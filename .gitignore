@@ -1,0 +1,50 @@
+# 의존성
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# 빌드 결과물
+*.apk
+*.aab
+android/.gradle/
+android/build/
+android/app/build/
+android/app/.cxx/
+ios/Pods/
+ios/build/
+
+# 서명 키 · 비밀 정보 (절대 커밋 금지)
+*.jks
+*.keystore
+!debug.keystore
+keystore.properties
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*-firebase-adminsdk-*.json
+
+# 환경 변수
+.env
+.env*.local
+
+# Supabase CLI 임시 파일
+supabase/.temp/
+supabase/.branches/
+
+# 테스트 · 로그
+coverage/
+*.log
+npm-debug.*
+
+# OS · 에디터
+.DS_Store
+Thumbs.db
+.idea/
+
+# Claude Code 개인 설정
+.claude/settings.local.json
