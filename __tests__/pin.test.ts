@@ -16,4 +16,9 @@ describe('PIN security', () => {
     await expect(getPinLockUntil()).resolves.toBe(0);
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('timetable.pin.lock.v1');
   });
+  it('keeps counting failed attempts across app backgrounding instead of resetting them', async () => {
+    jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify({ attempts: 3, until: 0 }));
+    await expect(getPinLockUntil()).resolves.toBe(0);
+    expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled();
+  });
 });

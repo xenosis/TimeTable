@@ -26,6 +26,8 @@ export async function savePin(pin: string): Promise<void> { if (!validPin(pin)) 
 export async function verifyPin(pin: string): Promise<boolean> { const saved = await SecureStore.getItemAsync(pinKey); return saved != null && saved === hashPin(pin); }
 type PinLock = { readonly attempts: number; readonly until: number };
 async function readLock(): Promise<PinLock> { try { const raw = await SecureStore.getItemAsync(pinLockKey); return raw ? JSON.parse(raw) as PinLock : { attempts: 0, until: 0 }; } catch { return { attempts: 0, until: 0 }; } }
-export async function getPinLockUntil(): Promise<number> { const lock = await readLock(); if (lock.until > Date.now()) return lock.until; if (lock.attempts || lock.until) await SecureStore.deleteItemAsync(pinLockKey); return 0; }
+// attempts가 남아 있어도 아직 잠기지 않은 상태(until=0)라면 지우면 안 된다 — 그러면 앱을
+// 백그라운드로 보냈다가 다시 열 때마다(AppState 'active') 실패 횟수가 초기화돼 잠금을 우회할 수 있다.
+export async function getPinLockUntil(): Promise<number> { const lock = await readLock(); if (lock.until > Date.now()) return lock.until; if (lock.until && lock.until <= Date.now()) await SecureStore.deleteItemAsync(pinLockKey); return 0; }
 export async function recordPinFailure(): Promise<number> { const lock = await readLock(); const attempts = lock.until && lock.until <= Date.now() ? 1 : lock.attempts + 1; const until = attempts >= 5 ? Date.now() + 5 * 60 * 1000 : 0; await SecureStore.setItemAsync(pinLockKey, JSON.stringify({ attempts, until })); return until; }
 export async function resetPinFailures(): Promise<void> { await SecureStore.deleteItemAsync(pinLockKey); }

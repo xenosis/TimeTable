@@ -1848,7 +1848,7 @@
     },
     {
       "id": "P3.6",
-      "status": "in_review",
+      "status": "needs_info",
       "priority": null,
       "category": "feature",
       "title": "알람 모드 구현",
@@ -1866,7 +1866,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-24T07:46:50.223Z",
-      "updated_at": "2026-09-28T03:33:41.552Z",
+      "updated_at": "2026-09-28T13:53:22.282Z",
       "log": [
         {
           "at": "2026-09-24T07:46:50.223Z",
@@ -1903,17 +1903,23 @@
           "owner": "claude",
           "status": "in_review",
           "note": "구현·npm run check·실기기 확인(3/4 항목) 완료, 병렬 검토 대기."
+        },
+        {
+          "at": "2026-09-28T13:53:22.282Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "critical-reviewer 반영 수정 완료: 알림 '끄기' 액션이 전체화면(AlarmActivity)을 안 닫던 문제(H1)를 companion finishIfShowing()으로 수정, fromAlarmDismiss extra 위조 가능 보안 문제(H2)를 일회용 토큰 AlarmHandoff로 교체, AlarmActivity taskAffinity 분리(H3), postDelayed(300ms) 제거하고 onStop 기반 finish로 변경(M1), MainActivity onStop에서 turnScreenOn도 원복(M2), requestDismissKeyguard SDK 26 미만 분기 추가(M3, minSdk=24라 실제 크래시 가능했음), AlarmSoundService null intent 시 START_NOT_STICKY(M5), 알람 알림 본문 탭 시 AlarmActivity로 이동(M4). 버전 1.30.30, npm run check 전체 통과. 실기기 재확인: 알림 '끄기'가 전체화면도 닫음(확인), 알림 본문 탭이 AlarmActivity로 이동(확인), '일정 보기'는 잠금해제/스와이프 잠금 상태에서 정상, 진짜 패턴 잠금 상태에서는 화면이 잠깐 떴다 다시 잠기는 제한 발견(보안상 의도된 동작일 가능성 높음, 추가 조사 필요). done_when 중 여전히 미확인: 실제 롤링 예약(디버그 POC 아님)으로 10초 이상 반복음 유지, 연속 알람이 마지막 일정으로 전환."
         }
       ]
     },
     {
       "id": "P3.7",
-      "status": "in_review",
+      "status": "needs_info",
       "priority": null,
       "category": "feature",
       "title": "알림 탭 이동",
       "summary": "알림을 누르면 해당 일정 화면으로 이동한다(Doro navigationRef 참고).",
-      "where": "src/utils/",
+      "where": "android/app/src/main/java/com/sewoong/kidtimetable/alarm/, android/app/src/main/java/com/sewoong/kidtimetable/MainActivity.kt",
       "parent": "P3",
       "deps": [
         "P3.4"
@@ -1924,7 +1930,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-24T08:15:45.979Z",
-      "updated_at": "2026-09-28T03:33:51.145Z",
+      "updated_at": "2026-09-28T13:53:43.634Z",
       "log": [
         {
           "at": "2026-09-24T08:15:45.979Z",
@@ -1955,6 +1961,18 @@
           "owner": "claude",
           "status": "in_review",
           "note": "구현·npm run check·실기기 확인(2/3 조합) 완료, 병렬 검토 대기."
+        },
+        {
+          "at": "2026-09-28T13:53:34.197Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "critical-reviewer 반영 수정 완료: MainActivity.onNewIntent() setIntent 누락 수정 외 P3.6에서 공유하는 AlarmActivity/AlarmSoundService/MainActivity 수정(H1/H2/H3/M1-M5) 함께 반영. 알람 알림 본문 탭 시 AlarmActivity로 먼저 가도록 바꿔(M4) 소리 안 멈춘 채 앱만 열리는 문제 해결. deps/where 메타데이터가 실제 구현(android/ 네이티브 딥링크)과 다르다는 지적(M6)은 where 필드를 android/app/src/main/java/.../alarm/, MainActivity.kt로 정정. 버전 1.30.30, npm run check 전체 통과. 실기기 재확인: 일반 알림×실행중/백그라운드 정상 이동, 전용 알람 알림 탭 시 AlarmActivity로 이동 확인. 여전히 미확인: 완전 종료(프로세스 kill) 상태에서 알림 탭 시 콜드 스타트 이동 — 디버그 POC가 포그라운드 서비스를 띄워 kill이 안 먹혀 재시도 필요, 실제 예약 항목으로 다시 테스트해야 함."
+        },
+        {
+          "at": "2026-09-28T13:53:43.634Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "M6 반영: where를 실제 구현 위치(android 네이티브 딥링크)로 정정. 이전 값 'src/utils/'는 실제 구현과 달랐음."
         }
       ]
     },
@@ -2284,7 +2302,7 @@
     },
     {
       "id": "P4.4",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "오늘의 할 일 화면",
@@ -2296,12 +2314,12 @@
         "P1.9"
       ],
       "doc": null,
-      "done_when": "오늘 할 일 목록·체크·진행률이 정확히 표시되고 활성 테마의 카드·강조 색이 적용됨",
+      "done_when": "오늘 할 일 목록·체크·진행률이 정확히 표시되고 활성 테마의 카드·강조 색이 적용됨. PIN 실패 카운터는 앱 재진입으로 초기화되지 않는다.",
       "est_min": 30,
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T14:18:49.556Z",
-      "updated_at": "2026-09-27T18:45:49.212Z",
+      "updated_at": "2026-09-28T14:06:17.705Z",
       "log": [
         {
           "at": "2026-09-16T04:50:10.534Z",
@@ -2350,8 +2368,34 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "반영한 수정: 축하·오류 문구를 이미 4.5:1 검증된 theme.colors.text로 바꾸고 이모지(⚠️)로 의미를 보강(PermissionGuide·TodayScheduleCard·WeeklyTimetable의 동일 패턴도 함께 정정). TodayTasksCard에 onChanged 콜백을 추가하고 app/index.tsx에서 refreshKey를 올리도록 연결해 체크 직후 보석판·연속일수가 즉시 갱신됨. npm run check 전체 통과. 딸 폰 실기기 확인 대기: 문구 가독성, 체크 직후 보석판 갱신 체감."
+        },
+        {
+          "at": "2026-09-28T14:00:27.129Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "딸 폰 실기기에서 done_when 재확인: 홈 화면에 오늘의 시간표·할 일·보석판·주간 시간표·테마 선택·관리자 설정만 노출, PIN 열기 전 편집 내용 비노출(관리자 화면은 PIN 입력 전 편집 폼이 렌더되지 않음, 다수 확인). 실제 항목(P44check) 추가 후 홈에 0/1로 즉시 반영, 체크 시 1/1+연속일수 갱신, 취소 시 0/1로 정확히 롤백 확인."
+        },
+        {
+          "at": "2026-09-28T14:00:36.310Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "실기기 확인 완료, npm run check 통과 상태. 리뷰 대기."
+        },
+        {
+          "at": "2026-09-28T14:06:06.055Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "critical-reviewer 반영: deps(P4.2, P1.9) 둘 다 done 확인(CLI로 직접 재확인). High-2로 발견된 PIN 잠금 우회 버그(getPinLockUntil이 아직 안 잠긴 상태에서도 attempts 기록을 지워, 앱을 백그라운드→포그라운드로 반복하면 5회 제한 없이 PIN 무제한 시도 가능했음) 수정 — until이 만료된 경우에만 기록을 지우도록 조건 좁힘, 회귀 테스트 추가. Medium-1(완료 항목 text/success 대비 쌍 누락)도 requiredContrastPairs에 추가. npm run check 전체 통과(회귀 테스트 포함)."
+        },
+        {
+          "at": "2026-09-28T14:06:17.705Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer 반영 완료, npm run check 전체 통과, deps done 확인."
         }
-      ]
+      ],
+      "done_at": "2026-09-28",
+      "evidence": "딸 폰 실기기(SM-A245N) 확인 + critical-reviewer 검토 반영(PIN 잠금 우회 수정, 대비 쌍 추가) + npm run check 통과 · 검증: 실기기: 오늘 할 일 추가→체크→취소 진행률/연속일수 정확히 반영. 코드: TodayTasksCard가 theme.colors만 사용, PIN 잠금 우회 회귀 테스트 통과."
     },
     {
       "id": "P4.5",
@@ -2641,7 +2685,7 @@
     },
     {
       "id": "P4.11",
-      "status": "needs_info",
+      "status": "in_review",
       "priority": null,
       "category": "feature",
       "title": "완료 이력이 있는 반복 할 일 종료",
@@ -2657,7 +2701,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-27T18:46:47.899Z",
-      "updated_at": "2026-09-27T18:47:01.822Z",
+      "updated_at": "2026-09-28T14:01:54.006Z",
       "log": [
         {
           "at": "2026-09-27T18:46:47.899Z",
@@ -2670,6 +2714,18 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "반영한 구현: migrations.ts schemaV8로 tasks.effective_until 컬럼 추가, getTodayTasks·hasTasksOn(rewardRepository)이 종료일 이후 제외, taskRepository에 getEndableTasks·endRecurringTask 추가, TaskEditor.tsx에 완료 이력 있는 반복 할 일 목록과 '오늘부터 그만두기' 버튼 추가(끄면 requestTaskRollingScheduleRefresh도 호출). 단위 테스트 3건 추가. npm run check 전체 통과. 딸 폰 실기기 확인 대기: 그만두기 버튼으로 종료한 뒤 오늘 목록·주간 완료 계산에서 사라지는지, 과거 완료 이력은 남아있는지."
+        },
+        {
+          "at": "2026-09-28T14:01:38.340Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "딸 폰 실기기 확인: 완료 이력 있는 반복 할 일(P44check)에서 '오늘부터 그만두기' 실행 → 할 일 편집 목록에서 즉시 사라짐(수정 불가 상태 해제 아님, effective_until 설정 확인). 오늘의 할 일 목록에는 오늘 날짜까지는 그대로 남고(코드: getTodayTasks의 effective_until >= 오늘 조건, done_when의 '종료일 이후'와 일치하는 의도된 동작), 완료 이력은 보존됨."
+        },
+        {
+          "at": "2026-09-28T14:01:54.006Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "주의: '종료일 이후'(내일부터) 실제로 목록에서 빠지는지는 하루가 지나야 실기기 관찰 가능 — 이번엔 오늘 날짜까지는 남아있음(코드상 effective_until >= 오늘 조건과 일치)만 확인했고, 내일 이후 실제 제외는 SQL 조건 코드 검토로만 확인(실기기 관찰 아님). done 처리 전 이 점 검토 필요."
         }
       ]
     },

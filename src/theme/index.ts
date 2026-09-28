@@ -187,6 +187,7 @@ export function assertValidTheme(theme: ThemeDefinition): ThemeDefinition {
     [theme.colors.text, theme.decorations.cardBackground],
     [theme.colors.textMuted, theme.decorations.cardBackground],
     [theme.decorations.stickerAccent, theme.decorations.cardBackground],
+    [theme.colors.text, theme.colors.success],
     ...theme.categories.map((category) => [category.textColor, category.backgroundColor] as const),
   ];
   if (requiredContrastPairs.some(([foreground, background]) => contrastRatio(foreground, background) < 4.5)) {
