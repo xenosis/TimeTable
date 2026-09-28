@@ -3260,7 +3260,7 @@
     },
     {
       "id": "P7.1",
-      "status": "in_review",
+      "status": "needs_info",
       "priority": null,
       "category": "feature",
       "title": "앱 꾸미기",
@@ -3276,7 +3276,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T10:11:28.628Z",
-      "updated_at": "2026-09-28T14:21:30.290Z",
+      "updated_at": "2026-09-28T14:31:26.115Z",
       "log": [
         {
           "at": "2026-09-16T04:50:33.860Z",
@@ -3313,6 +3313,12 @@
           "owner": "claude",
           "status": "in_review",
           "note": "실기기 확인·npm run check 통과, 병렬 검토 대기."
+        },
+        {
+          "at": "2026-09-28T14:31:26.115Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "critical-reviewer 반영: brand_icon_monochrome.xml도 foreground와 동일한 원인(모든 하위 path가 같은 방향+nonZero fillType이라 구멍이 안 뚫리고 속이 꽉 찬 덩어리)으로 깨져 있어, Material You '테마 아이콘' 켰을 때도 깨질 수 있었음 — brand_launcher(.xml, _round.xml)의 monochrome을 @mipmap/ic_launcher_monochrome(Expo 자동 생성)으로 동일하게 수정. 버전 1.30.33, npm run check 통과. 실기기로 기본 아이콘·스플래시는 재확인했으나, '테마 아이콘' 토글을 켠 상태의 monochrome 렌더링은 설정 앱 검색 입력이 막혀 실기기 확인 못함(같은 패턴 수정이라 근거는 있으나 미확인). 남은 Medium: brand_launcher_round·brand_icon_foreground.xml이 실질적으로 안 쓰이거나 문서와 어긋남(정리 여부는 사람 판단 필요), foreground 아트워크가 66dp 안전영역 대비 약간 크게 걸쳐있을 수 있음(잘림 여부 육안 확인은 정상이었음)."
         }
       ]
     },
