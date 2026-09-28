@@ -3260,7 +3260,7 @@
     },
     {
       "id": "P7.1",
-      "status": "needs_info",
+      "status": "in_review",
       "priority": null,
       "category": "feature",
       "title": "앱 꾸미기",
@@ -3274,9 +3274,9 @@
       "done_when": "아이콘·스플래시·알림아이콘·앱이름이 최종 확정되고 앱 안 테마 전환과 운영체제 자산의 분리가 확인됨",
       "est_min": 30,
       "gate": null,
-      "owner": "codex",
+      "owner": "claude",
       "claimed_at": "2026-09-18T10:11:28.628Z",
-      "updated_at": "2026-09-18T10:45:39.747Z",
+      "updated_at": "2026-09-28T14:21:30.290Z",
       "log": [
         {
           "at": "2026-09-16T04:50:33.860Z",
@@ -3301,6 +3301,18 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "코드·리뷰·전체 검사 완료. 아이콘·스플래시·알림 아이콘은 실기기에서 시각 확인이 필요하므로 docs/backlog/P7.1.md의 8개 체크 항목을 사용자 수동 테스트로 남긴다."
+        },
+        {
+          "at": "2026-09-28T14:21:22.209Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "딸 폰 실기기 확인 중 실제 버그 발견·수정: mipmap-anydpi-v26/brand_launcher(.xml, round.xml)의 foreground가 @drawable/brand_icon_foreground(monochrome용 흰색 단색 실루엣 벡터, brand_icon_monochrome.xml과 완전히 동일)를 잘못 참조해 API 26+ 실기기에서 앱 아이콘이 거의 빈 흰색 사각형으로 보였음(레거시 mipmap-*/brand_launcher.png 자체는 정상 컬러였음). Expo가 자동 생성한 @mipmap/ic_launcher_foreground(컬러 달력 아트워크)를 foreground로 참조하도록 수정. 실기기 확인: 앱 서랍 아이콘·스플래시 화면 모두 웃는 얼굴 컬러 달력으로 정상 표시. 알림 아이콘(흰색 단색), 테마 전환과 아이콘 독립성은 에셋·코드 구조로 확인(테마는 JS state만 다루고 네이티브 아이콘 리소스를 건드리지 않음). 버전 1.30.32, npm run check 통과."
+        },
+        {
+          "at": "2026-09-28T14:21:30.290Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "실기기 확인·npm run check 통과, 병렬 검토 대기."
         }
       ]
     },
