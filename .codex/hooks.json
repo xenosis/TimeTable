@@ -1,0 +1,46 @@
+{
+  "description": "TimeTable 프로젝트의 백로그 정책과 빠른/전체 품질 검사를 Codex에서 실행한다.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|exec_command|functions\\.exec_command|Shell|shell|local_shell)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/npm-install-guard.cjs\"",
+            "commandWindows": "node \"C:\\Users\\Lenovo\\claudeProjects\\TimeTable\\.codex\\hooks\\npm-install-guard.cjs\"",
+            "timeout": 10,
+            "statusMessage": "라이브러리 설치 정책 확인 중..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/post-edit-check.cjs\"",
+            "commandWindows": "node \"C:\\Users\\Lenovo\\claudeProjects\\TimeTable\\.codex\\hooks\\post-edit-check.cjs\"",
+            "timeout": 60,
+            "statusMessage": "편집 파일 길이·lint·지침 동기화 검사 중..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/quality-stop.cjs\"",
+            "commandWindows": "node \"C:\\Users\\Lenovo\\claudeProjects\\TimeTable\\.codex\\hooks\\quality-stop.cjs\"",
+            "timeout": 720,
+            "statusMessage": "전체 지침·길이·lint·typecheck·test·Android build 검사 중..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backlog 대시보드</title>
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --panel: #ffffff;
+    --border: #dde1e6;
+    --text: #1c2126;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --danger: #b3261e;
+    --danger-bg: #fdecea;
+    --warn: #92600a;
+    --warn-bg: #fff4e0;
+    --ok: #1a7f37;
+    --chip-bg: #eef1f5;
+    font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font-size: 13.5px; line-height: 1.45; display: flex; flex-direction: column; }
+
+  /* ---- 상단 바 (한 줄) ---- */
+  #topbar {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 7px 12px; background: var(--panel); border-bottom: 1px solid var(--border);
+  }
+  #topbar h1 { font-size: 14.5px; margin: 0; white-space: nowrap; }
+  #topbar .meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  #topbar .spacer { flex: 1 1 auto; min-width: 8px; }
+  #topbar input[type="text"], #topbar select {
+    border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12.5px;
+    background: #fff; color: var(--text);
+  }
+  #searchInput { width: 220px; }
+  button {
+    border: 1px solid var(--border); background: #fff; border-radius: 6px; padding: 5px 10px;
+    font-size: 12.5px; cursor: pointer; color: var(--text);
+  }
+  button:hover { background: #f0f2f5; }
+  #loadBtn { font-weight: 600; }
+  #integrityBadge { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); font-weight: 600; }
+  #integrityBadge[hidden] { display: none; }
+  #readonlyNote { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+
+  #integrityDrop {
+    position: absolute; top: 40px; right: 12px; z-index: 20; width: min(480px, 92vw);
+    background: var(--panel); border: 1px solid var(--danger); border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15); padding: 10px 12px; max-height: 60vh; overflow-y: auto;
+  }
+  #integrityDrop[hidden] { display: none; }
+  #integrityDrop h2 { margin: 0 0 6px; font-size: 13px; color: var(--danger); }
+  #integrityDrop ul { margin: 0; padding-left: 18px; color: var(--danger); font-size: 12.5px; }
+  #integrityDrop li { margin: 3px 0; }
+
+  #initialHint { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; color: var(--muted); text-align: center; padding: 20px; }
+  #initialHint[hidden] { display: none; }
+
+  #statusMsg { flex: 0 0 auto; padding: 10px 14px; font-size: 13px; }
+  #statusMsg.error { background: var(--danger-bg); color: var(--danger); white-space: pre-line; }
+  #statusMsg[hidden] { display: none; }
+
+  #split { flex: 1 1 auto; display: flex; min-height: 0; }
+  #split[hidden] { display: none; }
+  #listPane {
+    flex: 0 0 auto; width: 40%; min-width: 260px; display: flex; flex-direction: column;
+    background: var(--panel); min-height: 0;
+  }
+  #splitResizer {
+    flex: 0 0 6px; cursor: col-resize; background: var(--border); position: relative;
+  }
+  #splitResizer:hover, #splitResizer.dragging { background: var(--accent); }
+  #splitResizer::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: -3px; right: -3px; /* 잡기 쉽게 히트 영역 확장 */
+  }
+  #listMeta {
+    flex: 0 0 auto; padding: 6px 12px; font-size: 11.5px; color: var(--muted);
+    border-bottom: 1px solid var(--border); background: #fafbfc;
+  }
+  #listScroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15.5px; table-layout: fixed; }
+  thead th {
+    position: sticky; top: 0; background: #f0f2f5; text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--border); font-weight: 600; font-size: 12.5px; z-index: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  tbody td {
+    padding: 9px 10px; border-bottom: 1px solid #eef0f3; vertical-align: top;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: #f5f7fa; }
+  tbody tr.selected { background: #e8f0fe; }
+  .badge { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 13px; font-weight: 600; background: var(--chip-bg); color: var(--text); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  /* 상태별 색상 (enums.status: todo, in_progress, in_review, needs_info, blocked, done, cancelled) */
+  .badge.st-todo { background: #e5e7eb; color: #374151; }
+  .badge.st-in_progress { background: #dbeafe; color: #1d4ed8; }
+  .badge.st-in_review { background: #ede9fe; color: #7c3aed; }
+  .badge.st-needs_info { background: #fff4e0; color: #92600a; }
+  .badge.st-blocked { background: #fdecea; color: #b3261e; }
+  .badge.st-done { background: #e6f4ea; color: #1a7f37; }
+  .badge.st-cancelled { background: #e5e7eb; color: #6b7280; text-decoration: line-through; }
+  .muted { color: var(--muted); }
+  .empty-msg { color: var(--muted); padding: 20px 4px; text-align: center; }
+
+  #detailPane { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 16px 20px 60px; }
+  #detailPlaceholder { color: var(--muted); text-align: center; margin-top: 20vh; font-size: 13.5px; }
+  #detailBody h2 { margin: 0 0 2px; font-size: 16.5px; }
+  #detailBody .sub { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+  .dl { display: grid; grid-template-columns: 106px 1fr; gap: 5px 10px; margin: 8px 0; font-size: 12.5px; }
+  .dl dt { color: var(--muted); }
+  .dl dd { margin: 0; }
+  .chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--chip-bg); border-radius: 999px; padding: 2px 9px; font-size: 11.5px; }
+  .chip.error { background: var(--danger-bg); color: var(--danger); }
+  .chip.clickable { cursor: pointer; text-decoration: underline; }
+  pre.code-block {
+    background: #f4f5f7; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+    font-size: 11.5px; white-space: pre-wrap; word-break: break-word; margin: 4px 0;
+  }
+  .section-title { font-size: 12.5px; font-weight: 700; margin: 14px 0 6px; }
+  .log-entry { border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; margin-bottom: 7px; background: #fbfbfc; }
+  .log-entry .dl { margin: 0; }
+  .doc-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .doc-fallback { margin-top: 6px; }
+  .doc-fallback[hidden] { display: none; }
+
+  @media (max-width: 860px) {
+    #split { flex-direction: column; }
+    #listPane { flex: 1 1 50%; width: auto !important; border-bottom: 1px solid var(--border); }
+    #splitResizer { display: none; }
+    #detailPane { flex: 1 1 50%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>Backlog</h1>
+  <button id="loadBtn">📂 backlog.json 열기</button>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
+  <input type="file" id="dirInput" webkitdirectory directory multiple hidden>
+  <span class="meta" id="fileMeta"></span>
+  <button id="docConnectBtn" hidden>📎 docs/backlog 폴더 연결</button>
+  <span class="meta" id="docStatus" hidden></span>
+  <span class="spacer"></span>
+  <input type="text" id="searchInput" placeholder="ID · 제목 · 설명 검색">
+  <select id="statusFilter"></select>
+  <button id="integrityBadge" hidden></button>
+  <span id="readonlyNote">읽기 전용 · gate 미실행</span>
+</div>
+
+<div id="integrityDrop" hidden>
+  <h2 id="integrityTitle"></h2>
+  <ul id="integrityList"></ul>
+</div>
+
+<div id="initialHint">backlog.json을 아직 불러오지 않았습니다. 위의 "backlog.json 열기" 버튼을 눌러 선택하세요.<br>(이 프로젝트 루트의 backlog.json 하나만 고르면 됩니다.)</div>
+<div id="statusMsg" hidden></div>
+
+<div id="split" hidden>
+  <section id="listPane">
+    <div id="listMeta"></div>
+    <div id="listScroll">
+      <table>
+        <colgroup>
+          <col style="width: 15%"><col style="width: 42%"><col style="width: 16%"><col style="width: 12%"><col style="width: 15%">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>제목</th><th>상태</th><th>우선순위</th><th>비고</th></tr>
+        </thead>
+        <tbody id="taskTableBody"></tbody>
+      </table>
+      <div id="emptyMsg" class="empty-msg" hidden></div>
+    </div>
+  </section>
+  <div id="splitResizer" title="드래그해서 목록 폭 조절"></div>
+  <section id="detailPane">
+    <div id="detailPlaceholder">왼쪽 목록에서 작업을 선택하면 여기에 상세 내용이 표시됩니다.</div>
+    <div id="detailBody" hidden></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const state = {
+    tasks: [],
+    enums: null,
+    byId: new Map(),
+    selectedId: null,
+    loadedAt: null,
+    loadKind: null, // 'server' | 'local-file'
+    docOpenFor: null, // 문서를 펼쳐 보고 있던 task id (폴더 연결 후 자동 재오픈용)
+    size: 0,
+    docFiles: new Map(), // file:// 모드에서 문서 폴더를 연결했을 때만 채워짐: id -> File
+  };
+
+  function h(tag, attrs, ...children) {
+    const node = document.createElement(tag);
+    if (attrs) {
+      for (const [k, v] of Object.entries(attrs)) {
+        if (v === undefined || v === null) continue;
+        if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
+        else node.setAttribute(k, v);
+      }
+    }
+    for (const c of children.flat()) {
+      if (c === null || c === undefined) continue;
+      node.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
+    }
+    return node;
+  }
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+  function fmtVal(v, fallback) { return (v === null || v === undefined || v === '') ? fallback : String(v); }
+  function fmtDate(d) { try { return new Date(d).toLocaleString('ko-KR'); } catch { return String(d); } }
+  const STATUS_CLASS = {
+    todo: 'st-todo', in_progress: 'st-in_progress', in_review: 'st-in_review',
+    needs_info: 'st-needs_info', blocked: 'st-blocked', done: 'st-done', cancelled: 'st-cancelled',
+  };
+  function statusClass(status, isUnknown) { return isUnknown ? 'warn' : (STATUS_CLASS[status] || ''); }
+
+  const loadBtn = document.getElementById('loadBtn');
+  const fileInput = document.getElementById('fileInput');
+  const dirInput = document.getElementById('dirInput');
+  const fileMeta = document.getElementById('fileMeta');
+  const docConnectBtn = document.getElementById('docConnectBtn');
+  const docStatus = document.getElementById('docStatus');
+  const searchInput = document.getElementById('searchInput');
+  const statusFilter = document.getElementById('statusFilter');
+  const integrityBadge = document.getElementById('integrityBadge');
+  const integrityDrop = document.getElementById('integrityDrop');
+  const integrityTitle = document.getElementById('integrityTitle');
+  const integrityList = document.getElementById('integrityList');
+  const initialHint = document.getElementById('initialHint');
+  const statusMsg = document.getElementById('statusMsg');
+  const split = document.getElementById('split');
+  const listMeta = document.getElementById('listMeta');
+  const taskTableBody = document.getElementById('taskTableBody');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const detailPlaceholder = document.getElementById('detailPlaceholder');
+  const detailBody = document.getElementById('detailBody');
+  const splitEl = document.getElementById('split');
+  const listPane = document.getElementById('listPane');
+  const splitResizer = document.getElementById('splitResizer');
+
+  integrityBadge.addEventListener('click', () => { integrityDrop.hidden = !integrityDrop.hidden; });
+  document.addEventListener('click', (e) => {
+    if (!integrityDrop.hidden && !integrityDrop.contains(e.target) && e.target !== integrityBadge) integrityDrop.hidden = true;
+  });
+
+  // ---- 좌측 목록 폭 조절 (기본 40%, 드래그로 조절, localStorage에 기억) ----
+  const LIST_WIDTH_KEY = 'backlogDashboard.listWidth';
+  const MIN_LIST_WIDTH = 240;
+  const MIN_DETAIL_WIDTH = 320;
+
+  function clampListWidth(px) {
+    const total = splitEl.clientWidth || window.innerWidth;
+    const max = Math.max(MIN_LIST_WIDTH, total - MIN_DETAIL_WIDTH);
+    return Math.min(Math.max(px, MIN_LIST_WIDTH), max);
+  }
+  function setListWidth(px) { listPane.style.width = clampListWidth(px) + 'px'; }
+  function initListWidth() {
+    let saved = null;
+    try { saved = Number(localStorage.getItem(LIST_WIDTH_KEY)); } catch { /* 프라이빗 모드 등: 기본값 사용 */ }
+    const total = splitEl.clientWidth || window.innerWidth;
+    setListWidth(saved && !Number.isNaN(saved) && saved > 0 ? saved : Math.round(total * 0.4));
+  }
+
+  let resizing = false;
+  splitResizer.addEventListener('pointerdown', (e) => {
+    resizing = true;
+    splitResizer.classList.add('dragging');
+    splitResizer.setPointerCapture(e.pointerId);
+    document.body.style.userSelect = 'none';
+  });
+  splitResizer.addEventListener('pointermove', (e) => {
+    if (!resizing) return;
+    setListWidth(e.clientX - splitEl.getBoundingClientRect().left);
+  });
+  function endResize() {
+    if (!resizing) return;
+    resizing = false;
+    splitResizer.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    try { localStorage.setItem(LIST_WIDTH_KEY, String(listPane.getBoundingClientRect().width)); } catch { /* 저장 실패해도 동작에는 지장 없음 */ }
+  }
+  splitResizer.addEventListener('pointerup', endResize);
+  splitResizer.addEventListener('pointercancel', endResize);
+  window.addEventListener('resize', () => setListWidth(listPane.getBoundingClientRect().width));
+
+  initListWidth();
+
+  // ---- 불러오기: 로컬 서버에서는 프로젝트 JSON을 자동으로 읽는다 ----
+  function setModePickFile(reason) {
+    loadBtn.textContent = '📂 backlog.json 열기';
+    loadBtn.onclick = () => fileInput.click();
+    if (reason) fileMeta.textContent = reason;
+  }
+
+  function loadProjectBacklog() {
+    fileMeta.textContent = '프로젝트 backlog.json 불러오는 중…';
+    let lastModifiedHeader = null;
+    fetch('/backlog.json', { cache: 'no-store' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        lastModifiedHeader = res.headers.get('Last-Modified');
+        return res.text();
+      })
+      .then((text) => {
+        loadBtn.textContent = '↻ 프로젝트 backlog.json 새로 읽기';
+        loadBtn.onclick = loadProjectBacklog;
+        applyLoadedText(text, { kind: 'server', lastModified: lastModifiedHeader });
+      })
+      .catch((error) => setModePickFile(`자동 불러오기 실패 (${error.message}) — 파일을 직접 선택하세요.`));
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    fileInput.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onerror = () => { fileMeta.textContent = `파일을 읽는 중 오류: ${reader.error}`; };
+    reader.onload = () => applyLoadedText(String(reader.result), { kind: 'local-file', file });
+    reader.readAsText(file, 'utf-8');
+  });
+
+  docConnectBtn.addEventListener('click', () => dirInput.click());
+
+  dirInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    state.docFiles = new Map();
+    let count = 0;
+    for (const f of files) {
+      const m = /^([^/\\]+)\.md$/i.exec(f.name);
+      if (m) { state.docFiles.set(m[1], f); count++; }
+    }
+    updateDocConnectUI();
+    if (state.selectedId) openDetail(state.selectedId); // 열려 있던 상세를 새로고침 — 문서를 보고 있었으면 자동으로 다시 연다
+  });
+
+  function updateDocConnectUI() {
+    if (state.loadKind !== 'local-file') { docConnectBtn.hidden = true; docStatus.hidden = true; return; }
+    if (state.docFiles.size > 0) {
+      docConnectBtn.hidden = true;
+      docStatus.hidden = false;
+      docStatus.textContent = `문서 폴더 연결됨 (${state.docFiles.size}개)`;
+    } else {
+      docConnectBtn.hidden = false;
+      docStatus.hidden = true;
+    }
+  }
+
+  if (location.protocol !== 'file:') {
+    loadProjectBacklog();
+  } else {
+    setModePickFile('backlog.json을 선택하세요. 다시 읽으려면 같은 버튼으로 파일을 다시 선택하세요.');
+  }
+
+  function applyLoadedText(text, meta) {
+    state.size = text.length;
+    state.loadedAt = new Date();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      showError(`JSON 파싱 오류: ${e.message}`);
+      return;
+    }
+    if (typeof json !== 'object' || json === null || Array.isArray(json)) {
+      showError('JSON 최상위가 객체가 아닙니다. { "tasks": [...] } 형태여야 합니다.');
+      return;
+    }
+    if (!Array.isArray(json.tasks)) {
+      showError('tasks 배열을 찾을 수 없습니다. 최상위에 "tasks" 배열이 있어야 합니다.');
+      return;
+    }
+    hideError();
+    state.enums = (json.enums && typeof json.enums === 'object') ? json.enums : null;
+    state.tasks = json.tasks;
+    state.byId = new Map();
+    for (const t of state.tasks) {
+      if (t && typeof t === 'object' && typeof t.id === 'string' && t.id !== '') state.byId.set(t.id, t);
+    }
+    state.loadKind = meta.kind;
+    renderFileMeta(meta);
+    updateDocConnectUI();
+    renderAll();
+  }
+
+  function showError(message) {
+    initialHint.hidden = true;
+    split.hidden = true;
+    statusMsg.hidden = false;
+    statusMsg.classList.add('error');
+    statusMsg.textContent = message;
+  }
+  function hideError() {
+    initialHint.hidden = true;
+    statusMsg.hidden = true;
+    statusMsg.classList.remove('error');
+    statusMsg.textContent = '';
+    split.hidden = false;
+    setListWidth(listPane.getBoundingClientRect().width); // split이 실제로 보이게 된 뒤 폭을 실제 컨테이너 기준으로 재보정
+  }
+
+  function renderFileMeta(meta) {
+    const parts = [];
+    if (meta.kind === 'server') {
+      parts.push('backlog.json (자동 불러오기)');
+      parts.push(`${state.size.toLocaleString('ko-KR')} bytes`);
+      if (meta.lastModified) parts.push(`서버 파일 수정: ${fmtDate(meta.lastModified)}`);
+      parts.push(`새로고침: ${fmtDate(state.loadedAt)}`);
+    } else {
+      parts.push(meta.file ? meta.file.name : 'backlog.json');
+      parts.push(`${state.size.toLocaleString('ko-KR')} bytes`);
+      if (meta.file) parts.push(`파일 마지막 수정: ${fmtDate(meta.file.lastModified)}`);
+      parts.push(`불러온 시각: ${fmtDate(state.loadedAt)}`);
+    }
+    fileMeta.textContent = parts.join(' · ');
+  }
+
+  // ---- 무결성 검사 ----
+  function computeIntegrity(tasks, byId) {
+    const errors = [];
+    const seen = new Set();
+    tasks.forEach((t, idx) => {
+      if (!t || typeof t !== 'object') { errors.push(`tasks[${idx}]가 객체가 아닙니다.`); return; }
+      if (t.id === undefined || t.id === null || t.id === '') { errors.push(`tasks[${idx}]에 id가 없습니다.`); return; }
+      if (typeof t.id !== 'string') { errors.push(`tasks[${idx}].id는 문자열이어야 합니다. 숫자로 변환하지 않습니다.`); return; }
+      if (seen.has(t.id)) errors.push(`id 중복: "${t.id}"`);
+      seen.add(t.id);
+      if (t.deps !== undefined && !Array.isArray(t.deps)) {
+        errors.push(`"${t.id}".deps 가 배열이 아닙니다.`);
+      } else if (Array.isArray(t.deps)) {
+        for (const d of t.deps) if (!byId.has(d)) errors.push(`"${t.id}".deps 안의 "${d}" 는 존재하지 않는 id입니다.`);
+      }
+      if (t.parent !== undefined && t.parent !== null && !byId.has(t.parent)) {
+        errors.push(`"${t.id}".parent 가 존재하지 않는 id "${t.parent}" 를 가리킵니다.`);
+      }
+      if (t.log !== undefined && !Array.isArray(t.log)) errors.push(`"${t.id}".log 가 배열이 아닙니다.`);
+    });
+    return errors;
+  }
+
+  function renderIntegrity() {
+    const errors = computeIntegrity(state.tasks, state.byId);
+    if (errors.length === 0) {
+      integrityBadge.hidden = true;
+      integrityDrop.hidden = true;
+      return;
+    }
+    integrityBadge.hidden = false;
+    integrityBadge.textContent = `⚠ 무결성 오류 ${errors.length}건`;
+    integrityTitle.textContent = `무결성 오류 (${errors.length}건) — 조용히 무시하지 않고 표시합니다`;
+    clear(integrityList);
+    for (const msg of errors) integrityList.appendChild(h('li', { text: msg }));
+  }
+
+  function renderControls() {
+    const knownStatuses = state.enums && Array.isArray(state.enums.status) ? state.enums.status : null;
+    const counts = new Map();
+    for (const t of state.tasks) {
+      const s = fmtVal(t && t.status, '(status 없음)');
+      counts.set(s, (counts.get(s) || 0) + 1);
+    }
+    const statusesInData = Array.from(counts.keys());
+    const allStatuses = knownStatuses ? Array.from(new Set([...knownStatuses, ...statusesInData])) : statusesInData;
+
+    clear(statusFilter);
+    statusFilter.appendChild(h('option', { value: '__all__', text: `전체 (${state.tasks.length})` }));
+    for (const s of allStatuses) {
+      const isUnknown = s === '(status 없음)' || (knownStatuses && !knownStatuses.includes(s));
+      statusFilter.appendChild(h('option', { value: s, text: `${s} (${counts.get(s) || 0})${isUnknown ? ' ⚠' : ''}` }));
+    }
+    statusFilter.onchange = applyFilterAndRenderList;
+    searchInput.oninput = applyFilterAndRenderList;
+  }
+
+  function renderAll() {
+    renderIntegrity();
+    renderControls();
+    applyFilterAndRenderList();
+    if (state.selectedId && state.byId.has(state.selectedId)) openDetail(state.selectedId);
+  }
+
+  function applyFilterAndRenderList() {
+    const statusVal = statusFilter.value || '__all__';
+    const q = searchInput.value.trim().toLowerCase();
+    const filtered = state.tasks.filter((t) => {
+      if (!t) return false;
+      const s = fmtVal(t.status, '(status 없음)');
+      if (statusVal !== '__all__' && s !== statusVal) return false;
+      if (!q) return true;
+      const hay = [t.id, t.title, t.summary].map((v) => (v == null ? '' : String(v).toLowerCase())).join('\n');
+      return hay.includes(q);
+    });
+    renderList(filtered);
+  }
+
+  function renderList(filtered) {
+    clear(taskTableBody);
+    const containerIds = new Set(state.tasks.map((t) => t && t.parent).filter((v) => v !== null && v !== undefined));
+    const leafCount = state.tasks.filter((t) => t && !containerIds.has(t.id)).length;
+    const statusCounts = new Map();
+    for (const task of state.tasks) {
+      const status = fmtVal(task && task.status, '(status 없음)');
+      statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+    }
+    const countText = Array.from(statusCounts, ([status, count]) => `${status} ${count}`).join(' · ');
+    listMeta.textContent =
+      `전체 항목 ${state.tasks.length} · 실제 세부 실행 작업 ${leafCount} · 상위 작업 ${state.tasks.length - leafCount} · 표시 중 ${filtered.length} | ${countText}`;
+
+    if (state.tasks.length === 0) {
+      emptyMsg.hidden = false;
+      emptyMsg.textContent = 'tasks가 비어 있습니다. 등록된 작업이 없습니다.';
+      return;
+    }
+    if (filtered.length === 0) {
+      emptyMsg.hidden = false;
+      emptyMsg.textContent = '필터/검색 조건에 맞는 작업이 없습니다.';
+      return;
+    }
+    emptyMsg.hidden = true;
+
+    const knownStatuses = state.enums && Array.isArray(state.enums.status) ? state.enums.status : null;
+    for (const t of filtered) {
+      const notes = [];
+      if (Array.isArray(t.deps) && t.deps.some((d) => !state.byId.has(d))) notes.push('deps 오류');
+      if (t.parent !== undefined && t.parent !== null && !state.byId.has(t.parent)) notes.push('parent 오류');
+      const s = fmtVal(t.status, '(status 없음)');
+      if (s === '(status 없음)' || (knownStatuses && !knownStatuses.includes(s))) notes.push('알 수 없는 상태');
+
+      const idText = fmtVal(t.id, '(id 없음)');
+      const titleText = fmtVal(t.title, '정보 없음');
+      const notesText = notes.join(', ');
+      const tr = h('tr', { onclick: () => openDetail(t.id) },
+        h('td', { text: idText, title: idText }),
+        h('td', { text: titleText, title: titleText }),
+        h('td', {}, h('span', { class: 'badge ' + statusClass(s, notes.includes('알 수 없는 상태')), text: s })),
+        h('td', { text: fmtVal(t.priority, '미지정') }),
+        h('td', { title: notesText || undefined }, notes.length ? h('span', { class: 'badge warn', text: notesText }) : h('span', { class: 'muted', text: '-' }))
+      );
+      if (t.id === state.selectedId) tr.classList.add('selected');
+      taskTableBody.appendChild(tr);
+    }
+  }
+
+  // ---- 상세 ----
+  function openDetail(id) {
+    const t = state.byId.get(id);
+    if (!t) return;
+    state.selectedId = id;
+    applyFilterAndRenderList();
+
+    detailPlaceholder.hidden = true;
+    detailBody.hidden = false;
+    clear(detailBody);
+
+    detailBody.appendChild(h('h2', { text: `${fmtVal(t.id, '(id 없음)')} — ${fmtVal(t.title, '정보 없음')}` }));
+    detailBody.appendChild(h('div', { class: 'sub', text: `status: ${fmtVal(t.status, '정보 없음')} · priority: ${fmtVal(t.priority, '미지정')} · category: ${fmtVal(t.category, '미지정')}` }));
+
+    const dl = h('div', { class: 'dl' });
+    function addRow(label, valueNode) { dl.appendChild(h('dt', { text: label })); dl.appendChild(h('dd', {}, valueNode)); }
+
+    addRow('summary', h('span', { text: fmtVal(t.summary, '정보 없음') }));
+    addRow('done_when', h('span', { text: fmtVal(t.done_when, '정보 없음') }));
+
+    const depsWrap = h('div', { class: 'chip-list' });
+    if (!Array.isArray(t.deps) || t.deps.length === 0) {
+      depsWrap.appendChild(h('span', { class: 'muted', text: Array.isArray(t.deps) ? '없음' : 'deps가 배열이 아닙니다 (데이터 오류)' }));
+    } else {
+      for (const d of t.deps) {
+        const exists = state.byId.has(d);
+        const chip = h('span', { class: 'chip' + (exists ? ' clickable' : ' error'), text: exists ? String(d) : `${d} (⚠ 존재하지 않음)` });
+        if (exists) chip.addEventListener('click', () => openDetail(d));
+        depsWrap.appendChild(chip);
+      }
+    }
+    addRow('deps', depsWrap);
+
+    if (t.parent === undefined || t.parent === null) {
+      addRow('parent', h('span', { class: 'muted', text: '미지정 (최상위 작업)' }));
+    } else if (state.byId.has(t.parent)) {
+      const chip = h('span', { class: 'chip clickable', text: String(t.parent) });
+      chip.addEventListener('click', () => openDetail(t.parent));
+      addRow('parent', chip);
+    } else {
+      addRow('parent', h('span', { class: 'chip error', text: `${t.parent} (⚠ 존재하지 않는 참조)` }));
+    }
+
+    const docWrap = h('div', {});
+    docWrap.appendChild(h('span', { text: fmtVal(t.doc, '정보 없음') }));
+    if (t.doc) docWrap.appendChild(h('div', { class: 'doc-note', text: '※ 표시만 됩니다. 자동으로 열지 않습니다.' }));
+    addRow('doc', docWrap);
+
+    addRow('where', h('span', { text: fmtVal(t.where, '미지정') }));
+    addRow('est_min', h('span', { text: (t.est_min === null || t.est_min === undefined || t.est_min === '') ? '미지정' : `${t.est_min}분` }));
+
+    const gateWrap = h('div', {});
+    if (t.gate === null || t.gate === undefined || t.gate === '') {
+      gateWrap.appendChild(h('span', { class: 'muted', text: '미지정' }));
+    } else {
+      const gateText = (typeof t.gate === 'object') ? JSON.stringify(t.gate, null, 2) : String(t.gate);
+      gateWrap.appendChild(h('pre', { class: 'code-block', text: gateText }));
+      gateWrap.appendChild(h('div', { class: 'doc-note', text: '※ 표시 전용입니다. 실행하지 않습니다.' }));
+    }
+    addRow('gate', gateWrap);
+
+    addRow('owner', h('span', { text: fmtVal(t.owner, '미지정') }));
+    addRow('claimed_at', h('span', { text: fmtVal(t.claimed_at, '미지정') }));
+    addRow('updated_at', h('span', { text: fmtVal(t.updated_at, '정보 없음') }));
+    detailBody.appendChild(dl);
+
+    if (t.done_at !== undefined && t.done_at !== null && t.done_at !== '') {
+      detailBody.appendChild(h('div', { class: 'section-title', text: 'done_at' }));
+      detailBody.appendChild(h('div', { text: String(t.done_at) }));
+    }
+    if (t.evidence !== undefined && t.evidence !== null && t.evidence !== '') {
+      detailBody.appendChild(h('div', { class: 'section-title', text: 'evidence' }));
+      detailBody.appendChild(renderEvidence(t.evidence));
+    }
+
+    detailBody.appendChild(h('div', { class: 'section-title', text: `log (${Array.isArray(t.log) ? t.log.length : 0}건)` }));
+    if (!Array.isArray(t.log)) {
+      detailBody.appendChild(h('div', { class: 'muted', text: 'log가 배열이 아닙니다 (데이터 오류)' }));
+    } else if (t.log.length === 0) {
+      detailBody.appendChild(h('div', { class: 'muted', text: '기록 없음' }));
+    } else {
+      t.log.forEach((entry, idx) => detailBody.appendChild(renderLogEntry(entry, idx)));
+    }
+
+    detailBody.appendChild(h('div', { class: 'section-title', text: `연결된 문서 (docs/backlog/${fmtVal(t.id, '?')}.md)` }));
+    const openBtn = h('button', { text: '문서 보기' });
+    const hintBox = h('div', { class: 'doc-note', hidden: true });
+    const contentBox = h('pre', { class: 'code-block', hidden: true });
+    const fallbackWrap = h('div', { class: 'doc-fallback', hidden: true },
+      h('button', { text: '📎 docs/backlog 폴더에서 찾기', onclick: () => dirInput.click() })
+    );
+    openBtn.addEventListener('click', () => {
+      if (state.docOpenFor === t.id) {
+        state.docOpenFor = null;
+        hintBox.hidden = true; contentBox.hidden = true; fallbackWrap.hidden = true;
+        return;
+      }
+      state.docOpenFor = t.id;
+      openDoc(t.id, hintBox, contentBox, fallbackWrap);
+    });
+    detailBody.appendChild(openBtn);
+    detailBody.appendChild(hintBox);
+    detailBody.appendChild(contentBox);
+    detailBody.appendChild(fallbackWrap);
+    if (state.docOpenFor === t.id) openDoc(t.id, hintBox, contentBox, fallbackWrap); // 폴더 연결 등으로 다시 그려질 때 자동 재오픈
+  }
+
+  function openDoc(id, hintBox, contentBox, fallbackWrap) {
+    contentBox.hidden = true;
+    fallbackWrap.hidden = true;
+    hintBox.hidden = false;
+    hintBox.textContent = '불러오는 중…';
+
+    const cached = state.docFiles.get(String(id));
+    if (cached) {
+      const reader = new FileReader();
+      reader.onload = () => { hintBox.hidden = true; contentBox.textContent = String(reader.result); contentBox.hidden = false; };
+      reader.onerror = () => { hintBox.textContent = `문서를 읽는 중 오류: ${reader.error}`; };
+      reader.readAsText(cached, 'utf-8');
+      return;
+    }
+    fetch(`../docs/backlog/${encodeURIComponent(String(id))}.md`, { cache: 'no-store' })
+      .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.text(); })
+      .then((text) => { hintBox.hidden = true; contentBox.textContent = text; contentBox.hidden = false; })
+      .catch((err) => {
+        if (state.loadKind === 'local-file') {
+          hintBox.textContent = '이 문서는 아직 연결되지 않았습니다. 아래 버튼으로 docs/backlog 폴더를 한 번 선택하세요(이후로는 다시 안 물어봅니다).';
+          fallbackWrap.hidden = false;
+        } else {
+          hintBox.textContent = err.message.includes('404')
+            ? '문서가 없습니다 (docs/backlog/에 이 id의 .md 파일이 아직 생성되지 않았습니다).'
+            : `문서를 불러오지 못했습니다 (${err.message}).`;
+        }
+      });
+  }
+
+  function renderEvidence(evidence) {
+    if (typeof evidence === 'string') return h('div', { text: evidence });
+    if (Array.isArray(evidence)) {
+      const ul = h('ul');
+      for (const item of evidence) ul.appendChild(h('li', { text: (typeof item === 'object') ? JSON.stringify(item) : String(item) }));
+      return ul;
+    }
+    if (typeof evidence === 'object') {
+      const dl = h('div', { class: 'dl' });
+      for (const [k, v] of Object.entries(evidence)) {
+        dl.appendChild(h('dt', { text: k }));
+        dl.appendChild(h('dd', { text: (typeof v === 'object') ? JSON.stringify(v) : String(v) }));
+      }
+      return dl;
+    }
+    return h('div', { text: String(evidence) });
+  }
+
+  function renderLogEntry(entry, idx) {
+    const box = h('div', { class: 'log-entry' });
+    box.appendChild(h('div', { class: 'muted', text: `#${idx + 1}` }));
+    if (!entry || typeof entry !== 'object') {
+      box.appendChild(h('div', { text: `예상치 못한 형식: ${JSON.stringify(entry)}` }));
+      return box;
+    }
+    const dl = h('div', { class: 'dl' });
+    const knownOrder = ['at', 'status', 'owner', 'note'];
+    const shown = new Set();
+    for (const key of knownOrder) {
+      if (!(key in entry)) continue;
+      shown.add(key);
+      dl.appendChild(h('dt', { text: key }));
+      dl.appendChild(h('dd', { text: fmtVal(entry[key], key === 'owner' ? '미지정' : '정보 없음') }));
+    }
+    for (const key of Object.keys(entry)) {
+      if (shown.has(key)) continue;
+      const v = entry[key];
+      dl.appendChild(h('dt', { text: key }));
+      dl.appendChild(h('dd', { text: (typeof v === 'object' && v !== null) ? JSON.stringify(v) : fmtVal(v, '정보 없음') }));
+    }
+    box.appendChild(dl);
+    return box;
+  }
+})();
+</script>
+</body>
+</html>

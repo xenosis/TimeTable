@@ -1,0 +1,69 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/validate-backlog.js",
+            "shell": "bash",
+            "timeout": 15,
+            "statusMessage": "backlog.json 무결성 검사 중..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/post-edit-check.cjs",
+            "shell": "powershell",
+            "timeout": 60,
+            "statusMessage": "편집 파일 길이·lint 검사 중..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$env:CLAUDE_PROJECT_DIR/.claude/hooks/backlog-read-guard.cjs\"",
+            "shell": "powershell",
+            "timeout": 10,
+            "statusMessage": "기준 백로그 직접 읽기 여부 확인 중..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/npm-install-guard.js",
+            "shell": "bash",
+            "timeout": 10,
+            "statusMessage": "라이브러리 설치 정책 확인 중..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/quality-stop.cjs",
+            "shell": "powershell",
+            "timeout": 720,
+            "statusMessage": "전체 길이·lint·typecheck·test·Android build 검사 중..."
+          }
+        ]
+      }
+    ]
+  }
+}

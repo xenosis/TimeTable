@@ -1,0 +1,87 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { getDatabase } from '../db/database';
+import { setTaskCompletionWithRewards } from '../db/rewardRepository';
+import { getTodayTasks, type TodayTask } from '../db/taskRepository';
+import { requestTaskRollingScheduleRefresh } from '../notifications/taskRollingSchedule';
+import { borderRadius, fontSize, spacing, touchTarget, type ThemeDefinition } from '../theme';
+
+const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly theme: ThemeDefinition; readonly refreshKey: number; readonly onChanged?: () => void }) {
+  const [tasks, setTasks] = useState<readonly TodayTask[]>([]);
+  const [loadedDate, setLoadedDate] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [celebration, setCelebration] = useState<{ readonly date: string; readonly message: string } | null>(null);
+  const requestId = useRef(0);
+  const [rewardScale] = useState(() => new Animated.Value(1));
+  const date = dateKey(new Date());
+  const weekday = new Date().getDay();
+  const load = useCallback(async () => {
+    const currentRequestId = ++requestId.current;
+    try {
+      const saved = await getTodayTasks(await getDatabase(), date, weekday);
+      if (currentRequestId !== requestId.current) return;
+      setTasks(saved);
+      setLoadedDate(date);
+      if (!saved.length || saved.some((task) => !task.completed)) setCelebration(null);
+      setError('');
+    } catch {
+      if (currentRequestId !== requestId.current) return;
+      setTasks([]); setLoadedDate(date); setError('오늘 할 일을 불러오지 못했어요.');
+    }
+  }, [date, weekday]);
+  useEffect(() => {
+    let active = true;
+    const currentRequestId = ++requestId.current;
+    void getDatabase()
+      .then((db) => getTodayTasks(db, date, weekday))
+      .then((saved) => {
+        if (active && currentRequestId === requestId.current) { setTasks(saved); setLoadedDate(date); if (!saved.length || saved.some((task) => !task.completed)) setCelebration(null); setError(''); }
+      })
+      .catch(() => {
+        if (active && currentRequestId === requestId.current) { setTasks([]); setLoadedDate(date); setError('오늘 할 일을 불러오지 못했어요.'); }
+      });
+    return () => { active = false; };
+  }, [date, refreshKey, weekday]);
+  useEffect(() => {
+    if (!celebration || celebration.date !== date) return;
+    rewardScale.setValue(0.6);
+    Animated.spring(rewardScale, { toValue: 1, useNativeDriver: true }).start();
+  }, [celebration, date, rewardScale]);
+  const visibleTasks = loadedDate === date ? tasks : [];
+  const completed = visibleTasks.filter((task) => task.completed).length;
+  const toggle = async (task: TodayTask) => {
+    if (busy || loadedDate !== date) return;
+    setBusy(true);
+    let scheduleRefreshFailed = false;
+    try {
+      const database = await getDatabase();
+      const earned = await setTaskCompletionWithRewards(database, task.id, date, weekday, !task.completed);
+      try { await requestTaskRollingScheduleRefresh(); } catch { scheduleRefreshFailed = true; }
+      const updated = await getTodayTasks(database, date, weekday);
+      if (!task.completed && updated.length && updated.every((item) => item.completed)) setCelebration({ date, message: earned ? (earned.kind === 'large-gem' ? '큰 보석을 받았어요! 💎' : '보석을 받았어요! 💎') : '오늘 할 일을 모두 끝냈어요! ✨' });
+      else setCelebration(null);
+      if (date === dateKey(new Date())) {
+        await load();
+        if (scheduleRefreshFailed) setError('할 일은 저장됐지만 알림을 다시 예약하지 못했어요. 앱을 다시 열면 다시 시도해요.');
+      }
+      onChanged?.();
+    } catch {
+      setError('할 일 상태를 저장하지 못했어요.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
+    <Text style={[styles.title, { color: theme.colors.text }]}>오늘의 할 일</Text>
+    <Text style={{ color: theme.colors.textMuted }}>{completed}/{visibleTasks.length} 완료</Text>
+    <View style={[styles.progress, { backgroundColor: theme.colors.border }]}><View style={[styles.bar, { backgroundColor: theme.colors.primary, width: `${visibleTasks.length ? (completed / visibleTasks.length) * 100 : 0}%` }]} /></View>
+    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed) }} disabled={busy || loadedDate !== date} onPress={() => void toggle(task)} style={[styles.task, { borderColor: theme.colors.border }, Boolean(task.completed) && { backgroundColor: theme.colors.success }]}><Text style={{ color: theme.colors.text }}>{task.completed ? '✓' : '○'}  {task.title}</Text></Pressable>)}
+    {error ? <Text style={{ color: theme.colors.text, fontWeight: '700' }}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={{ color: theme.colors.textMuted }}>{loadedDate === date ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
+    {celebration?.date === date && <Animated.Text accessibilityLiveRegion="polite" style={{ color: theme.colors.text, fontWeight: '700', transform: [{ scale: rewardScale }] }}>{celebration.message}</Animated.Text>}
+  </View>;
+}
+const styles = StyleSheet.create({ card: { borderWidth: 2, borderRadius: borderRadius.lg, gap: spacing.sm, padding: spacing.lg, width: '100%' }, title: { fontSize: fontSize.lg, fontWeight: '700' }, progress: { borderRadius: 8, height: 12, overflow: 'hidden' }, bar: { height: '100%' }, task: { borderWidth: 1, borderRadius: borderRadius.md, justifyContent: 'center', minHeight: touchTarget.minimum, paddingHorizontal: spacing.md } });
+

@@ -45,7 +45,7 @@
 | 로컬 DB | expo-sqlite | 딸 폰의 오프라인 캐시 (Doro 경험) |
 | 서버 | Supabase (Postgres + RLS + Realtime + Edge Functions) | Doro 경험 |
 | 일반 알림 | expo-notifications | Doro에서 검증됨 |
-| 알람 모드 | PoC 후 결정 (5-2 참고) | react-native-notify-kit 또는 직접 만든 Kotlin 모듈 |
+| 알람 모드 | 자체 Kotlin 모듈 | 잠금 화면 알람은 0단계 PoC에서 결정 |
 | 원격 푸시 | Expo Push API + FCM | Doro `notify-schedule` 방식 재사용 |
 | 상태관리 | Zustand | Doro 경험 |
 | 네비게이션 | **결정 필요** | 아래 참고 |
@@ -96,7 +96,7 @@
 | `POST_NOTIFICATIONS` (13+) | 알림 표시 | 실행 중 사용자에게 요청한다. 알림 채널을 1개 이상 만든 뒤에야 요청 창이 뜬다 | 첫 실행 안내 화면에서 요청 |
 | `SCHEDULE_EXACT_ALARM` (12+) | 정확한 시각에 알림 | Android 14+에서 새로 설치하면 기본 거부. 사용자가 설정에서 허용해야 한다 | 보조 수단 |
 | `USE_EXACT_ALARM` (13+) | 정확한 시각에 알림 | 설치 시 자동 허용. Play에서는 알람·캘린더가 핵심인 앱만 허용 | **선언** (APK 배포라 가능, Doro와 동일) |
-| `USE_FULL_SCREEN_INTENT` (14+ 특별 권한) | 잠금화면 위에 전체화면 알람 | 설치 시 기본 허용. 단 Play로 설치하면 알람·통화 앱이 아닐 경우 회수된다. **APK 직접 설치 시 동작은 공식 문서에 없다** | 실기기로 확인. 꺼져 있으면 설정 화면으로 안내 |
+| `USE_FULL_SCREEN_INTENT` (14+ 특별 권한) | 잠금화면 위에 전체화면 알람 | 기기·설치 경로에 따라 별도 허용이 필요하다. SM-A245N(Android 16) 개발 APK의 최초 확인에서는 거부 상태였다 | 첫 실행에서 상태를 확인하고, 꺼져 있으면 설정 화면으로 안내 |
 | 배터리 최적화 예외 | 절전 중 알림 지연 방지 | 제조사(삼성 등) 절전 기능이 앱의 백그라운드 동작을 제한할 수 있다 | 첫 실행 안내 화면에서 예외 설정 안내 |
 
 ### 5-2. 일반 알림과 알람 모드 구현 방식
@@ -116,6 +116,12 @@
 2. 동시에 A를 PoC(개념 검증)한다.
 3. 딸 폰에서 잠금화면, 무음 모드, 앱 종료, 화면 꺼짐 상태를 테스트한다. 통과하면 A를 채택하고, 실패하면 B로 간다.
 4. A를 채택하면 일반 알림도 A로 통일할지 검토한다. 라이브러리가 두 개면 예약과 취소 로직이 복잡해진다.
+
+**D3 결정 (2026-09-19): B. 직접 만든 Kotlin 모듈을 사용한다.**
+
+- `react-native-notify-kit` 10.7.1 PoC는 전체 화면 알림 특별 접근의 기본 상태와 임시 허용 상태 모두에서 전용 전체 화면 대신 NotificationShade/AOD만 표시됐다. 반복음과 `끄기` 동작은 이 경로에서 확인하지 못했다.
+- 최종 경로는 `AlarmManager.setAlarmClock()`의 broadcast → `CATEGORY_ALARM`·높은 중요도 전체 화면 알림 → 잠금을 유지하는 `AlarmActivity`다. 전용 화면은 반복음을 재생하고 `끄기` 또는 화면 종료 시 해당 진행 중 알림까지 없앤다.
+- SM-A245N(Android 16)에서 전체 화면 알림 특별 접근이 거부된 상태에서는 상단 알림과 진동만 나타났다. 허용한 뒤 잠금 상태에서 전용 화면, 반복음, 끄기 동작을 확인했다.
 
 ### 5-3. 예약 전략: "롤링 예약"
 
@@ -181,7 +187,7 @@
 | 데이터 | 아빠 (parent) | 딸 (child) |
 |--------|---------------|------------|
 | 시간표, 교시 시간, 할 일 목록, 휴일·방학 | 읽기 / 쓰기 | 읽기 |
-| 할 일 완료 기록, 스티커 적립 | 읽기 / 쓰기 | 읽기 + 오늘 것 체크/취소 |
+| 할 일 완료 기록, 보석 지급 | 읽기 / 쓰기 | 읽기 + 오늘 것 체크/취소 |
 | 보상 목표 | 읽기 / 쓰기 | 읽기 |
 | 기기 동기화 상태 | 읽기 | 자기 것 쓰기 |
 
@@ -202,11 +208,11 @@
 | `families` | id, name, parent_pin_hash | 가족 단위 |
 | `family_members` | family_id, user_id, role(`parent`/`child`), display_name | 계정 ↔ 가족 연결 |
 | `periods` | family_id, period_no, start_time, end_time | 교시 시간 정의 (예: 1교시 09:00~09:40). 종 시간이 바뀌면 여기만 고친다 |
-| `timetable_items` | family_id, weekday, period_no 또는 start/end_time, title, category(학교/학원/생활), color, icon, alert_mode(`none`/`notify`/`alarm`), alert_before_min | 시간표 항목 |
+| `timetable_items` | family_id, weekday, period_no 또는 start/end_time, title, category(학교/학원/생활), color_key, icon_key, alert_mode(`none`/`notify`/`alarm`), alert_before_min | 시간표 항목. 색·아이콘의 의미 키를 저장하고 실제 모양은 선택된 테마가 해석한다 |
 | `day_exceptions` | family_id, date 또는 기간, type(공휴일/방학/재량휴업), note | 이날은 학교 알림 끔 |
 | `tasks` | family_id, title, repeat_weekdays 또는 date, remind_time, alert_mode, sticker_reward | 할 일 (요일 반복 / 특정 날짜) |
 | `task_completions` | task_id, date, done_at, done_by | 날짜별 완료 기록 |
-| `sticker_ledger` | family_id, child_id, delta, reason, task_id, created_at | 스티커 적립·사용 내역. 합계가 현재 스티커 수 |
+| `sticker_ledger` | family_id, child_id, delta, reason, task_id, created_at | 보석 지급·사용 내역. 합계가 현재 보석 지급 수 |
 | `rewards` | family_id, title, sticker_goal, achieved_at | 보상 목표 (예: 스티커 20개 → 주말 영화) |
 | `devices` | user_id, push_token, last_synced_at, scheduled_count, app_version | 푸시 토큰 + 딸 폰 동기화 상태 |
 
@@ -256,6 +262,15 @@
 - **실수 방지:** 편집, 설정, 로그아웃처럼 딸이 실수로 바꾸면 안 되는 메뉴는 PIN 뒤에 둔다.
 - **시간표 화면:** "오늘" 탭을 기본으로 하고, 주간 보기(요일 × 교시 격자)를 함께 둔다.
 
+### 바꿀 수 있는 아이용 테마
+
+- 아이가 앱 안에서 **번들된 테마**를 직접 고를 수 있게 한다. 테마는 화면의 배경·카드·강조색·과목 색·장식·스티커 분위기를 바꾸되, 큰 글씨·최소 터치 영역·읽기 대비 기준은 항상 유지한다.
+- 1단계 테마 계약의 최소 장식·스티커 토큰은 카드 배경·테두리, 강조 도형, 스티커 도형·강조색이다. P4.7은 이 토큰만 소비하며, 이미지 자산·완료/미완료별 스티커 규칙은 해당 화면 작업에서 별도로 정한다.
+- 데이터에는 `color_key`, `icon_key` 같은 **의미 키**만 저장한다. 테마를 바꿔도 "수학"이나 "생활"의 의미와 기존 시간표 데이터가 바뀌지 않으며, 테마 레지스트리가 현재 색·아이콘으로 해석한다.
+- 선택값은 딸 폰 로컬에 저장한다. 서버 원격 제어는 6단계에서 별도로 범위와 권한을 결정한다.
+- 캐릭터 이름은 아이와 이야기할 때의 예시일 뿐이다. 산리오 등 제3자 캐릭터 이미지·로고·폰트는 허가 또는 적절한 라이선스가 확인되기 전에는 앱에 넣지 않는다. 초기 테마는 독자적인 색·도형·스티커 스타일로 만든다.
+- 런처 아이콘·스플래시·알림 작은 아이콘은 운영체제 자산이므로 앱 안 테마 전환 대상이 아니다. 최종 브랜딩 작업에서 별도로 확정한다.
+
 ---
 
 ## 11. 나중에 고려할 기능
@@ -277,11 +292,12 @@
 |---|------|--------|-----------|
 | D1 | 앱 이름 · 패키지명 | 예: `com.sewoong.timetable` | 0단계 |
 | D2 | 네비게이션 | Expo Router / React Navigation | 0단계 |
-| D3 | 알람 모드 구현 | A(notify-kit) / B(자체 Kotlin) | 0단계 PoC 후 |
+| D3 | 알람 모드 구현 | 자체 Kotlin | 0단계 PoC 완료 |
 | D4 | Supabase 프로젝트 | 새 프로젝트 / Doro 프로젝트 재사용 | 5단계 전 |
 | D5 | 시간표 범위 | 학교만 / 학원·생활 일정 포함 | 2단계 전 |
-| D6 | 스티커 보상 규칙 | 할 일당 개수, 보너스, 보상 목표 | 4단계 전 |
+| D6 | 보상 규칙 | 개별·하루 완료 보상 없음. 일요일~토요일 전체 완료 시 일반 보석 1개, 달력 한 달 전체 완료 시 큰 보석 1개 | 확정 |
 | D7 | 딸 폰 PIN 수정 권한 확인 | 서버 확인(추천) / 화면 잠금만 | 5단계 전 |
+| D8 | 테마 기본 범위 | 딸 폰 로컬 선택, 번들된 독자 테마, 앱 안 UI만 변경 | 1단계에서 결정됨 |
 
 ---
 
@@ -308,3 +324,5 @@
 - [Supabase Pricing](https://supabase.com/pricing)
 - [NEIS 초등학교시간표 Open API](https://open.neis.go.kr/portal/data/service/selectServicePage.do?page=1&rows=10&sortColumn=&sortDirection=&infId=OPEN15020190408160341416743&infSeq=2)
 - [공공데이터포털: NEIS 초등학교 시간표](https://www.data.go.kr/data/15122331/openapi.do)
+
+

@@ -1,0 +1,53 @@
+# Read-only backlog queries are routine project operations.
+prefix_rule(
+    pattern = ["npm", "run", "backlog", "--", ["list", "get", "next"]],
+    decision = "allow",
+    justification = "Use the validated read-only backlog CLI.",
+    match = [
+        "npm run backlog -- list --all --json",
+        "npm run backlog -- get P0 --json",
+        "npm run backlog -- next --json",
+    ],
+    not_match = [
+        "npm run backlog -- add --id P1.9",
+        "npm run backlog -- set-status P1.9 in_progress",
+    ],
+)
+
+# Backlog mutations always require an explicit approval boundary.
+prefix_rule(
+    pattern = ["npm", "run", "backlog", "--", ["add", "set-status"]],
+    decision = "prompt",
+    justification = "Backlog changes require main-agent intent, a current --expect-hash, and reviewable evidence.",
+    match = [
+        "npm run backlog -- add --id P1.9",
+        "npm run backlog -- set-status P1.9 in_progress --expect-hash abc",
+    ],
+    not_match = ["npm run backlog -- list --all --json"],
+)
+
+# Existing project quality commands may run outside the sandbox when required.
+prefix_rule(
+    pattern = ["npm", "run", ["instructions:check", "code-length", "lint", "typecheck", "test:ci", "build", "check"]],
+    decision = "allow",
+    justification = "Run the repository's configured quality checks and Android debug build; this does not deploy.",
+    match = ["npm run check", "npm run lint", "npm run build"],
+    not_match = ["npm run android", "npm run start"],
+)
+
+# Every dependency addition needs the user's approval; the hook adds Expo-specific guidance.
+prefix_rule(
+    pattern = [["npm", "npm.cmd"], ["install", "i"]],
+    decision = "prompt",
+    justification = "Ask before adding a library; use npx expo install for Expo-managed or native modules.",
+    match = ["npm install zustand", "npm.cmd i lodash"],
+    not_match = ["npm run lint", "npx expo install expo-sqlite"],
+)
+
+prefix_rule(
+    pattern = [["npx", "npx.cmd"], "expo", "install"],
+    decision = "prompt",
+    justification = "Expo module installation still requires the user's approval.",
+    match = ["npx expo install expo-sqlite"],
+    not_match = ["npx expo run:android"],
+)

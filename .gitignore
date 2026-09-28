@@ -6,6 +6,9 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+.kotlin/
+.metro-health-check*
+*.tsbuildinfo
 
 # 빌드 결과물
 *.apk
@@ -14,6 +17,7 @@ android/.gradle/
 android/build/
 android/app/build/
 android/app/.cxx/
+android/local.properties
 ios/Pods/
 ios/build/
 
@@ -48,3 +52,12 @@ Thumbs.db
 
 # Claude Code 개인 설정
 .claude/settings.local.json
+
+# backlog CLI 변경 전 백업
+.backlog-backups/
+android/release.properties
+android/*.jks
+TimeTable-v*-release.apk
+
+# 세션 중 임시 산출물(리뷰 로그, uiautomator 덤프, 스크린샷 등)
+.tmp/

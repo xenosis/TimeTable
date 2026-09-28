@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "TimeTable",
+    "slug": "kidtimetable",
+    "scheme": "kidtimetable",
+      "version": "1.30.30",
+    "orientation": "portrait",
+    "icon": "./assets/timetable-icon.png",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.sewoong.kidtimetable",
+        "versionCode": 84,
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM",
+        "android.permission.USE_FULL_SCREEN_INTENT",
+        "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#4F46E5",
+        "foregroundImage": "./assets/timetable-icon.png",
+        "backgroundImage": "./assets/adaptive-icon-background.png",
+        "monochromeImage": "./assets/adaptive-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#4F46E5"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/timetable-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#4F46E5"
+        }
+      ],
+      "expo-secure-store",
+      "expo-background-task"
+    ]
+  }
+}
