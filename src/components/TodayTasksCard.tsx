@@ -74,14 +74,29 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
       setBusy(false);
     }
   };
+  const remaining = visibleTasks.length - completed;
+  const remainingCopy = !visibleTasks.length ? '' : remaining > 0 ? `아직 ${remaining}개 남았어요` : '오늘 할 일을 다 했어요! ✨';
   return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
     <Text style={[styles.title, { color: theme.colors.text }]}>오늘의 할 일</Text>
-    <Text style={{ color: theme.colors.textMuted }}>{completed}/{visibleTasks.length} 완료</Text>
+    <View style={styles.countRow}>
+      <Text style={[styles.count, { color: theme.colors.textMuted }]}>{completed}/{visibleTasks.length} 완료</Text>
+      {!!remainingCopy && <Text style={[styles.remaining, { color: remaining > 0 ? theme.colors.textMuted : theme.colors.success }]}>{remainingCopy}</Text>}
+    </View>
     <View style={[styles.progress, { backgroundColor: theme.colors.border }]}><View style={[styles.bar, { backgroundColor: theme.colors.primary, width: `${visibleTasks.length ? (completed / visibleTasks.length) * 100 : 0}%` }]} /></View>
-    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed) }} disabled={busy || loadedDate !== date} onPress={() => void toggle(task)} style={[styles.task, { borderColor: theme.colors.border }, Boolean(task.completed) && { backgroundColor: theme.colors.success }]}><Text style={{ color: theme.colors.text }}>{task.completed ? '✓' : '○'}  {task.title}</Text></Pressable>)}
-    {error ? <Text style={{ color: theme.colors.text, fontWeight: '700' }}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={{ color: theme.colors.textMuted }}>{loadedDate === date ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
-    {celebration?.date === date && <Animated.Text accessibilityLiveRegion="polite" style={{ color: theme.colors.text, fontWeight: '700', transform: [{ scale: rewardScale }] }}>{celebration.message}</Animated.Text>}
+    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed) }} disabled={busy || loadedDate !== date} onPress={() => void toggle(task)} style={[styles.task, { borderColor: theme.colors.border }, Boolean(task.completed) && { backgroundColor: theme.colors.success }]}><Text style={[styles.taskMark, { color: theme.colors.text }]}>{task.completed ? '✓' : '○'}</Text><Text style={[styles.taskTitle, { color: theme.colors.text }]}>{task.title}</Text></Pressable>)}
+    {error ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedDate === date ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
+    {celebration?.date === date && <Animated.Text accessibilityLiveRegion="polite" style={[styles.celebration, { color: theme.colors.text, transform: [{ scale: rewardScale }] }]}>{celebration.message}</Animated.Text>}
   </View>;
 }
-const styles = StyleSheet.create({ card: { borderWidth: 2, borderRadius: borderRadius.lg, gap: spacing.sm, padding: spacing.lg, width: '100%' }, title: { fontSize: fontSize.lg, fontWeight: '700' }, progress: { borderRadius: 8, height: 12, overflow: 'hidden' }, bar: { height: '100%' }, task: { borderWidth: 1, borderRadius: borderRadius.md, justifyContent: 'center', minHeight: touchTarget.minimum, paddingHorizontal: spacing.md } });
+const styles = StyleSheet.create({
+  card: { borderWidth: 2, borderRadius: borderRadius.lg, gap: spacing.sm, padding: spacing.lg, width: '100%' },
+  title: { fontSize: fontSize.lg, fontWeight: '700' },
+  countRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  count: { fontSize: fontSize.sm }, remaining: { fontSize: fontSize.sm, fontWeight: '700' },
+  progress: { borderRadius: 8, height: 12, overflow: 'hidden' }, bar: { height: '100%' },
+  task: { alignItems: 'center', borderWidth: 1, borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'flex-start', minHeight: touchTarget.minimum + 16, paddingHorizontal: spacing.md },
+  taskMark: { fontSize: fontSize.lg, fontWeight: '700', width: 32 }, taskTitle: { flex: 1, fontSize: fontSize.md, fontWeight: '600' },
+  empty: { fontSize: fontSize.sm }, error: { fontSize: fontSize.sm, fontWeight: '700' },
+  celebration: { fontSize: fontSize.lg, fontWeight: '700' },
+});
 

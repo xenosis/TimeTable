@@ -5,6 +5,7 @@ import { borderRadius, fontSize, spacing, themes } from '../theme';
 import type { ThemeDefinition } from '../theme';
 
 type ThemePickerProps = {
+  theme: ThemeDefinition;
   selectedThemeId: string;
   onSelect: (themeId: string) => Promise<void>;
 };
@@ -29,7 +30,7 @@ function ThemePreview({ theme }: { theme: ThemeDefinition }) {
   );
 }
 
-export function ThemePicker({ selectedThemeId, onSelect }: ThemePickerProps) {
+export function ThemePicker({ theme, selectedThemeId, onSelect }: ThemePickerProps) {
   const [error, setError] = useState<string | null>(null);
   const chooseTheme = async (themeId: string) => {
     setError(null);
@@ -37,8 +38,8 @@ export function ThemePicker({ selectedThemeId, onSelect }: ThemePickerProps) {
   };
   return (
     <View style={styles.container}>
-      <Text accessibilityRole="header" style={styles.heading}>내가 고르는 화면 색</Text>
-      <Text style={styles.description}>마음에 드는 카드를 누르면 바로 바뀌어요.</Text>
+      <Text accessibilityRole="header" style={[styles.heading, { color: theme.colors.text }]}>내가 고르는 화면 색</Text>
+      <Text style={[styles.description, { color: theme.colors.textMuted }]}>마음에 드는 카드를 누르면 바로 바뀌어요.</Text>
       {themes.map((theme) => {
         const selected = theme.id === selectedThemeId;
         return (
@@ -62,7 +63,7 @@ export function ThemePicker({ selectedThemeId, onSelect }: ThemePickerProps) {
           </Pressable>
         );
       })}
-      {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
+      {error ? <Text accessibilityLiveRegion="polite" style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : null}
     </View>
   );
 }
@@ -70,7 +71,7 @@ export function ThemePicker({ selectedThemeId, onSelect }: ThemePickerProps) {
 const styles = StyleSheet.create({
   container: { gap: spacing.md, width: '100%' },
   heading: { fontSize: fontSize.lg, fontWeight: '700' },
-  description: { fontSize: fontSize.sm, color: '#475569' },
+  description: { fontSize: fontSize.sm },
   option: { borderWidth: 3, borderRadius: borderRadius.lg, padding: spacing.md, gap: spacing.md },
   pressed: { opacity: 0.78 },
   optionHeader: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
@@ -86,5 +87,5 @@ const styles = StyleSheet.create({
   chip: { borderRadius: borderRadius.full, minHeight: 40, justifyContent: 'center', paddingHorizontal: spacing.md },
   chipText: { fontSize: fontSize.sm, fontWeight: '700' },
   shape: { alignSelf: 'flex-end', fontSize: fontSize.xxl, lineHeight: fontSize.xxl, marginTop: spacing.sm },
-  error: { color: '#B91C1C', fontSize: fontSize.sm, fontWeight: '700' },
+  error: { fontSize: fontSize.sm, fontWeight: '700' },
 });

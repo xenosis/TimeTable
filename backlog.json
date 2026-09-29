@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.1",
   "meta": {
-    "updated": "2026-09-28",
+    "updated": "2026-09-29",
     "context_doc": "docs/tasks.md",
     "max_est_min": 45,
     "note": "TimeTable(kidtimetable) 작업 항목 SSOT. 이 프로젝트엔 전용 CLI가 없으므로 이 파일은 직접 편집한다(voice-claude-car의 pnpm backlog와 달리 수동 관리). 단계 구조·근거는 docs/tasks.md·docs/research.md 참고. 상태 갱신 시 status/log/updated_at을 함께 갱신하고, 완료 시 evidence에 확인 근거(파일 경로·명령 결과 등)를 남긴다. needs_info/blocked는 log에 사유를 남길 것."
@@ -1304,19 +1304,19 @@
       "category": "feature",
       "title": "주간 화면",
       "summary": "요일 × 교시 격자로 주간 시간표를 보여준다. 활성 테마의 의미 색·아이콘을 사용한다.",
-      "where": "app/",
+      "where": "app/(tabs)/timetable.tsx src/components/WeekdayTabs.tsx src/components/DailyScheduleList.tsx src/components/WeekOverviewGrid.tsx",
       "parent": "P2",
       "deps": [
         "P2.2",
         "P1.9"
       ],
       "doc": null,
-      "done_when": "요일×교시 격자 화면이 데이터를 정확히 표시하고 활성 테마의 의미 색·아이콘이 적용됨",
+      "done_when": "요일 탭 기본 보기(오늘 요일 선택, 하루 일정 전체 목록)와 '주간 한눈에 보기' 토글(요일×교시 조건부 그리드, 화면 폭에 맞춰 가로 스크롤 없이 표시)로 주간 시간표를 확인할 수 있고, 두 보기 모두 활성 테마의 의미 색·아이콘이 적용됨",
       "est_min": 45,
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-09-17T15:49:36.317Z",
-      "updated_at": "2026-09-17T16:09:36.058Z",
+      "updated_at": "2026-09-29T12:31:04.950Z",
       "log": [
         {
           "at": "2026-09-16T04:49:54.216Z",
@@ -1341,6 +1341,12 @@
           "owner": "codex",
           "status": "done",
           "note": "비판 검토에서 확인된 주말·복수 항목·시간 지정 일정·저장 후 갱신·오류 표시 결함을 모두 보완했다. 최종 재검토에 남은 Critical/High/Medium 결함 없음."
+        },
+        {
+          "at": "2026-09-29T12:31:04.950Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "사용자 피드백(세로 화면에서 가로 스크롤해야 하는 시간표가 아이에게 불편)에 따라 UX 재설계. 가로 스크롤 격자였던 src/components/WeeklyTimetable.tsx를 삭제하고, 요일 탭 기본 보기(DailyScheduleList, 오늘 요일 선택·하루 전체 목록)와 주간 한눈에 보기 토글(WeekOverviewGrid, useWindowDimensions로 화면 폭에 맞춰 칸 너비 계산해 가로 스크롤 제거)로 교체했다. 데이터 유틸 src/utils/weeklyTimetable.ts와 __tests__/weekly-timetable.test.ts는 WeekOverviewGrid가 그대로 재사용해 변경 없음. done_when·where를 새 구현에 맞게 갱신한다. npm run check(지침 동기화·코드 길이·lint·typecheck·Jest·Android debug build) 통과, 에뮬레이터 Medium_Phone_API_36.0에서 요일 탭 기본 선택·주간 그리드 전환·칸 너비 무스크롤을 시각 확인했다. status는 done 유지(기능은 여전히 존재, 구현 방식만 교체됨)."
         }
       ],
       "done_at": "2026-09-17",

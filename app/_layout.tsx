@@ -22,7 +22,7 @@ function ThemedRootLayout() {
           headerTitleStyle: { fontWeight: '700' },
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'TimeTable' }} />
+        <Stack.Screen name="(tabs)" options={{ title: 'TimeTable' }} />
         <Stack.Screen name="manage" options={{ title: '관리자 설정' }} />
       </Stack>
     </SafeAreaProvider>
