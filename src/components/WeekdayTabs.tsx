@@ -1,8 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { borderRadius, fontSize, spacing, touchTarget, type ThemeDefinition } from '../theme';
-
-const weekdays = [{ day: 0, label: '일' }, { day: 1, label: '월' }, { day: 2, label: '화' }, { day: 3, label: '수' }, { day: 4, label: '목' }, { day: 5, label: '금' }, { day: 6, label: '토' }] as const;
+import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
 
 export function WeekdayTabs({ selected, today, theme, onSelect }: {
   readonly selected: number;
@@ -11,7 +10,7 @@ export function WeekdayTabs({ selected, today, theme, onSelect }: {
   readonly onSelect: (weekday: number) => void;
 }) {
   return <View style={styles.row}>
-    {weekdays.map(({ day, label }) => {
+    {SCHOOL_WEEKDAYS.map(({ day, label }) => {
       const isSelected = day === selected;
       const isToday = day === today;
       return <Pressable

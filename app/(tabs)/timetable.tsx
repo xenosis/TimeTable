@@ -10,6 +10,7 @@ import { getActiveTimetableMode } from '../../src/db/timetableModeRepository';
 import type { TimetableMode } from '../../src/db/types';
 import { borderRadius, fontSize, spacing, touchTarget } from '../../src/theme';
 import { useActiveTheme } from '../../src/theme/provider';
+import { defaultSchoolWeekday } from '../../src/utils/weekdays';
 
 const today = () => new Date().getDay();
 
@@ -17,7 +18,7 @@ export default function TimetableScreen() {
   const { theme } = useActiveTheme();
   const [refreshKey, setRefreshKey] = useState(0);
   const [timetableMode, setTimetableMode] = useState<TimetableMode>('regular');
-  const [selectedDay, setSelectedDay] = useState(today);
+  const [selectedDay, setSelectedDay] = useState(() => defaultSchoolWeekday(today()));
   const [weekView, setWeekView] = useState(false);
   const { colors } = theme;
 
