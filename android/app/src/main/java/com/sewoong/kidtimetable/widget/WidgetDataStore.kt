@@ -19,5 +19,10 @@ object WidgetDataStore {
     val file = File(context.filesDir, FILE_NAME)
     if (file.exists() && file.length() <= MAX_BYTES) JSONObject(file.readText(Charsets.UTF_8)) else null
   } catch (_: Exception) { null }
-}
 
+  /** 저장된 데이터를 위젯이 그리는 모델로 읽는다. 없거나 깨졌거나 모르는 버전이면 null. */
+  fun readSnapshot(context: Context): WidgetSnapshot? = try {
+    val file = File(context.filesDir, FILE_NAME)
+    if (file.exists() && file.length() <= MAX_BYTES) WidgetSnapshotParser.parse(file.readText(Charsets.UTF_8)) else null
+  } catch (_: Exception) { null }
+}

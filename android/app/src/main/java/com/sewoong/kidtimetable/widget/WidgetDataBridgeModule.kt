@@ -9,7 +9,7 @@ class WidgetDataBridgeModule(private val context: ReactApplicationContext) : Rea
   override fun getName() = "WidgetDataBridge"
   @ReactMethod fun writeWidgetData(payload: String, promise: Promise) = try {
     WidgetDataStore.write(context, payload)
-    WidgetRefreshScheduler.scheduleNext(context, payload)
+    WidgetRefreshScheduler.scheduleNext(context, WidgetSnapshotParser.parse(payload))
     val manager = android.appwidget.AppWidgetManager.getInstance(context)
     val provider = android.content.ComponentName(context, TodayWidgetProvider::class.java)
     TodayWidgetProvider().onUpdate(context, manager, manager.getAppWidgetIds(provider))

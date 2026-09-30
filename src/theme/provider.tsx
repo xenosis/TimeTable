@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 
 import { defaultTheme, type ThemeDefinition } from './index';
+import { refreshWidgetQuietly } from '../widgets/widgetRefresh';
 import { themeSelectionStore } from './selection';
 
 type ActiveThemeContextValue = {
@@ -31,6 +32,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
       const queuedSelection = selectionQueue.current.then(async () => {
         const selectedTheme = await themeSelectionStore.select(themeId);
         setTheme(selectedTheme);
+        void refreshWidgetQuietly(); // 위젯 데이터에 테마 색이 들어 있으므로 바뀐 색을 반영한다
         return selectedTheme;
       });
       selectionQueue.current = queuedSelection.catch(() => undefined);

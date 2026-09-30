@@ -23,7 +23,14 @@ export async function replaceRollingNotificationsFromDatabase(database: Pick<Tim
 async function refreshTaskRollingSchedule(): Promise<void> {
   const { getDatabase } = await import('../db/database');
   const database = await getDatabase();
-  await replaceRollingNotificationsFromDatabase(database, new Date(), 'local-family');
+  try {
+    await replaceRollingNotificationsFromDatabase(database, new Date(), 'local-family');
+  } finally {
+    // 할 일 저장·체크 뒤에도 위젯의 할 일 개수와 완료 상태가 맞도록 알림 예약 성공 여부와 무관하게 갱신한다
+    // DB·네이티브 모듈이 이 파일을 불러오는 시점에 딸려 오지 않도록(순수 계산 테스트가 로딩되게) 동적으로 불러온다
+    const { refreshWidgetQuietly } = await import('../widgets/widgetRefresh');
+    await refreshWidgetQuietly();
+  }
 }
 
 /** P4.8 owns this tasks-owner refresh after a task change or when its card opens. */

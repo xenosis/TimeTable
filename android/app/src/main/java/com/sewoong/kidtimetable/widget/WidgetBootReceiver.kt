@@ -8,7 +8,7 @@ import com.sewoong.kidtimetable.alarm.RollingAlarmScheduler
 class WidgetBootReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     Log.i("TimeTableBoot", "Restoring scheduled work after ${intent.action}")
-    runCatching { WidgetDataStore.read(context)?.let { WidgetRefreshScheduler.scheduleNext(context, it.toString()) } }
+    runCatching { WidgetRefreshScheduler.scheduleNext(context, WidgetDataStore.readSnapshot(context)) }
       .onFailure { Log.w("TimeTableBoot", "Widget restore failed", it) }
     runCatching { NotificationPocScheduler.restoreAfterBoot(context) }
       .onFailure { Log.w("TimeTableBoot", "Notification PoC restore failed", it) }

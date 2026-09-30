@@ -7,13 +7,6 @@ import type { TimetableSetId } from '../db/types';
 import { resolveThemeColor, resolveThemeIcon, type ThemeDefinition } from '../theme';
 import { borderRadius, fontSize, spacing } from '../theme';
 import { getTodaySchedule } from '../utils/todaySchedule';
-import { writeWidgetData } from '../widgets/widgetDataBridge';
-
-function getDateKey(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
 
 function ScheduleItemCard({ label, item, theme }: { readonly label: string; readonly item: TimetableItem; readonly theme: ThemeDefinition }) {
   const category = resolveThemeColor(theme, item.colorKey);
@@ -34,7 +27,6 @@ export function TodayScheduleCard({ refreshKey, theme, setId }: { readonly refre
   const [failedWeekday, setFailedWeekday] = useState<number | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [message, setMessage] = useState('오늘 일정을 불러오는 중이에요.');
-  const [widgetError, setWidgetError] = useState(false);
   const weekday = now.getDay();
 
   useEffect(() => {
@@ -51,12 +43,6 @@ export function TodayScheduleCard({ refreshKey, theme, setId }: { readonly refre
       setLoadedRefreshKey(refreshKey);
       setFailedWeekday(null);
       setMessage(saved.length ? '' : '오늘은 등록된 일정이 없어요.');
-      setWidgetError(false);
-      const widgetNow = new Date();
-      const schedule = getTodaySchedule(saved, widgetNow);
-      void writeWidgetData({ schemaVersion: 1, updatedAt: widgetNow.toISOString(), scheduleDate: getDateKey(widgetNow), theme: { background: theme.colors.background, surface: theme.colors.surface, text: theme.colors.text, primary: theme.colors.primary, onPrimary: theme.colors.onPrimary, border: theme.colors.border }, current: schedule.current && { title: schedule.current.title, startTime: schedule.current.startTime }, next: schedule.next && { title: schedule.next.title, startTime: schedule.next.startTime }, schedule: saved.map(({ title, startTime, endTime }) => ({ title, startTime, endTime })) }).catch(() => {
-        if (active) setWidgetError(true);
-      });
     }).catch(() => {
       if (active) {
         setFailedWeekday(weekday);
@@ -64,7 +50,7 @@ export function TodayScheduleCard({ refreshKey, theme, setId }: { readonly refre
       }
     });
     return () => { active = false; };
-  }, [weekday, refreshKey, theme, setId]);
+  }, [weekday, refreshKey, setId]);
 
   const readyItems = loadedWeekday === weekday && loadedRefreshKey === refreshKey ? items : [];
   const { current, next, minutesUntilNext } = getTodaySchedule(readyItems, now);
@@ -75,7 +61,6 @@ export function TodayScheduleCard({ refreshKey, theme, setId }: { readonly refre
     {current && <ScheduleItemCard label="지금" item={current} theme={theme} />}
     {next && <ScheduleItemCard label="다음" item={next} theme={theme} />}
     {failedWeekday === weekday && <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>⚠️ {message}</Text>}
-    {widgetError && <Text style={[styles.empty, { color: theme.colors.text }]}>오늘 일정은 보이지만 위젯을 갱신하지 못했어요.</Text>}
     {!current && !next && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{emptyMessage}</Text>}
     {next && <Text style={[styles.next, { color: theme.colors.textMuted }]}>다음 일정까지 {minutesUntilNext}분 남았어요.</Text>}
   </View>;

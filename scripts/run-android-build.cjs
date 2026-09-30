@@ -39,8 +39,8 @@ if (!environment.ANDROID_SDK_ROOT) environment.ANDROID_SDK_ROOT = environment.AN
 // 절대 경로를 써야 한다: Windows의 NoDefaultCurrentDirectoryInExePath 보안 설정이 켜져 있으면
 // cmd.exe가 현재 디렉터리의 'gradlew.bat'을 명령으로 찾지 못한다.
 const gradleCommand = process.platform === 'win32'
-  ? { command: environment.ComSpec || 'cmd.exe', args: ['/d', '/s', '/c', `"${path.join(androidRoot, 'gradlew.bat')}" :app:assembleDebug -PreactNativeArchitectures=x86_64`] }
-  : { command: path.join(androidRoot, 'gradlew'), args: [':app:assembleDebug', '-PreactNativeArchitectures=x86_64'] };
+  ? { command: environment.ComSpec || 'cmd.exe', args: ['/d', '/s', '/c', `"${path.join(androidRoot, 'gradlew.bat')}" :app:assembleDebug :app:testDebugUnitTest -PreactNativeArchitectures=x86_64`] }
+  : { command: path.join(androidRoot, 'gradlew'), args: [':app:assembleDebug', ':app:testDebugUnitTest', '-PreactNativeArchitectures=x86_64'] };
 
 console.log(`ANDROID_BUILD_JDK: ${javaHome}`);
 console.log('ANDROID_BUILD_TARGET: Emulator (x86_64) — 품질 검사 전용이며 실기기 설치에 사용하지 마세요.');

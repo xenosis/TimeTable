@@ -1,8 +1,8 @@
 import { getTodaySchedule } from '../src/utils/todaySchedule';
 
 const items = [
-  { id: 1, startTime: '09:00', endTime: '09:40', title: 'Korean', colorKey: 'korean' as const, iconKey: 'text' as const },
-  { id: 2, startTime: '10:00', endTime: '10:40', title: 'Math', colorKey: 'math' as const, iconKey: 'number' as const },
+  { id: 1, startTime: '09:00', endTime: '09:40', title: 'Korean', category: 'school' as const, colorKey: 'korean' as const, iconKey: 'text' as const },
+  { id: 2, startTime: '10:00', endTime: '10:40', title: 'Math', category: 'school' as const, colorKey: 'math' as const, iconKey: 'number' as const },
 ];
 
 describe('getTodaySchedule', () => {

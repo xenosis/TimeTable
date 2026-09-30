@@ -30,7 +30,7 @@ describe('rolling refresh lifecycle', () => {
     expect(register).toHaveBeenCalledTimes(2);
   });
 
-  it('refreshes timetable and task owners when the app starts', async () => {
+  it('refreshes timetable and task owners together through refreshAllRollingOwners', async () => {
     requestRollingScheduleRefresh.mockResolvedValue(undefined);
     requestTaskRollingScheduleRefresh.mockResolvedValue(undefined);
 

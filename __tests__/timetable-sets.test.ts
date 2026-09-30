@@ -7,30 +7,8 @@ import {
   createTimetableSet, deleteTimetableSet, getActiveTimetableSet, listTimetableSets, renameTimetableSet, setActiveTimetableSet,
 } from '../src/db/timetableSetRepository';
 import type { TimetableDatabase, TimetableItemInput } from '../src/db/types';
+import { openTestDatabase as openDatabase, withTempDirectory } from '../test-utils/sqliteTestDatabase';
 import { buildTimetableNotificationsFromDatabase } from '../src/notifications/rollingSchedule';
-
-/* eslint-disable @typescript-eslint/no-require-imports */
-// @types/node를 추가하지 않고(라이브러리 정책) Node 내장 모듈을 require로 불러온다
-const { mkdtempSync, rmSync } = require('node:fs') as { mkdtempSync(prefix: string): string; rmSync(path: string, options: { recursive: boolean; force: boolean }): void };
-const { tmpdir } = require('node:os') as { tmpdir(): string };
-const { join } = require('node:path') as { join(...parts: string[]): string };
-/* eslint-enable @typescript-eslint/no-require-imports */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { DatabaseSync } = require('node:sqlite') as { DatabaseSync: new (path: string) => NodeDb };
-type NodeDb = { close(): void; exec(sql: string): void; prepare(sql: string): { get(...p: unknown[]): unknown; all(...p: unknown[]): unknown[]; run(...p: unknown[]): unknown } };
-
-/** 실제 SQLite 엔진(Node 내장)을 앱의 TimetableDatabase 모양으로 감싼다. 목이 아니라 진짜 SQL을 검증하기 위함이다. */
-function openDatabase(path = ':memory:'): TimetableDatabase & { close(): void } {
-  const db = new DatabaseSync(path);
-  db.exec('PRAGMA foreign_keys = ON');
-  return {
-    close: () => db.close(),
-    execAsync: async (sql) => { db.exec(sql); },
-    getFirstAsync: async <T,>(sql: string, ...params: unknown[]) => (db.prepare(sql).get(...params) ?? null) as T | null,
-    getAllAsync: async <T,>(sql: string, ...params: unknown[]) => db.prepare(sql).all(...params) as T[],
-    runAsync: async (sql, ...params) => db.prepare(sql).run(...params),
-  };
-}
 
 const item = (setId: number, title: string, weekday = 1, start = '09:00', end = '10:00'): TimetableItemInput => ({
   weekday, startTime: start, endTime: end, title, category: 'academy', colorKey: 'math', iconKey: 'number', setId,
@@ -163,24 +141,21 @@ describe('시간표 세트 저장소', () => {
     expect((await getActiveTimetableSet(database)).id).toBe(second);
   });
 
-  it('앱을 완전히 닫았다 다시 열어도 마지막에 적용한 세트가 유지된다', async () => {
-    const directory = mkdtempSync(join(tmpdir(), 'timetable-sets-'));
-    const path = join(directory, 'timetable.db');
-    try {
-      const first = openDatabase(path);
-      await migrateDatabase(first);
-      const summer = await createTimetableSet(first, '여름방학');
-      await createTimetableItem(first, item(summer, '캠프'));
-      await setActiveTimetableSet(first, summer);
-      first.close();
-      const reopened = openDatabase(path);
-      await migrateDatabase(reopened); // 앱 시작 때마다 실행되는 마이그레이션이 데이터를 건드리지 않아야 한다
-      const active = await getActiveTimetableSet(reopened);
-      expect(active).toEqual({ id: summer, name: '여름방학' });
-      expect((await getTimetableItemsForWeekday(reopened, 1, active.id)).map(({ title }) => title)).toEqual(['캠프']);
-      reopened.close();
-    } finally { rmSync(directory, { recursive: true, force: true }); }
-  });
+  it('앱을 완전히 닫았다 다시 열어도 마지막에 적용한 세트가 유지된다', () => withTempDirectory('timetable-sets-', async (_directory, pathOf) => {
+    const path = pathOf('timetable.db');
+    const first = openDatabase(path);
+    await migrateDatabase(first);
+    const summer = await createTimetableSet(first, '여름방학');
+    await createTimetableItem(first, item(summer, '캠프'));
+    await setActiveTimetableSet(first, summer);
+    first.close();
+    const reopened = openDatabase(path);
+    await migrateDatabase(reopened); // 앱 시작 때마다 실행되는 마이그레이션이 데이터를 건드리지 않아야 한다
+    const active = await getActiveTimetableSet(reopened);
+    expect(active).toEqual({ id: summer, name: '여름방학' });
+    expect((await getTimetableItemsForWeekday(reopened, 1, active.id)).map(({ title }) => title)).toEqual(['캠프']);
+    reopened.close();
+  }));
 
   it('적용 기록이 사라져도 가장 먼저 만든 세트로 되돌아온다', async () => {
     const database = await freshDatabase();

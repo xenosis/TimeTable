@@ -8,6 +8,7 @@ import {
 import type { TimetableSet } from '../db/types';
 import { requestRollingScheduleRefresh } from '../notifications/rollingRefresh';
 import { fontSize, spacing, type ThemeDefinition } from '../theme';
+import { refreshWidgetQuietly } from '../widgets/widgetRefresh';
 import { TimetableSetCreate } from './TimetableSetCreate';
 import { TimetableSetRow } from './TimetableSetRow';
 
@@ -23,7 +24,7 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   readonly refreshKey: number;
   /** 다른 시간표를 적용했을 때 */
   readonly onApplied: (set: TimetableSet) => void;
-  /** 지금 쓰는 시간표의 이름만 바뀌었을 때(알림 재예약은 필요 없다) */
+  /** 지금 쓰는 시간표의 이름만 바뀌었을 때(알림 재예약은 필요 없고, 위젯 데이터의 이름은 이 패널이 다시 쓴다) */
   readonly onRenamed: (set: TimetableSet) => void;
 }) {
   const [sets, setSets] = useState<readonly TimetableSetSummary[]>([]);
@@ -83,7 +84,10 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
 
   const rename = (set: TimetableSetSummary, name: string) => run(async (database) => {
     await renameTimetableSet(database, set.id, name);
-    if (set.id === activeSet.id) onRenamed({ id: set.id, name: name.trim() });
+    if (set.id === activeSet.id) {
+      onRenamed({ id: set.id, name: name.trim() });
+      await refreshWidgetQuietly(); // 위젯 데이터에 들어 있는 시간표 이름도 바꾼다(알림 재예약은 필요 없다)
+    }
     return `이름을 '${name.trim()}'(으)로 바꿨어요.`;
   }, '이름을 바꾸지 못했어요.');
 
