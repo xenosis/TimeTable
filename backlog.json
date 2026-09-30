@@ -4193,7 +4193,7 @@
     },
     {
       "id": "P7.3",
-      "status": "todo",
+      "status": "needs_info",
       "priority": null,
       "category": "docs",
       "title": "문서화: 빌드 · 업데이트 절차",
@@ -4207,10 +4207,29 @@
       "done_when": "docs/build-commands.md 작성 완료",
       "est_min": 20,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-09-30T23:36:24.671Z",
+      "updated_at": "2026-09-30T23:39:14.432Z",
+      "log": [
+        {
+          "at": "2026-09-30T23:36:24.671Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "docs/build-commands.md 작성 완료분 검증 착수"
+        },
+        {
+          "at": "2026-09-30T23:36:26.515Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "문서 작성 완료, 리뷰 대기"
+        },
+        {
+          "at": "2026-09-30T23:39:14.432Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "docs/build-commands.md 작성·리뷰 반영(서명 설명 정정, 키 현재 위치·git 미커밋 확인 기록). 사용자 결정 필요: 서명 키 저장소 밖 백업 위치를 지금 정해 기록할지, P7.6(배포 직전)으로 넘기고 P7.3 범위에서 뺄지"
+        }
+      ]
     },
     {
       "id": "P7.4",
