@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, Slot, Stack, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useImmersive } from '../../src/store/immersiveMode';
 import { fontSize, spacing, touchTarget } from '../../src/theme';
 import { useActiveTheme } from '../../src/theme/provider';
 
@@ -15,16 +16,18 @@ export default function TabsLayout() {
   const pathname = usePathname();
   const { theme } = useActiveTheme();
   const insets = useSafeAreaInsets();
+  const immersive = useImmersive();
 
   return <View style={styles.container}>
     <Stack.Screen options={{
       title: 'TimeTable',
+      headerShown: !immersive,
       headerRight: () => <Pressable accessibilityRole="button" accessibilityLabel="관리자 설정 열기" onPress={() => router.push('/manage')} style={styles.gearButton}>
         <Text style={styles.gearGlyph}>⚙️</Text>
       </Pressable>,
     }} />
     <View style={styles.content}><Slot /></View>
-    <View style={[styles.tabBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border, paddingBottom: Math.max(spacing.sm, insets.bottom) }]}>
+    {!immersive && <View style={[styles.tabBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border, paddingBottom: Math.max(spacing.sm, insets.bottom) }]}>
       {tabs.map(({ path, label, icon }) => {
         const active = pathname === path;
         return <Pressable
@@ -39,7 +42,7 @@ export default function TabsLayout() {
           <Text style={[styles.tabLabel, { color: active ? theme.colors.primary : theme.colors.textMuted, fontWeight: active ? '700' : '600' }]}>{label}</Text>
         </Pressable>;
       })}
-    </View>
+    </View>}
   </View>;
 }
 
