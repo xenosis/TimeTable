@@ -44,6 +44,13 @@ class AlarmActivity : Activity() {
     setContentView(createContent())
   }
 
+  /** 이미 떠 있는 화면을 가장 최근 알람의 내용으로 바꾼다. */
+  private fun showLatest(newScheduleId: String, title: String) {
+    intent = Intent(intent).putExtra("scheduleId", newScheduleId).putExtra("title", title)
+    scheduleId = newScheduleId
+    setContentView(createContent())
+  }
+
   override fun onStop() {
     super.onStop()
     // 사용자가 홈으로 나가도, 넘겨준 MainActivity가 앞으로 와도 이 화면은 더 필요 없다.
@@ -134,5 +141,12 @@ class AlarmActivity : Activity() {
 
     /** 알림의 "끄기" 액션처럼 이 화면 밖에서 알람을 끌 때도 떠 있는 전체화면을 함께 닫는다. */
     fun finishIfShowing() { current?.finish() }
+
+    /** 알람이 연달아 울릴 때: 같은 알림 id의 갱신은 전체화면 인텐트를 다시 실행하지 않으므로
+     * (그래서 onNewIntent가 오지 않는다) 서비스가 떠 있는 화면을 직접 마지막 일정으로 바꿔 준다. */
+    fun showLatestIfShowing(scheduleId: String, title: String) {
+      val activity = current ?: return
+      activity.runOnUiThread { activity.showLatest(scheduleId, title) }
+    }
   }
 }

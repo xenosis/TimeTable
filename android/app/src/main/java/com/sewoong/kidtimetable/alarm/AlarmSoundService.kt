@@ -27,6 +27,8 @@ class AlarmSoundService : Service() {
     val title = intent.getStringExtra("title") ?: "할 일"
     TimeTableNotificationChannels.ensure(this)
     startForeground(AlarmReceiver.NOTIFICATION_ID, buildNotification(scheduleId, title))
+    // 이미 다른 알람의 전체화면이 떠 있으면 마지막 일정으로 바꾼다(알림 갱신은 전체화면을 다시 띄우지 않는다)
+    AlarmActivity.showLatestIfShowing(scheduleId, title)
     startSound()
     return START_NOT_STICKY
   }
