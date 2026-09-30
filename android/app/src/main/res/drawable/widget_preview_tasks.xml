@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 선택 화면(Android 11 이하)용 미리보기: 제목 줄과 체크 상자 세 줄을 단순한 도형으로 그린다. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item><shape android:shape="rectangle"><solid android:color="#FFFFFF" /><corners android:radius="16dp" /><size android:width="110dp" android:height="110dp" /></shape></item>
+  <item android:left="12dp" android:top="12dp" android:right="40dp" android:bottom="82dp"><shape android:shape="rectangle"><solid android:color="#1E293B" /><corners android:radius="4dp" /></shape></item>
+  <item android:left="12dp" android:top="42dp" android:right="86dp" android:bottom="52dp"><shape android:shape="rectangle"><solid android:color="#16A34A" /><corners android:radius="3dp" /></shape></item>
+  <item android:left="12dp" android:top="64dp" android:right="86dp" android:bottom="30dp"><shape android:shape="rectangle"><solid android:color="#16A34A" /><corners android:radius="3dp" /></shape></item>
+  <item android:left="12dp" android:top="86dp" android:right="86dp" android:bottom="8dp"><shape android:shape="rectangle"><solid android:color="#CBD5E1" /><corners android:radius="3dp" /></shape></item>
+  <item android:left="34dp" android:top="46dp" android:right="24dp" android:bottom="56dp"><shape android:shape="rectangle"><solid android:color="#94A3B8" /><corners android:radius="3dp" /></shape></item>
+  <item android:left="34dp" android:top="68dp" android:right="40dp" android:bottom="34dp"><shape android:shape="rectangle"><solid android:color="#94A3B8" /><corners android:radius="3dp" /></shape></item>
+  <item android:left="34dp" android:top="90dp" android:right="50dp" android:bottom="12dp"><shape android:shape="rectangle"><solid android:color="#CBD5E1" /><corners android:radius="3dp" /></shape></item>
+</layer-list>

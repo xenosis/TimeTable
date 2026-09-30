@@ -10,10 +10,8 @@ object WidgetDataStore {
   fun write(context: Context, payload: String) {
     require(payload.toByteArray(Charsets.UTF_8).size <= MAX_BYTES) { "Widget data is too large." }
     JSONObject(payload)
-    val target = File(context.filesDir, FILE_NAME)
-    val temporary = File(context.filesDir, "$FILE_NAME.tmp")
-    temporary.writeText(payload, Charsets.UTF_8)
-    check(temporary.renameTo(target))
+    // 아직 앱이 DB에 기록하지 못한 위젯 체크를 새 데이터에 다시 입혀 같은 잠금 안에서 쓴다
+    WidgetCheckStore.writeData(context, payload)
   }
   fun read(context: Context): JSONObject? = try {
     val file = File(context.filesDir, FILE_NAME)

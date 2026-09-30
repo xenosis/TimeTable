@@ -201,6 +201,16 @@ describe('buildWidgetData: 위젯 v2 데이터', () => {
       await createTimetableItem(database, item(regular, '2교시 수학', 3, '09:50', '10:30', 'school'));
       const { days } = await buildWidgetData(database, daylightTheme, WEDNESDAY);
       expect(days[0].schedule).toEqual([]);
+      expect(days[0].hasSchool).toBe(true); // 위젯이 '오늘은 수업 뒤 일정이 없어요'와 '오늘 일정이 없어요'를 구분한다
+    });
+
+    it('hasSchool은 그날 학교 수업이 있는 날만 true이다', async () => {
+      const database = await freshDatabase();
+      const regular = (await getActiveTimetableSet(database)).id;
+      await createTimetableItem(database, item(regular, '1교시 국어', 3, '09:00', '09:40', 'school'));
+      await createTimetableItem(database, item(regular, '피아노', 4, '16:00', '17:00'));
+      const { days } = await buildWidgetData(database, daylightTheme, WEDNESDAY);
+      expect(days.map(({ hasSchool }) => hasSchool)).toEqual([true, false, false, false, false, false, false]);
     });
 
     it('방학 시간표(학교 항목이 없음)는 모든 항목이 담긴다', async () => {

@@ -12,6 +12,7 @@ import type { TimetableSet } from '../../src/db/types';
 import { fontSize, spacing } from '../../src/theme';
 import { useActiveTheme } from '../../src/theme/provider';
 import { msUntilNextLocalMidnight } from '../../src/utils/date';
+import { subscribeWidgetChecksApplied } from '../../src/widgets/widgetChecksSignal';
 
 export default function TodayScreen() {
   const { theme } = useActiveTheme();
@@ -29,6 +30,9 @@ export default function TodayScreen() {
       .finally(() => { if (active) bump(); });
     return () => { active = false; };
   }, [bump]));
+
+  // 위젯에서 누른 체크가 DB에 반영되면(앱이 실행될 때 뒤늦게 기록된다) 오늘 할 일과 보석을 다시 읽는다.
+  useEffect(() => subscribeWidgetChecksApplied(bump), [bump]);
 
   // 앱을 켜 둔 채로 자정을 넘기거나 백그라운드에서 돌아오면 "오늘" 기준 화면을 다시 그린다.
   useEffect(() => {

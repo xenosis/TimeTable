@@ -6,7 +6,7 @@ const sample: WidgetDataV2 = {
   updatedAt: '2026-09-30T00:00:00.000Z',
   timetableName: '평소',
   theme: { background: '#FFFFFF', surface: '#FFFFFF', text: '#111111', textMuted: '#555555', primary: '#000000', onPrimary: '#FFFFFF', border: '#CCCCCC' },
-  days: [{ date: '2026-09-30', weekday: 3, schedule: [{ title: '피아노', startTime: '17:10', endTime: '18:10', backgroundColor: '#DB2777', textColor: '#FFFFFF' }], tasks: [], hiddenScheduleCount: 0, hiddenTaskCount: 0 }],
+  days: [{ date: '2026-09-30', weekday: 3, hasSchool: true, schedule: [{ title: '피아노', startTime: '17:10', endTime: '18:10', backgroundColor: '#DB2777', textColor: '#FFFFFF' }], tasks: [], hiddenScheduleCount: 0, hiddenTaskCount: 0 }],
 };
 
 it('serializes widget data for the native file writer', async () => {

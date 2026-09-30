@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 오늘 할 일 위젯. 줄 수는 위젯 높이에 맞춰 코드에서 보이거나 숨긴다. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/task_root" android:layout_width="match_parent" android:layout_height="match_parent"
+  android:orientation="vertical" android:padding="8dp" android:background="#FFFFFF">
+  <TextView android:id="@+id/task_heading" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingLeft="4dp" android:paddingBottom="2dp" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:text="오늘 할 일" />
+  <TextView android:id="@+id/task_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingLeft="4dp" android:paddingTop="6dp" android:textSize="16sp" android:visibility="gone" />
+  <LinearLayout android:id="@+id/task_row_1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="4dp" android:paddingBottom="4dp" android:paddingLeft="4dp" android:paddingRight="4dp" android:visibility="gone">
+    <TextView android:id="@+id/task_box_1" android:layout_width="24dp" android:layout_height="wrap_content" android:textSize="16sp" android:maxLines="1" />
+    <TextView android:id="@+id/task_title_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+  </LinearLayout>
+  <LinearLayout android:id="@+id/task_row_2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="4dp" android:paddingBottom="4dp" android:paddingLeft="4dp" android:paddingRight="4dp" android:visibility="gone">
+    <TextView android:id="@+id/task_box_2" android:layout_width="24dp" android:layout_height="wrap_content" android:textSize="16sp" android:maxLines="1" />
+    <TextView android:id="@+id/task_title_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+  </LinearLayout>
+  <LinearLayout android:id="@+id/task_row_3" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="4dp" android:paddingBottom="4dp" android:paddingLeft="4dp" android:paddingRight="4dp" android:visibility="gone">
+    <TextView android:id="@+id/task_box_3" android:layout_width="24dp" android:layout_height="wrap_content" android:textSize="16sp" android:maxLines="1" />
+    <TextView android:id="@+id/task_title_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+  </LinearLayout>
+  <LinearLayout android:id="@+id/task_row_4" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="4dp" android:paddingBottom="4dp" android:paddingLeft="4dp" android:paddingRight="4dp" android:visibility="gone">
+    <TextView android:id="@+id/task_box_4" android:layout_width="24dp" android:layout_height="wrap_content" android:textSize="16sp" android:maxLines="1" />
+    <TextView android:id="@+id/task_title_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+  </LinearLayout>
+  <TextView android:id="@+id/task_more" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingLeft="4dp" android:paddingTop="2dp" android:textSize="14sp" android:maxLines="1" android:visibility="gone" />
+</LinearLayout>

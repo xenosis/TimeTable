@@ -17,8 +17,11 @@ object WidgetClock {
 object WidgetRefreshScheduler {
   /** 오늘 일정의 다음 시작·끝 시각, 또는 자정 직후 중 더 빠른 때에 위젯을 다시 그린다. */
   fun scheduleNext(context: Context, snapshot: WidgetSnapshot?) {
-    val next = WidgetDayResolver.nextRefreshAtMillis(System.currentTimeMillis(), TimeZone.getDefault(), snapshot)
     val operation = PendingIntent.getBroadcast(context, 5504, Intent(context, WidgetRefreshReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).apply { cancel(operation); setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, operation) }
+    val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    // 위젯을 모두 지웠다면 일정 경계와 자정마다 깨우는 알람을 이어 가지 않는다(배터리). 다시 올리면 제공자가 이 함수를 불러 예약이 되살아난다.
+    if (!WidgetUpdater.hasWidgets(context)) { alarms.cancel(operation); return }
+    val next = WidgetDayResolver.nextRefreshAtMillis(System.currentTimeMillis(), TimeZone.getDefault(), snapshot)
+    alarms.apply { cancel(operation); setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, operation) }
   }
 }
