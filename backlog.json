@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.1",
   "meta": {
-    "updated": "2026-09-29",
+    "updated": "2026-09-30",
     "context_doc": "docs/tasks.md",
     "max_est_min": 45,
     "note": "TimeTable(kidtimetable) 작업 항목 SSOT. 이 프로젝트엔 전용 CLI가 없으므로 이 파일은 직접 편집한다(voice-claude-car의 pnpm backlog와 달리 수동 관리). 단계 구조·근거는 docs/tasks.md·docs/research.md 참고. 상태 갱신 시 status/log/updated_at을 함께 갱신하고, 완료 시 evidence에 확인 근거(파일 경로·명령 결과 등)를 남긴다. needs_info/blocked는 log에 사유를 남길 것."
@@ -503,7 +503,7 @@
     },
     {
       "id": "P1",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P0",
       "category": "infra",
       "title": "1단계: 프로젝트 기반",
@@ -515,17 +515,31 @@
       "done_when": "빈 앱이 딸 폰에 설치됨 (docs/tasks.md 1단계 체크리스트 전부 완료)",
       "est_min": null,
       "gate": null,
-      "owner": null,
+      "owner": "claude",
       "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
+      "updated_at": "2026-09-30T07:50:18.361Z",
       "log": [
         {
           "at": "2026-09-15T00:00:00Z",
           "owner": null,
           "status": "in_progress",
           "note": "현재 상태: app/index.tsx·_layout.tsx(placeholder), src/theme/index.ts, src/utils/date.ts, __tests__/date.test.ts, CLAUDE.md 존재. android/ 네이티브 프로젝트 prebuild됨. src/db·store·screens·components, 빌드 스크립트(scripts/), 서명 키, 실기기 설치는 미확인."
+        },
+        {
+          "at": "2026-09-30T07:50:17.353Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "하위 P1.1~P1.12 모두 done. docs/tasks.md 1단계 체크리스트 12개 항목을 완료로 갱신함. 서명 키 외부 백업은 P7.6(배포 직전)으로 분리됨."
+        },
+        {
+          "at": "2026-09-30T07:50:18.361Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "완료 조건 확인: 릴리즈 APK가 딸 폰에 설치·실행됨(P1.8), 1단계 체크리스트 전부 완료."
         }
-      ]
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "P1.1~P1.12 done, docs/tasks.md 1-1~1-12 체크, 2026-09-26 딸 폰 릴리즈 APK 설치·실행 확인 기록(P1.8) · 검증: 이번 세션에서 재설치는 하지 않았고 하위 작업별 기존 검증 기록에 의존. 이번 세션 코드 변경에 대해서는 npm run check 통과"
     },
     {
       "id": "P1.1",
@@ -751,7 +765,7 @@
     },
     {
       "id": "P1.7",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "infra",
       "title": "빌드 준비: 서명 키 · APK 빌드 스크립트",
@@ -762,12 +776,12 @@
         "P1.2"
       ],
       "doc": null,
-      "done_when": "새 서명 키 생성·백업, scripts/build-apk.ps1 존재",
+      "done_when": "새 서명 키 생성, scripts/build-apk.ps1 존재, 새 키로 서명한 릴리즈 APK가 딸 폰에 설치됨(외부 백업은 P7.6에서 배포 직전에 수행)",
       "est_min": 30,
       "gate": null,
-      "owner": "codex",
+      "owner": "claude",
       "claimed_at": "2026-09-17T06:48:40.701Z",
-      "updated_at": "2026-09-26T11:16:43.681Z",
+      "updated_at": "2026-09-30T07:49:38.157Z",
       "log": [
         {
           "at": "2026-09-17T06:48:40.701Z",
@@ -810,12 +824,38 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "독립 검토 결과: 새 키·릴리즈 스크립트·첫 실기기 설치는 확인됐으나, 명시된 외부 백업은 사용자 결정으로 장기 사용·배포 직전에 수행한다. Gradle release의 암묵적 debug 서명 경로도 1.30.11에서 차단했다."
+        },
+        {
+          "at": "2026-09-30T07:49:26.152Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "2026-09-30 사용자 결정: 서명 키 외부 백업은 앱 완성 후(배포 직전)로 미룬다. 백업을 별도 작업 P7.6으로 분리하고 P1.7 완료 조건에서 뺀다."
+        },
+        {
+          "at": "2026-09-30T07:49:36.043Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "완료 조건에서 외부 백업을 뺐으므로(P7.6으로 분리) 남은 조건은 이미 충족된 상태. 상태를 정리한다."
+        },
+        {
+          "at": "2026-09-30T07:49:37.098Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "새 키 서명 릴리즈 APK 생성, build-apk.ps1 존재, 딸 폰 설치·실행 확인은 기존 기록의 독립 검토로 확인됨. 외부 백업은 P7.6."
+        },
+        {
+          "at": "2026-09-30T07:49:38.157Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "사용자 결정으로 외부 백업을 P7.6으로 분리한 뒤 나머지 완료 조건을 확인."
         }
-      ]
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "scripts/build-apk.ps1 존재, 새 키로 서명한 1.30.10 Device-arm64-v8a 릴리즈 APK를 사용자가 딸 폰에서 설치·실행 확인(기존 로그), Gradle release의 암묵적 debug 서명 경로 차단(1.30.11) · 검증: 이번 세션에서 빌드·실기기 설치를 새로 실행하지는 않았고 기존 로그의 독립 검토·사용자 확인에 의존함. 외부 백업은 P7.6에서 배포 직전 수행"
     },
     {
       "id": "P1.8",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "infra",
       "title": "설치 확인: 빈 앱 릴리즈 APK를 딸 폰에 설치",
@@ -830,17 +870,37 @@
       "done_when": "딸 폰에서 릴리즈 APK 실행 확인",
       "est_min": 20,
       "gate": null,
-      "owner": "codex",
-      "claimed_at": null,
-      "updated_at": "2026-09-26T11:17:06.720Z",
+      "owner": "claude",
+      "claimed_at": "2026-09-30T07:49:47.245Z",
+      "updated_at": "2026-09-30T07:49:49.288Z",
       "log": [
         {
           "at": "2026-09-26T11:17:06.720Z",
           "owner": "codex",
           "status": "needs_info",
           "note": "사용자 실기기 확인: 새 키로 서명한 1.30.10 Device-arm64-v8a 릴리즈 APK가 정상 설치·실행됨. 직접 의존 P1.7의 외부 키 백업이 장기 사용·배포 직전으로 보류돼 있어, 그 확인 뒤 완료 처리할 것."
+        },
+        {
+          "at": "2026-09-30T07:49:47.245Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "직접 의존 P1.7이 완료되어(외부 백업은 P7.6으로 분리) 보류 사유가 사라짐"
+        },
+        {
+          "at": "2026-09-30T07:49:48.256Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "완료 조건 '딸 폰에서 릴리즈 APK 실행 확인'은 2026-09-26 사용자 실기기 확인 기록으로 충족됨"
+        },
+        {
+          "at": "2026-09-30T07:49:49.288Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "P1.7 완료 후 상태 정리."
         }
-      ]
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "2026-09-26 사용자 실기기 확인: 새 키로 서명한 1.30.10 Device-arm64-v8a 릴리즈 APK가 정상 설치·실행됨 · 검증: 이번 세션에서 재설치하지는 않음. 기존 사용자 확인 기록에 의존"
     },
     {
       "id": "P1.9",
@@ -1061,7 +1121,7 @@
     },
     {
       "id": "P2",
-      "status": "in_review",
+      "status": "done",
       "priority": "P1",
       "category": "feature",
       "title": "2단계: 시간표 (로컬)",
@@ -1077,7 +1137,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-26T16:30:50.434Z",
-      "updated_at": "2026-09-28T01:37:52.265Z",
+      "updated_at": "2026-09-30T07:51:09.982Z",
       "log": [
         {
           "at": "2026-09-26T16:30:50.434Z",
@@ -1114,8 +1174,16 @@
           "owner": "claude",
           "status": "in_review",
           "note": "딸 폰 실기기에서 PIN 게이트·교시 저장/재조회·시간표 항목 추가 즉시 반영·요일 복사·앱 강제종료 후 재시작 데이터 유지까지 5가지 시나리오 모두 확인 완료."
+        },
+        {
+          "at": "2026-09-30T07:51:09.982Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "하위 P2.1~P2.15 모두 done, 의존 P1 done. 완료 조건의 딸 폰 실기기 5개 시나리오(PIN 게이트, 교시 저장·재조회, 항목 추가 즉시 반영, 요일 복사, 강제종료 후 재시작 데이터 유지)는 기존 기록으로 확인됨. 이후 추가된 주간 시간축 표·가로 전환·요일 이동은 에뮬레이터에서 확인했고 딸 폰에서는 아직 확인하지 않았다. 메모 기능은 P2.16~P2.18에서 별도 진행."
         }
-      ]
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "P2.1~P2.15 done, docs/tasks.md 2-1~2-9 체크, 딸 폰 실기기 5개 시나리오 확인 기록 · 검증: 이번 세션 변경분은 npm run check 통과와 에뮬레이터 확인. 딸 폰에서 시간축 표·가로 전환 동작은 미확인"
     },
     {
       "id": "P2.1",
@@ -1541,7 +1609,7 @@
     },
     {
       "id": "P2.11",
-      "status": "todo",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "결정: 시간표 항목 부가 메모(픽업 시간·인솔 안내 등) 지원 여부",
@@ -1555,10 +1623,218 @@
       "done_when": "부가 메모 필드 지원 여부와, 지원한다면 저장 위치(timetable_items 컬럼 추가 등)·화면 노출 방식에 대한 사용자 결정이 기록됨",
       "est_min": null,
       "gate": "사용자 결정 필요: 메모 필드가 꼭 필요한지, 제목에 병기하는 것으로 충분한지",
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-29T16:16:44.659Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-09-30T07:50:48.233Z",
+      "updated_at": "2026-09-30T07:50:50.343Z",
+      "log": [
+        {
+          "at": "2026-09-30T07:50:48.233Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자가 메모 칸 추가를 결정함(2026-09-30): '메모는 추가하면 좋을 것 같다'. 결정을 기록하고 구현을 P2.16~P2.18로 나눈다."
+        },
+        {
+          "at": "2026-09-30T07:50:49.292Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "결정 내용: 시간표 항목에 짧은 한 줄 메모 칸을 추가한다. 저장 P2.16, 입력 P2.17, 표시 P2.18. 알림·알람·위젯 표시 여부는 P2.18에서 사용자 확인."
+        },
+        {
+          "at": "2026-09-30T07:50:50.343Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "완료 조건은 사용자 결정 기록이며 충족됨."
+        }
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "2026-09-30 사용자 응답: 메모는 추가하면 좋을 것 같다. 후속 작업 P2.16(저장), P2.17(입력), P2.18(표시) 생성 · 검증: 결정 항목이라 코드 검증 대상 아님. 구현 검증은 P2.16~P2.18에서 수행"
+    },
+    {
+      "id": "P2.12",
+      "status": "done",
+      "priority": "P1",
+      "category": "feature",
+      "title": "시간표 화면 첫 칼럼 시간축 배치 가능성 검증 (시간표1~3 실데이터)",
+      "summary": "사용자 엑셀 시간표(시간표1~3.png)처럼 표의 첫 칼럼이 시간이고 월~금 칼럼에 수업·학원이 시간에 맞게 놓이는 주간표를 만들 수 있는지 먼저 검증한다. 요일마다 시간이 달라(예: 수요일 13:10~14:30, 화·목 14:10~16:20, 피아노 17:10~18:10 vs 일루스터 17:00~18:00) 한 주의 모든 시작·종료 시각을 합친 행 경계가 몇 개나 되는지, 폰 폭(약 360dp)에서 5요일+시간 칼럼이 읽히는지 시간표1·2 내용을 테스트 데이터로 삼아 행 경계 계산 함수와 화면 폭·행 개수 계산으로 확인한다. 후보: (a) 모든 경계를 행으로 쓰는 표, (b) 시간에 비례한 세로 배치+빈 구간 압축, (c) 칸에 자기 시각 표기. 결론과 채택안을 docs에 기록한다.",
+      "where": "src/utils/ __tests__/",
+      "parent": "P2",
+      "deps": [
+        "P2.5"
+      ],
+      "doc": null,
+      "done_when": "시간표1·2 데이터를 픽스처로 한 행 경계 계산 함수와 단위 테스트가 있고, 세로(약 360dp)·가로(약 800dp) 두 폭에서 행 개수·최소 행 높이·칸 글자 수 수용 여부 산정 결과와 채택안(세로 스크롤 허용 여부 포함)이 docs에 기록됨",
+      "est_min": 40,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-09-30T01:58:35.501Z",
+      "updated_at": "2026-09-30T02:08:03.587Z",
+      "log": [
+        {
+          "at": "2026-09-30T01:40:03.325Z",
+          "owner": null,
+          "status": "todo",
+          "note": "2026-09-30 사용자 요청: 주간 시간표는 가로 전환으로 일주일치를 명확히 볼 수 있어야 함. 세로·가로 두 화면 폭 모두 검증하도록 범위 확대."
+        },
+        {
+          "at": "2026-09-30T01:58:35.501Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "P2.5 완료로 deps 충족. src/utils/timetableGrid.ts(행 경계·칸 병합 계산)와 시간표1·2 픽스처 테스트 작성 후 세로·가로 폭 산정 결과를 docs/timetable-grid-feasibility.md에 기록."
+        },
+        {
+          "at": "2026-09-30T02:02:46.340Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "src/utils/timetableGrid.ts, __tests__/timetable-grid.test.ts(4개), docs/timetable-grid-feasibility.md 작성. 학기 14행·방학 주 6행 확인, 채택안 기록. npm run check 통과. 리뷰 대기."
+        },
+        {
+          "at": "2026-09-30T02:08:03.587Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer 반영: 시간표2 수·금 돌봄 종료를 16:10으로 정정(이미지 재확인), 가로 폭·높이 산정표 추가, 추정값 표기, 채택값(36/64→592dp)·압축 경로 테스트 추가. 얇은 행 병합 여부는 P2.13 착수 전 사용자 확인 사항으로 남김."
+        }
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "src/utils/timetableGrid.ts, __tests__/timetable-grid.test.ts(6개), docs/timetable-grid-feasibility.md. 학기 14행/방학 주 6행, 채택값 학기 592dp · 검증: npm run check 통과(agent-instructions, code-length, lint, typecheck, test, build). 폭 산정은 손계산 추정으로 문서에 명시, P2.13에서 에뮬레이터 실측"
+    },
+    {
+      "id": "P2.13",
+      "status": "done",
+      "priority": "P1",
+      "category": "feature",
+      "title": "주간 시간표를 시간축 표로 구현 (첫 칼럼=시간, 칸이 시간 구간만큼 늘어남)",
+      "summary": "P2.12 채택안대로 주간 화면을 첫 칼럼이 시간인 표로 바꾼다. 여러 시간 구간에 걸친 일정(예: 5교시 수업, 14:10~16:20 리틀 포레스트)은 하나의 칸으로 이어 붙여 보여주고, 행 경계와 맞지 않는 일정은 칸 안에 자기 시작~종료 시각을 함께 표기한다. 과목별 색·아이콘을 유지하고, 시간 없는 일정과 겹치는 일정도 깨지지 않게 처리하며, 칸을 누르면 해당 요일로 이동하는 기존 동작을 유지한다. 방학·특별주 세트 시간표도 같은 표로 보인다. 가로 화면에서는 큰 제목·토글 등 위쪽 영역을 줄여(예: 한 줄 헤더) 표가 화면 높이를 최대한 쓰게 한다.",
+      "where": "src/components/WeekOverviewGrid.tsx",
+      "parent": "P2",
+      "deps": [
+        "P2.12",
+        "P2.14"
+      ],
+      "doc": null,
+      "done_when": "주간 화면이 첫 칼럼=시간 표로 표시되고 시간표1·2 실데이터와 같은 배치로 렌더됨(구간 병합, 자기 시각 표기, 색 구분). 가로에서는 넓은 폭을 활용해 제목·시각이 충분히 읽히고 세로에서도 깨지지 않음. 겹침·시간 없는 일정 테스트 통과, npm run check 통과, 에뮬레이터 세로·가로 확인",
+      "est_min": 45,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-09-30T05:29:03.390Z",
+      "updated_at": "2026-09-30T06:22:19.521Z",
+      "log": [
+        {
+          "at": "2026-09-30T01:40:04.298Z",
+          "owner": null,
+          "status": "todo",
+          "note": "2026-09-30 사용자 요청: 가로 전환 시 일주일치를 명확히 볼 수 있게 함. P2.14(가로 허용)에 의존."
+        },
+        {
+          "at": "2026-09-30T01:51:16.677Z",
+          "owner": null,
+          "status": "todo",
+          "note": "P2.14 에뮬레이터 확인(2026-09-30): 가로(2400x1080)에서 헤더·큰 제목·토글·하단 탭이 세로 공간 절반 이상을 차지해 표 영역이 약 200dp뿐임. 가로에서는 제목·토글을 줄이거나 숨겨 표가 세로 공간을 최대한 쓰도록 범위에 포함."
+        },
+        {
+          "at": "2026-09-30T05:29:03.390Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "deps P2.12·P2.14 완료. 사용자 결정(2026-09-30): ①얇은 행을 합치지 않고 정확한 시각 유지 ②시간표1 수요일 수업 종료 13:10은 임시값으로 두고 NEIS 가져오기(P8.1) 때 실제 값으로 대체. 구현: 계산은 timetableGrid.ts, 렌더는 WeekTimeGrid.tsx로 분리, 시간이 잘못된 일정은 숨기지 않고 표 아래에 따로 표시."
+        },
+        {
+          "at": "2026-09-30T05:50:50.829Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "WeekTimeGrid.tsx(시간축 표 렌더), WeekOverviewGrid(데이터 로딩만), timetableGrid.ts(unplaced·cellRect 추가), immersiveMode 스토어(가로 주간 보기에서 헤더·탭 숨김), 버전 1.33.0(코드 91). 에뮬레이터에서 시간표1 데이터로 세로·가로 렌더 확인. npm run check 통과. 리뷰 대기."
+        },
+        {
+          "at": "2026-09-30T06:22:19.521Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer 지적 반영: 시간표2 방학 모드 렌더 확인, 가로에서 학기/방학 제목·해제 버튼·요일 헤더를 스크롤 밖에 고정, 안전 영역 여백 적용, 빈 시각 방어·테스트, 접근성 라벨, 문서 정정. 열린 질문 2건(주간 표에 날짜별 예외 반영 여부, 가로 칸 탭 동작)은 사용자 결정 대기이며 완료 조건에는 포함되지 않음."
+        }
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "src/components/WeekTimeGrid.tsx, WeekOverviewGrid.tsx, src/utils/timetableGrid.ts, src/store/immersiveMode.ts, app/(tabs)/timetable.tsx·_layout.tsx, __tests__/timetable-grid.test.ts(7개). 에뮬레이터 API36에서 시간표1(학기)·시간표2(방학) 데이터로 세로·가로 렌더 캡처 확인. 버전 1.33.0(코드 91) · 검증: npm run check 통과(agent-instructions, code-length, lint, typecheck, test, build). 실기기·PIN 키보드·Android 뒤로가기 동작은 미확인"
+    },
+    {
+      "id": "P2.14",
+      "status": "done",
+      "priority": "P1",
+      "category": "feature",
+      "title": "가로 전환 허용 (주간 시간표를 가로로 넓게 보기)",
+      "summary": "현재 app.json orientation=portrait와 MainActivity screenOrientation=portrait 때문에 폰을 눕혀도 가로로 전환되지 않는다. 주간 시간표가 앱의 핵심 화면이라 부모나 커서 길게 계획을 세우는 경우 가로로 일주일치를 한눈에 볼 수 있어야 한다. 아이가 쓰는 오늘 화면은 세로 최적화를 유지하되 가로로 눕혀도 깨지지 않게 하고, 잠금 화면 알람 화면(AlarmActivity)은 세로 고정을 유지한다. 새 라이브러리 없이 orientation 설정과 useWindowDimensions 기반 레이아웃으로 처리한다.",
+      "where": "app.json android/app/src/main/AndroidManifest.xml app/",
+      "parent": "P2",
+      "deps": [
+        "P2.5"
+      ],
+      "doc": null,
+      "done_when": "폰을 눕히면 앱이 가로로 전환되고 오늘·시간표·내 보석·관리 화면이 가로에서도 잘리거나 겹치지 않음(에뮬레이터 회전 확인). 알람 화면은 세로 유지. 회전해도 선택한 요일·보기 상태가 유지됨. npm run check 통과",
+      "est_min": 40,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-09-30T01:40:18.273Z",
+      "updated_at": "2026-09-30T01:58:08.533Z",
+      "log": [
+        {
+          "at": "2026-09-30T01:40:18.273Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "P2.5 완료로 deps 충족. 사용자가 가로 전환을 요청(2026-09-30). app.json·AndroidManifest의 portrait 고정 해제, 알람 화면은 세로 유지."
+        },
+        {
+          "at": "2026-09-30T01:51:18.134Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "app.json orientation=default, MainActivity screenOrientation portrait 제거(AlarmActivity는 portrait 유지), 버전 1.32.0(코드 90). npm run check 통과. 에뮬레이터에서 가로 전환 확인: 오늘·시간표 탭 잘림 없음, MainActivity requestedOrientation=UNSPECIFIED, configChanges에 orientation 있어 회전 시 상태 유지. 가로 세로 공간 부족은 P2.13으로 이관."
+        },
+        {
+          "at": "2026-09-30T01:58:08.533Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer 지적 반영: 확인 범위를 오늘·시간표·내 보석·관리자 설정 4개 화면으로 확대해 가로에서 잘림 없음 확인. PIN 키보드 입력·일정 편집 화면·실기기 회전은 미확인(딸 폰 입수 후 확인)."
+        }
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "app.json orientation=default, MainActivity screenOrientation 제거, AlarmActivity portrait 유지, 1.32.0/코드 90. 에뮬레이터 API36 가로(2400x1080) 4개 화면 캡처 확인, requestedOrientation=UNSPECIFIED · 검증: npm run check 통과(agent-instructions, code-length, lint, typecheck, test, build). 리뷰어 지적 중 package-lock 버전 불일치(1.30.28)는 기존부터 있던 문제, prebuild 재생성 시 android/ 덮어쓰기 위험은 기존 위험으로 별도 관리"
+    },
+    {
+      "id": "P2.15",
+      "status": "done",
+      "priority": "P1",
+      "category": "feature",
+      "title": "주간표는 요일 글자만 눌러 이동 + 요일별 화면에 오늘로 가기 버튼",
+      "summary": "사용자 결정(2026-09-30): 주간 시간표에서 칸을 눌러도 이동하지 않고, 월~금 요일 글자를 누를 때만 그 요일 화면으로 이동한다(스크롤 중 실수로 전체화면이 풀리는 문제 방지). 주간표 위에 '요일을 누르면 그 요일 시간표로 이동해요'라고 설명한다. 요일별 화면에는 오늘 요일로 돌아가는 버튼을 둔다(오늘이 월~금이고 다른 요일을 보고 있을 때만 표시). 시간표는 저장·불러오기로 바꿔 쓰는 하나의 시간표로 보며 '평소 시간표'나 날짜별 임시 시간표는 다루지 않는다.",
+      "where": "src/components/WeekTimeGrid.tsx app/(tabs)/timetable.tsx",
+      "parent": "P2",
+      "deps": [
+        "P2.13"
+      ],
+      "doc": null,
+      "done_when": "주간표의 칸은 눌러도 반응이 없고 요일 글자만 해당 요일 화면으로 이동함. 주간표 위에 이동 방법 설명이 세로·가로 모두 보임. 요일별 화면에서 다른 요일을 보고 있을 때 오늘로 가기 버튼이 보이고 누르면 오늘 요일로 이동하며 오늘 요일을 보고 있거나 주말이면 버튼이 없음. npm run check 통과, 에뮬레이터 세로·가로 확인",
+      "est_min": 30,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-09-30T06:22:49.562Z",
+      "updated_at": "2026-09-30T06:48:19.067Z",
+      "log": [
+        {
+          "at": "2026-09-30T06:22:49.562Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 요청: 칸 대신 요일 글자로만 이동, 주간표 설명, 오늘로 가기 버튼"
+        },
+        {
+          "at": "2026-09-30T06:26:58.668Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "칸은 누름 반응 제거, 요일 글자만 이동, 주간표 설명 문구(세로·가로), 요일별 화면 오늘로 가기 버튼(오늘이 월~금이고 다른 요일 볼 때만). 버전 1.34.0(코드 92). 에뮬레이터 세로·가로 확인. 전체 검사·리뷰 대기."
+        },
+        {
+          "at": "2026-09-30T06:48:19.067Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer 지적 반영: 자정·앱 복귀 시 오늘 기준 재계산(AppState+자정 타이머), 세로 설명은 요일 헤더가 있을 때만 표 안에 표시, today() 통일, 문구를 '요일(월~금)을 누르면 그 요일 시간표를 볼 수 있어요'로 변경. 가로에서 칸 탭 무반응·요일 탭 이동 및 전체화면 해제·오늘로 가기 버튼 확인. 주말 버튼 숨김은 코드로만 확인(에뮬레이터 날짜 수요일). 검사 첫 실행 1회 실패는 로그를 남기지 않아 원인 미확인이며 이후 재실행은 모두 통과."
+        }
+      ],
+      "done_at": "2026-09-30",
+      "evidence": "src/components/WeekTimeGrid.tsx(칸 View화·WEEK_HINT), app/(tabs)/timetable.tsx(오늘로 가기·자정 갱신), 버전 1.34.0(코드 92). 에뮬레이터 API36 세로·가로 캡처 확인 · 검증: npm run check 통과(agent-instructions, code-length, lint, typecheck, test, build). canGoToday 판정 단위 테스트는 없음(권장 사항으로 남김)"
     },
     {
       "id": "P3",
@@ -2769,6 +3045,27 @@
       ]
     },
     {
+      "id": "P4.12",
+      "status": "todo",
+      "priority": null,
+      "category": "infra",
+      "title": "expo-animation 스킬 설치 (스티커·칭찬 연출 착수 전)",
+      "summary": "스티커 적립·스티커판 등 칭찬 연출 애니메이션을 구현하기 직전에 Expo 공식 스킬 expo-animation을 설치한다. 2026-09-30 스킬 추천 때 학원 시간 변경 대응이 핵심 목적이라 지금은 불필요하다고 보고 보류함. 설치 명령: npx skills add expo/skills@expo-animation -a claude-code -y (여러 스킬을 한 번에 넘기면 첫 번째만 설치되니 하나씩 실행). 설치 전 SKILL.md와 보안 평가를 확인하고, 애니메이션에 새 라이브러리가 필요하면 사용자에게 먼저 묻는다.",
+      "where": null,
+      "parent": "P4",
+      "deps": [
+        "P4.2"
+      ],
+      "doc": null,
+      "done_when": ".claude/skills/expo-animation이 설치되어 있고, P4.6·P4.7 착수 전에 사용자에게 설치 여부를 확인함",
+      "est_min": 5,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-09-30T06:21:28.645Z",
+      "log": []
+    },
+    {
       "id": "P5",
       "status": "todo",
       "priority": "P0",
@@ -3460,6 +3757,25 @@
       ]
     },
     {
+      "id": "P7.6",
+      "status": "todo",
+      "priority": "P2",
+      "category": "infra",
+      "title": "배포 직전: 서명 키 외부 백업",
+      "summary": "릴리즈 APK 서명 키(키스토어 파일과 비밀번호)를 PC 밖 안전한 곳(USB·개인 클라우드 등)에 한 부 더 보관한다. 키를 잃으면 딸 폰의 앱을 같은 서명으로 업데이트할 수 없어 앱을 지우고 다시 설치해야 하고, 그러면 폰에 저장된 시간표·할 일·보석 기록이 사라진다. 2026-09-30 사용자 결정으로 앱이 완성된 뒤(배포 직전)로 미뤘다.",
+      "where": "scripts/build-apk.ps1 signing",
+      "parent": "P7",
+      "deps": [],
+      "doc": null,
+      "done_when": "서명 키 파일과 비밀번호가 PC 밖 두 곳 이상에 보관됨이 사용자 확인으로 기록됨(키 내용·비밀번호 자체는 기록하지 않음)",
+      "est_min": 20,
+      "gate": "사용자 작업: 키 파일은 민감 정보라 에이전트가 외부로 옮기지 않는다. 배포 직전 사용자가 직접 복사하고 확인한다",
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-09-30T07:49:25.124Z",
+      "log": []
+    },
+    {
       "id": "P8",
       "status": "todo",
       "priority": "P3",
@@ -3534,7 +3850,7 @@
     },
     {
       "id": "P8.3",
-      "status": "needs_info",
+      "status": "cancelled",
       "priority": "P3",
       "category": "feature",
       "title": "방학 모드",
@@ -3548,7 +3864,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-09-18T10:48:37.675Z",
-      "updated_at": "2026-09-18T11:03:03.719Z",
+      "updated_at": "2026-09-30T07:03:03.198Z",
       "log": [
         {
           "at": "2026-09-18T10:48:37.675Z",
@@ -3567,6 +3883,18 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "구현·검토·전체 검사 완료. 방학·평소 모드 전환과 별도 항목 저장은 준비됐으며, 실기기에서 docs/backlog/P8.3.md의 전환·편집·복사 확인이 필요하다. 교시 시간도 모드별로 분리할지는 요구사항에 명시되지 않아 현재 공유한다."
+        },
+        {
+          "at": "2026-09-30T07:03:01.860Z",
+          "owner": "codex",
+          "status": "todo",
+          "note": "취소 전 단계: 사용자가 방학 모드 폐기를 결정함(시간표 세트 저장·불러오기로 대체)."
+        },
+        {
+          "at": "2026-09-30T07:03:03.198Z",
+          "owner": "codex",
+          "status": "cancelled",
+          "note": "2026-09-30 사용자 결정으로 취소: 평소/방학 2개 고정 모드는 시간표 세트 저장·불러오기(P8.5·P8.6)로 대체됨. 살릴 내용(세트 간 항목 분리, 같은 세트 안 요일 복사, 재시작 후 유지, 교시 시간 분리 여부 질문)은 P8.5·P8.6으로 이전. 구현된 timetable_mode 코드는 P8.5에서 교체."
         }
       ]
     },
@@ -3605,22 +3933,124 @@
     {
       "id": "P8.5",
       "status": "todo",
-      "priority": "P3",
+      "priority": "P2",
       "category": "feature",
-      "title": "결정: 방학·학원 변경 중 특정 기간 한정 임시 시간표",
-      "summary": "실제 사용 중인 엑셀 시간표(2026-09-30 사용자 제공 시간표1~3.png)를 보면 '7/27~31일만' 처럼 방학 중 특정 한 주만 평소와 다른 학원 시간표가 적용된다. 현재 앱의 방학 모드(P8.3)는 평소/방학 두 세트를 통째로 켜고 끄는 스위치라, 특정 날짜 범위에만 한정해 적용되는 임시 시간표(그 기간이 지나면 자동으로 평소 시간표로 복귀)는 표현할 수 없다. 앱의 핵심 목적이 '학원 시간 변경 시 아이 혼동 방지'이므로 이 시나리오를 지원할지, 지원한다면 UI를 어떻게 둘지 결정이 필요하다.",
+      "title": "시간표 세트 데이터 모델 (이름 붙여 여러 개 저장, 기존 평소/방학 이전)",
+      "summary": "시간표는 '하나의 시간표'로 보고, 학기·방학 등은 완성된 시간표를 이름 붙여 저장해 두었다가 불러와 적용하는 방식으로 바꾼다(예: '1학기', '여름방학', '2학기'). 날짜별 임시 시간표·자동 전환·'평소 시간표' 개념은 만들지 않는다. P8.3의 평소/방학 2개 고정 모드(timetable_items.timetable_mode, timetable_settings.active_mode, timetableModeRepository, 관리 화면 모드 전환)를 임의 개수·이름의 시간표 세트로 교체하는 DB 마이그레이션·repository·적용 중 세트 저장을 다룬다. 기존 regular/vacation 항목은 '평소'·'방학' 이름의 세트로 이전한다. 세트마다 항목이 서로 섞이지 않아야 하고, 요일 복사는 같은 세트 안에서만 동작하며, 앱을 다시 열어도 마지막으로 적용한 세트가 유지된다. 미결정(P8.3에서 이월): 교시 시간(periods)을 세트별로 따로 둘지 현재처럼 공유할지 — 요구사항에 없어 우선 공유로 두고 사용자에게 확인한다.",
       "where": "src/db/ app/manage.tsx",
       "parent": "P8",
-      "deps": [
-        "P8.3"
-      ],
+      "deps": [],
       "doc": null,
-      "done_when": "특정 기간 한정 임시 시간표를 지원할지 여부와, 지원한다면 데이터 모델(day_exceptions 확장 또는 별도 테이블)·편집 UI·자동 복귀 방식에 대한 사용자 결정이 기록됨",
-      "est_min": null,
-      "gate": "사용자 결정 필요: 이 기능을 만들지, 만든다면 어떤 방식(날짜 범위 지정 임시 오버라이드 vs 현재처럼 수동 평소/방학 전환 유지)으로 할지",
+      "done_when": "timetable_sets 저장 구조와 마이그레이션이 있고, 세트 생성(빈 것/다른 세트 복제)·이름변경·삭제·적용 중 세트 조회/변경 repository 함수가 단위 테스트로 검증됨. 기존 평소/방학 항목이 세트로 이전되고 세트 간 항목이 섞이지 않으며 삭제 시 그 세트 항목이 정리됨. 요일 복사는 같은 세트 안에서만 동작하고 마지막 적용 세트가 재시작 뒤에도 유지됨. 교시 시간 공유 여부는 사용자 결정으로 기록됨",
+      "est_min": 45,
+      "gate": null,
       "owner": null,
       "claimed_at": null,
-      "updated_at": "2026-09-29T16:16:23.596Z",
+      "updated_at": "2026-09-30T07:02:42.427Z",
+      "log": [
+        {
+          "at": "2026-09-30T01:30:08.445Z",
+          "owner": null,
+          "status": "todo",
+          "note": "2026-09-30 사용자 정정: 시간표1~3.png는 엑셀 시간표 예시(주간 표 레이아웃 참고용)였고, 방학 가변/기간 한정 자동 전환은 불필요. 시간표를 이름 붙여 저장해 두고 불러쓰는 방식으로 재정의. 45분 상한 때문에 데이터 모델(P8.5)과 관리 UI(P8.6)로 분리."
+        },
+        {
+          "at": "2026-09-30T07:02:42.427Z",
+          "owner": null,
+          "status": "todo",
+          "note": "2026-09-30 사용자 결정: 방학 모드(P8.3)는 시간표 세트 저장·불러오기로 대체되어 취소. P8.3에서 살릴 내용(세트 간 항목 분리, 요일 복사는 같은 세트 안에서만, 재시작 후 선택 유지, 교시 시간 분리 여부 질문, 기존 코드 교체 대상)을 이 항목으로 이전."
+        }
+      ]
+    },
+    {
+      "id": "P8.6",
+      "status": "todo",
+      "priority": "P2",
+      "category": "feature",
+      "title": "시간표 세트 관리 UI (만들기·복제·이름변경·삭제·적용)",
+      "summary": "PIN 뒤 관리 화면에서 시간표 세트 목록을 보고 새로 만들기(빈 것/현재 것 복제)·이름 변경·삭제·적용을 할 수 있게 한다. 적용 시 오늘·시간표 화면과 알림 예약이 새 세트로 다시 계산되고, 시간표 화면 제목에 적용 중인 세트 이름을 보여준다. 삭제는 적용 중인 세트를 막고 확인 절차를 둔다(실수 방지).",
+      "where": "app/manage.tsx src/components/",
+      "parent": "P8",
+      "deps": [
+        "P8.5"
+      ],
+      "doc": null,
+      "done_when": "관리 화면에서 세트 생성·복제·이름변경·삭제·적용이 동작하고 적용 즉시 오늘·시간표·알림에 반영됨. 적용 중 세트는 삭제 불가, 시간표 제목에 세트 이름 표시. 확인 절차: ①한 세트에서 만든 항목이 다른 세트의 오늘·주간·편집 목록에 보이지 않음 ②한 세트를 수정한 뒤 다른 세트로 돌아가도 원래 항목이 그대로임 ③요일 복사는 적용 중인 세트 안에서만 대상 요일이 바뀜 ④앱을 완전히 닫았다 열어도 마지막 적용 세트가 유지됨",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-09-30T07:02:51.990Z",
+      "log": [
+        {
+          "at": "2026-09-30T07:02:51.990Z",
+          "owner": null,
+          "status": "todo",
+          "note": "P8.3에서 이월: 실기기 수동 확인 절차(세트 간 항목 분리, 같은 세트 안 요일 복사, 재시작 후 유지)를 완료 조건에 포함."
+        }
+      ]
+    },
+    {
+      "id": "P2.16",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "메모 저장: 시간표 항목에 짧은 메모 컬럼 추가",
+      "summary": "시간표 항목에 짧은 한 줄 메모를 저장한다(예: '일루스터 16:45 차', '선생님 데리러'). timetable_items에 memo 컬럼을 추가하는 마이그레이션(기존 항목은 빈 메모), 항목 입력·조회 repository의 메모 지원, 빈 메모 처리, 단위 테스트를 다룬다. 서버 스키마(P6.2)에도 같은 컬럼이 필요하므로 그 항목에 메모를 남긴다.",
+      "where": "src/db/",
+      "parent": null,
+      "deps": [
+        "P2.11"
+      ],
+      "doc": null,
+      "done_when": "memo 컬럼 마이그레이션이 기존 데이터를 보존하며 적용되고, 항목 저장·수정·조회·요일 복사에서 메모가 유지됨. 단위 테스트 통과, npm run check 통과",
+      "est_min": 40,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-09-30T07:50:36.397Z",
+      "log": []
+    },
+    {
+      "id": "P2.17",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "메모 입력: 항목 편집 화면에 메모 칸",
+      "summary": "PIN 뒤 시간표 항목 편집 화면에 짧은 메모 입력 칸을 추가한다. 한글 입력 필드이므로 value={field}를 직접 사용하고 ' ' 폴백이나 빈 문자열 폴백은 쓰지 않는다(CLAUDE.md의 한글 IME 규칙). 저장·수정 시 메모가 함께 저장되고 비우면 메모가 지워진다.",
+      "where": "src/components/TimetableEditor.tsx",
+      "parent": null,
+      "deps": [
+        "P2.16"
+      ],
+      "doc": null,
+      "done_when": "편집 화면에서 메모를 입력·수정·삭제할 수 있고 한글이 자모 분리 없이 입력됨(에뮬레이터 확인). npm run check 통과",
+      "est_min": 30,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-09-30T07:50:37.455Z",
+      "log": []
+    },
+    {
+      "id": "P2.18",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "메모 표시: 오늘·요일별·주간 화면에 메모 보이기",
+      "summary": "저장된 메모를 오늘 화면, 요일별 화면, 주간표 칸에 보여준다. 요일별·오늘 화면은 시간 아래에 메모를 한 줄로 표시하고, 주간표는 칸이 좁으므로 칸 높이에 맞게 표시하되 잘리는 경우를 정한다. 미결정(사용자 확인): 알림 본문, 잠금 화면 알람, 홈 화면 위젯에도 메모를 보여줄지.",
+      "where": "src/components/",
+      "parent": null,
+      "deps": [
+        "P2.16"
+      ],
+      "doc": null,
+      "done_when": "메모가 있는 항목에 한해 오늘·요일별·주간 화면에 메모가 표시되고 메모가 없는 항목은 지금과 같음. 세로·가로에서 겹치거나 깨지지 않음(에뮬레이터 확인). 알림·알람·위젯 표시 여부가 사용자 결정으로 기록됨. npm run check 통과",
+      "est_min": 40,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-09-30T07:50:38.497Z",
       "log": []
     }
   ]
