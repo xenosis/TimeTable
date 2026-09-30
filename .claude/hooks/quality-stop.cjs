@@ -1,5 +1,6 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 let rawInput = '';
 process.stdin.setEncoding('utf8');
@@ -14,6 +15,12 @@ process.stdin.on('end', () => {
   }
 
   const projectRoot = path.resolve(input.cwd || process.cwd());
+
+  // 이 세션에서 Write/Edit로 파일을 수정한 표시(mark-edited.cjs)가 없으면 검사를 건너뛴다
+  const sessionId = String(input.session_id || 'default').replace(/[^\w-]/g, '_');
+  const flagPath = path.join(projectRoot, 'node_modules', '.cache', 'quality-edited', sessionId);
+  if (!fs.existsSync(flagPath)) process.exit(0);
+
   const result = spawnSync(process.execPath, ['scripts/run-quality-checks.cjs'], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -21,7 +28,11 @@ process.stdin.on('end', () => {
     windowsHide: true,
   });
 
-  if (result.status === 0 && !result.error) process.exit(0);
+  if (result.status === 0 && !result.error) {
+    // 통과하면 표시를 지운다. 실패 시에는 남겨 다음 Stop에서도 다시 검사한다.
+    try { fs.unlinkSync(flagPath); } catch { /* 이미 없으면 무시 */ }
+    process.exit(0);
+  }
 
   const timedOut = result.error?.code === 'ETIMEDOUT';
   const details = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();

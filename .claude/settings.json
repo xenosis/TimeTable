@@ -6,6 +6,17 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node .claude/hooks/mark-edited.cjs",
+            "shell": "bash",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
             "command": "node .claude/hooks/validate-backlog.js",
             "shell": "bash",
             "timeout": 15,
