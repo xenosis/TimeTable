@@ -15,18 +15,15 @@ export async function buildTaskNotificationsFromDatabase(database: Pick<Timetabl
 }
 
 /** Replaces only the tasks owner's native generation; the timetable owner is separate (see rollingSchedule.ts). */
-export async function replaceRollingNotificationsFromDatabase(database: Pick<TimetableDatabase, 'getAllAsync'>, now = new Date(), familyId = 'local-family', timetableMode = 'regular'): Promise<number> {
+export async function replaceRollingNotificationsFromDatabase(database: Pick<TimetableDatabase, 'getAllAsync'>, now = new Date(), familyId = 'local-family'): Promise<number> {
   const taskNotifications = await buildTaskNotificationsFromDatabase(database, now, familyId);
   return replaceAndroidRollingSchedule(taskNotifications.map(({ id, title, triggerAt, mode }) => ({ id, title, triggerAt: triggerAt.getTime(), mode })), 'tasks');
 }
 
 async function refreshTaskRollingSchedule(): Promise<void> {
-  const [{ getDatabase }, { getActiveTimetableMode }] = await Promise.all([
-    import('../db/database'),
-    import('../db/timetableModeRepository'),
-  ]);
+  const { getDatabase } = await import('../db/database');
   const database = await getDatabase();
-  await replaceRollingNotificationsFromDatabase(database, new Date(), 'local-family', await getActiveTimetableMode(database));
+  await replaceRollingNotificationsFromDatabase(database, new Date(), 'local-family');
 }
 
 /** P4.8 owns this tasks-owner refresh after a task change or when its card opens. */

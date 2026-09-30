@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getDatabase } from '../db/database';
 import { getPeriods, type Period } from '../db/periodRepository';
 import { createTimetableItems, deleteTimetableItem, getEditableTimetableItems, updateTimetableItem, type EditableTimetableItem } from '../db/timetableRepository';
-import type { TimetableCategory, TimetableMode } from '../db/types';
+import type { TimetableCategory, TimetableSetId } from '../db/types';
 import { borderRadius, colorKeys, fontSize, iconKeys, resolveThemeColor, resolveThemeIcon, spacing, touchTarget, type ThemeDefinition } from '../theme';
 import { formatTimeInput } from '../utils/timeInput';
 
@@ -16,22 +16,22 @@ function Button({ label, onPress, selected = false, disabled = false }: { readon
   return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.button, selected && styles.selected, (pressed || disabled) && styles.dim]}><Text style={[styles.buttonText, selected && styles.selectedText]}>{label}</Text></Pressable>;
 }
 
-export function TimetableEditor({ refreshKey, theme, onChanged, timetableMode }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly onChanged: () => Promise<void>; readonly timetableMode: TimetableMode }) {
+export function TimetableEditor({ refreshKey, theme, onChanged, setId }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly onChanged: () => Promise<void>; readonly setId: TimetableSetId }) {
   const [periods, setPeriods] = useState<readonly Period[]>([]);
   const [items, setItems] = useState<readonly EditableTimetableItem[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [message, setMessage] = useState('시간표 항목을 불러오는 중이에요.');
   const [saving, setSaving] = useState(false);
 
-  const reload = () => void getDatabase().then(async (database) => ({ periods: await getPeriods(database), items: await getEditableTimetableItems(database, 'local-family', timetableMode) })).then((saved) => {
+  const reload = () => void getDatabase().then(async (database) => ({ periods: await getPeriods(database), items: await getEditableTimetableItems(database, setId) })).then((saved) => {
     setPeriods(saved.periods); setItems(saved.items); setMessage(saved.items.length ? '수정할 항목을 고르거나 새 항목을 입력해 주세요.' : '새 시간표 항목을 입력해 주세요.');
   }).catch(() => setMessage('시간표 항목을 불러오지 못했어요.'));
-  useEffect(reload, [refreshKey, timetableMode]);
+  useEffect(reload, [refreshKey, setId]);
 
   const select = (item: EditableTimetableItem) => setDraft({ id: item.id, weekdays: [item.weekday], title: item.title, periodNo: item.periodNo ?? null, startTime: item.startTime ?? '', endTime: item.endTime ?? '', category: item.category, colorKey: item.colorKey, iconKey: item.iconKey, alertMode: item.alertMode ?? 'none', alertBeforeMin: String(item.alertBeforeMin ?? 0) });
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
   const toggleWeekday = (weekday: number) => set('weekdays', draft.id ? [weekday] : draft.weekdays.includes(weekday) ? draft.weekdays.filter((day) => day !== weekday) : [...draft.weekdays, weekday]);
-  const input = () => ({ title: draft.title, periodNo: draft.periodNo, startTime: draft.periodNo == null ? draft.startTime : null, endTime: draft.periodNo == null ? draft.endTime : null, category: draft.category, colorKey: draft.colorKey, iconKey: draft.iconKey, alertMode: draft.alertMode, alertBeforeMin: Number(draft.alertBeforeMin), timetableMode });
+  const input = () => ({ title: draft.title, periodNo: draft.periodNo, startTime: draft.periodNo == null ? draft.startTime : null, endTime: draft.periodNo == null ? draft.endTime : null, category: draft.category, colorKey: draft.colorKey, iconKey: draft.iconKey, alertMode: draft.alertMode, alertBeforeMin: Number(draft.alertBeforeMin), setId });
 
   const save = async () => {
     setSaving(true);
@@ -48,7 +48,7 @@ export function TimetableEditor({ refreshKey, theme, onChanged, timetableMode }:
   const remove = async () => {
     if (!draft.id) return;
     setSaving(true);
-    try { await deleteTimetableItem(await getDatabase(), draft.id, 'local-family', timetableMode); setDraft(emptyDraft()); reload(); await onChanged(); setMessage('시간표 항목을 지우고 알림 예약도 새로 만들었어요.'); }
+    try { await deleteTimetableItem(await getDatabase(), draft.id, setId); setDraft(emptyDraft()); reload(); await onChanged(); setMessage('시간표 항목을 지우고 알림 예약도 새로 만들었어요.'); }
     catch { setMessage('항목을 지우지 못했어요.'); } finally { setSaving(false); }
   };
 

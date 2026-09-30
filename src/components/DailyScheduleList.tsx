@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getTimetableItemsForWeekday, type TimetableItem } from '../db/timetableRepository';
-import type { TimetableMode } from '../db/types';
+import type { TimetableSetId } from '../db/types';
 import { borderRadius, fontSize, resolveThemeColor, resolveThemeIcon, spacing, type ThemeDefinition } from '../theme';
 
 function toMinutes(time: string): number {
@@ -27,11 +27,11 @@ function ScheduleRow({ item, state, theme }: { readonly item: TimetableItem; rea
   </View>;
 }
 
-export function DailyScheduleList({ weekday, isToday, theme, timetableMode, refreshKey }: {
+export function DailyScheduleList({ weekday, isToday, theme, setId, refreshKey }: {
   readonly weekday: number;
   readonly isToday: boolean;
   readonly theme: ThemeDefinition;
-  readonly timetableMode: TimetableMode;
+  readonly setId: TimetableSetId;
   readonly refreshKey: number;
 }) {
   const [items, setItems] = useState<readonly TimetableItem[]>([]);
@@ -40,11 +40,11 @@ export function DailyScheduleList({ weekday, isToday, theme, timetableMode, refr
 
   useEffect(() => {
     let active = true;
-    void getDatabase().then((database) => getTimetableItemsForWeekday(database, weekday, 'local-family', timetableMode)).then((saved) => {
+    void getDatabase().then((database) => getTimetableItemsForWeekday(database, weekday, setId)).then((saved) => {
       if (active) { setItems(saved); setFailed(false); }
     }).catch(() => { if (active) setFailed(true); });
     return () => { active = false; };
-  }, [weekday, timetableMode, refreshKey]);
+  }, [weekday, setId, refreshKey]);
 
   useEffect(() => {
     if (!isToday) return;

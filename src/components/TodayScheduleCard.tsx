@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getTimetableItemsForWeekday, type TimetableItem } from '../db/timetableRepository';
-import type { TimetableMode } from '../db/types';
+import type { TimetableSetId } from '../db/types';
 import { resolveThemeColor, resolveThemeIcon, type ThemeDefinition } from '../theme';
 import { borderRadius, fontSize, spacing } from '../theme';
 import { getTodaySchedule } from '../utils/todaySchedule';
@@ -27,7 +27,7 @@ function ScheduleItemCard({ label, item, theme }: { readonly label: string; read
   </View>;
 }
 
-export function TodayScheduleCard({ refreshKey, theme, timetableMode }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly timetableMode: TimetableMode }) {
+export function TodayScheduleCard({ refreshKey, theme, setId }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly setId: TimetableSetId }) {
   const [items, setItems] = useState<readonly TimetableItem[]>([]);
   const [loadedWeekday, setLoadedWeekday] = useState<number | null>(null);
   const [loadedRefreshKey, setLoadedRefreshKey] = useState<number | null>(null);
@@ -44,7 +44,7 @@ export function TodayScheduleCard({ refreshKey, theme, timetableMode }: { readon
 
   useEffect(() => {
     let active = true;
-    void getDatabase().then((database) => getTimetableItemsForWeekday(database, weekday, 'local-family', timetableMode)).then((saved) => {
+    void getDatabase().then((database) => getTimetableItemsForWeekday(database, weekday, setId)).then((saved) => {
       if (!active) return;
       setItems(saved);
       setLoadedWeekday(weekday);
@@ -64,7 +64,7 @@ export function TodayScheduleCard({ refreshKey, theme, timetableMode }: { readon
       }
     });
     return () => { active = false; };
-  }, [weekday, refreshKey, theme, timetableMode]);
+  }, [weekday, refreshKey, theme, setId]);
 
   const readyItems = loadedWeekday === weekday && loadedRefreshKey === refreshKey ? items : [];
   const { current, next, minutesUntilNext } = getTodaySchedule(readyItems, now);

@@ -1,6 +1,6 @@
 import type { TimetableDatabase } from './types';
 
-export const databaseVersion = 8;
+export const databaseVersion = 9;
 
 export const schemaV1 = [
   `CREATE TABLE IF NOT EXISTS periods (
@@ -118,6 +118,29 @@ export const schemaV8 = [
   'ALTER TABLE tasks ADD COLUMN effective_until TEXT',
 ] as const;
 
+/**
+ * 시간표 세트: 평소/방학 2개 고정 모드를 임의 개수·이름의 시간표 세트로 바꾼다.
+ * 기존 timetable_mode·active_mode 컬럼은 남겨 두되(옛 CHECK 제약 때문에 제거 불가) 더는 읽지 않는다.
+ * 기존 평소 항목은 '평소' 세트로, 방학 항목(또는 방학 모드가 켜진 경우)은 '방학' 세트로 옮긴다.
+ */
+export const schemaV9 = [
+  `CREATE TABLE IF NOT EXISTS timetable_sets (
+    id INTEGER PRIMARY KEY,
+    family_id TEXT NOT NULL DEFAULT 'local-family' CHECK (length(trim(family_id)) > 0),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (family_id, name)
+  )`,
+  'ALTER TABLE timetable_items ADD COLUMN set_id INTEGER REFERENCES timetable_sets(id) ON DELETE CASCADE',
+  'ALTER TABLE timetable_settings ADD COLUMN active_set_id INTEGER REFERENCES timetable_sets(id) ON DELETE SET NULL',
+  "INSERT INTO timetable_sets (family_id, name) SELECT family_id, '평소' FROM (SELECT family_id FROM timetable_items UNION SELECT family_id FROM timetable_settings UNION SELECT 'local-family')",
+  "INSERT INTO timetable_sets (family_id, name) SELECT family_id, '방학' FROM (SELECT family_id FROM timetable_items WHERE timetable_mode = 'vacation' UNION SELECT family_id FROM timetable_settings WHERE active_mode = 'vacation')",
+  "UPDATE timetable_items SET set_id = (SELECT id FROM timetable_sets WHERE timetable_sets.family_id = timetable_items.family_id AND timetable_sets.name = CASE timetable_items.timetable_mode WHEN 'vacation' THEN '방학' ELSE '평소' END)",
+  "INSERT OR IGNORE INTO timetable_settings (family_id, active_mode) SELECT family_id, 'regular' FROM timetable_sets",
+  "UPDATE timetable_settings SET active_set_id = (SELECT id FROM timetable_sets WHERE timetable_sets.family_id = timetable_settings.family_id AND timetable_sets.name = CASE timetable_settings.active_mode WHEN 'vacation' THEN '방학' ELSE '평소' END)",
+  'CREATE INDEX IF NOT EXISTS timetable_items_set_weekday ON timetable_items(family_id, set_id, weekday)',
+] as const;
+
 type UserVersionRow = { user_version: number };
 
 export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsync' | 'getFirstAsync'>): Promise<void> {
@@ -156,6 +179,10 @@ export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsy
     }
     if (version < 8) {
       for (const statement of schemaV8) await database.execAsync(statement);
+      await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
+    }
+    if (version < 9) {
+      for (const statement of schemaV9) await database.execAsync(statement);
       await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
     }
     await database.execAsync('COMMIT');

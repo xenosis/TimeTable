@@ -1,4 +1,4 @@
-import { alertModes, timetableCategories, timetableModes, type TimetableDatabase, type TimetableItemInput, type TimetableMode } from './types';
+import { alertModes, timetableCategories, type TimetableDatabase, type TimetableItemInput, type TimetableSetId } from './types';
 import type { ColorKey, IconKey } from '../theme';
 
 const clockPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -17,17 +17,17 @@ function requireValidItem(item: TimetableItemInput): void {
   if (item.endTime != null && !clockPattern.test(item.endTime)) throw new Error('end time must use HH:MM');
   if (!alertModes.includes(item.alertMode ?? 'none')) throw new Error('unknown alert mode');
   if (!Number.isInteger(item.alertBeforeMin ?? 0) || (item.alertBeforeMin ?? 0) < 0) throw new Error('alert lead time cannot be negative');
-  if (!timetableModes.includes(item.timetableMode ?? 'regular')) throw new Error('unknown timetable mode');
+  if (!Number.isInteger(item.setId) || item.setId < 1) throw new Error('timetable set id must be positive');
 }
 
 export async function createTimetableItem(database: Pick<TimetableDatabase, 'runAsync'>, item: TimetableItemInput): Promise<void> {
   requireValidItem(item);
   await database.runAsync(
     `INSERT INTO timetable_items
-      (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, timetable_mode)
+      (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, set_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     item.familyId?.trim() || 'local-family', item.weekday, item.periodNo ?? null, item.startTime ?? null, item.endTime ?? null, item.title.trim(), item.category,
-    item.colorKey, item.iconKey, item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.timetableMode ?? 'regular',
+    item.colorKey, item.iconKey, item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.setId,
   );
 }
 
@@ -35,30 +35,30 @@ export async function updateTimetableItem(database: Pick<TimetableDatabase, 'run
   if (!Number.isInteger(id) || id < 1) throw new Error('item id must be positive');
   requireValidItem(item);
   await database.runAsync(
-    `UPDATE timetable_items SET weekday = ?, period_no = ?, start_time = ?, end_time = ?, title = ?, category = ?, color_key = ?, icon_key = ?, alert_mode = ?, alert_before_min = ?, timetable_mode = ?
-     WHERE id = ? AND family_id = ? AND timetable_mode = ?`,
+    `UPDATE timetable_items SET weekday = ?, period_no = ?, start_time = ?, end_time = ?, title = ?, category = ?, color_key = ?, icon_key = ?, alert_mode = ?, alert_before_min = ?, set_id = ?
+     WHERE id = ? AND family_id = ? AND set_id = ?`,
     item.weekday, item.periodNo ?? null, item.startTime ?? null, item.endTime ?? null, item.title.trim(), item.category, item.colorKey, item.iconKey,
-    item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.timetableMode ?? 'regular', id, item.familyId?.trim() || 'local-family', item.timetableMode ?? 'regular',
+    item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.setId, id, item.familyId?.trim() || 'local-family', item.setId,
   );
 }
 
-export async function deleteTimetableItem(database: Pick<TimetableDatabase, 'runAsync'>, id: number, familyId = 'local-family', timetableMode: TimetableMode = 'regular'): Promise<void> {
+export async function deleteTimetableItem(database: Pick<TimetableDatabase, 'runAsync'>, id: number, setId: TimetableSetId, familyId = 'local-family'): Promise<void> {
   if (!Number.isInteger(id) || id < 1) throw new Error('item id must be positive');
-  await database.runAsync('DELETE FROM timetable_items WHERE id = ? AND family_id = ? AND timetable_mode = ?', id, familyId, timetableMode);
+  await database.runAsync('DELETE FROM timetable_items WHERE id = ? AND family_id = ? AND set_id = ?', id, familyId, setId);
 }
 
-export async function copyTimetableWeekday(database: Pick<TimetableDatabase, 'execAsync' | 'getAllAsync' | 'runAsync'>, sourceWeekday: number, targetWeekday: number, familyId = 'local-family', timetableMode: TimetableMode = 'regular'): Promise<void> {
+export async function copyTimetableWeekday(database: Pick<TimetableDatabase, 'execAsync' | 'getAllAsync' | 'runAsync'>, sourceWeekday: number, targetWeekday: number, setId: TimetableSetId, familyId = 'local-family'): Promise<void> {
   if (!Number.isInteger(sourceWeekday) || sourceWeekday < 0 || sourceWeekday > 6 || !Number.isInteger(targetWeekday) || targetWeekday < 0 || targetWeekday > 6) throw new Error('weekday must be between 0 and 6');
   if (sourceWeekday === targetWeekday) throw new Error('source and target weekdays must differ');
   await database.execAsync('BEGIN IMMEDIATE');
   try {
-    const [sourceCount] = await database.getAllAsync<{ count: number }>('SELECT COUNT(*) AS count FROM timetable_items WHERE family_id = ? AND weekday = ? AND timetable_mode = ?', familyId, sourceWeekday, timetableMode);
+    const [sourceCount] = await database.getAllAsync<{ count: number }>('SELECT COUNT(*) AS count FROM timetable_items WHERE family_id = ? AND weekday = ? AND set_id = ?', familyId, sourceWeekday, setId);
     if (!sourceCount?.count) throw new Error('source weekday has no items');
-    await database.runAsync('DELETE FROM timetable_items WHERE family_id = ? AND weekday = ? AND timetable_mode = ?', familyId, targetWeekday, timetableMode);
+    await database.runAsync('DELETE FROM timetable_items WHERE family_id = ? AND weekday = ? AND set_id = ?', familyId, targetWeekday, setId);
     await database.runAsync(
-      `INSERT INTO timetable_items (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, timetable_mode)
-       SELECT family_id, ?, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, timetable_mode
-       FROM timetable_items WHERE family_id = ? AND weekday = ? AND timetable_mode = ?`, targetWeekday, familyId, sourceWeekday, timetableMode,
+      `INSERT INTO timetable_items (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, set_id)
+       SELECT family_id, ?, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, set_id
+       FROM timetable_items WHERE family_id = ? AND weekday = ? AND set_id = ?`, targetWeekday, familyId, sourceWeekday, setId,
     );
     await database.execAsync('COMMIT');
   } catch (error) { await database.execAsync('ROLLBACK'); throw error; }
@@ -83,18 +83,18 @@ export async function getEditableTimetableItemById(database: Pick<TimetableDatab
       COALESCE(periods.start_time, timetable_items.start_time) AS startTime,
       COALESCE(periods.end_time, timetable_items.end_time) AS endTime,
       timetable_items.title, timetable_items.category, timetable_items.color_key AS colorKey, timetable_items.icon_key AS iconKey,
-      timetable_items.alert_mode AS alertMode, timetable_items.alert_before_min AS alertBeforeMin, timetable_items.timetable_mode AS timetableMode
+      timetable_items.alert_mode AS alertMode, timetable_items.alert_before_min AS alertBeforeMin, timetable_items.set_id AS setId
     FROM timetable_items LEFT JOIN periods ON periods.family_id = timetable_items.family_id AND periods.period_no = timetable_items.period_no
     WHERE timetable_items.id = ? AND timetable_items.family_id = ?`,
     id, familyId,
   );
 }
 
-export async function getEditableTimetableItems(database: Pick<TimetableDatabase, 'getAllAsync'>, familyId = 'local-family', timetableMode: TimetableMode = 'regular'): Promise<readonly EditableTimetableItem[]> {
+export async function getEditableTimetableItems(database: Pick<TimetableDatabase, 'getAllAsync'>, setId: TimetableSetId, familyId = 'local-family'): Promise<readonly EditableTimetableItem[]> {
   return database.getAllAsync<EditableTimetableItem>(
     `SELECT id, weekday, period_no AS periodNo, start_time AS startTime, end_time AS endTime, title, category,
-      color_key AS colorKey, icon_key AS iconKey, alert_mode AS alertMode, alert_before_min AS alertBeforeMin, timetable_mode AS timetableMode
-    FROM timetable_items WHERE family_id = ? AND timetable_mode = ? ORDER BY weekday, COALESCE(period_no, 999), start_time, id`, familyId, timetableMode,
+      color_key AS colorKey, icon_key AS iconKey, alert_mode AS alertMode, alert_before_min AS alertBeforeMin, set_id AS setId
+    FROM timetable_items WHERE family_id = ? AND set_id = ? ORDER BY weekday, COALESCE(period_no, 999), start_time, id`, familyId, setId,
   );
 }
 
@@ -111,8 +111,8 @@ export async function createTimetableItems(database: Pick<TimetableDatabase, 'ex
 export async function getTimetableItemsForWeekday(
   database: Pick<TimetableDatabase, 'getAllAsync'>,
   weekday: number,
+  setId: TimetableSetId,
   familyId = 'local-family',
-  timetableMode: TimetableMode = 'regular',
 ): Promise<readonly TimetableItem[]> {
   if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) throw new Error('weekday must be between 0 and 6');
   return database.getAllAsync<TimetableItem>(
@@ -121,9 +121,9 @@ export async function getTimetableItemsForWeekday(
       timetable_items.color_key AS colorKey, timetable_items.icon_key AS iconKey
     FROM timetable_items LEFT JOIN periods
       ON periods.family_id = timetable_items.family_id AND periods.period_no = timetable_items.period_no
-    WHERE timetable_items.family_id = ? AND timetable_items.weekday = ? AND timetable_items.timetable_mode = ?
+    WHERE timetable_items.family_id = ? AND timetable_items.weekday = ? AND timetable_items.set_id = ?
     ORDER BY startTime, endTime, timetable_items.id`,
-    familyId, weekday, timetableMode,
+    familyId, weekday, setId,
   );
 }
 

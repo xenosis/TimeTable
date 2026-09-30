@@ -6,8 +6,10 @@ export type TimetableCategory = (typeof timetableCategories)[number];
 export const alertModes = ['none', 'notify', 'alarm'] as const;
 export type AlertMode = (typeof alertModes)[number];
 
-export const timetableModes = ['regular', 'vacation'] as const;
-export type TimetableMode = (typeof timetableModes)[number];
+/** 시간표 세트(예: 1학기·방학)의 ID. 항목은 정확히 하나의 세트에 속한다. */
+export type TimetableSetId = number;
+
+export type TimetableSet = { readonly id: TimetableSetId; readonly name: string };
 
 export type TimetableItemInput = {
   readonly familyId?: string;
@@ -21,7 +23,7 @@ export type TimetableItemInput = {
   readonly iconKey: IconKey;
   readonly alertMode?: AlertMode;
   readonly alertBeforeMin?: number;
-  readonly timetableMode?: TimetableMode;
+  readonly setId: TimetableSetId;
 };
 
 export type TimetableDatabase = {

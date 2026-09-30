@@ -7,8 +7,8 @@ import { PermissionGuide } from '../../src/components/PermissionGuide';
 import { TodayScheduleCard } from '../../src/components/TodayScheduleCard';
 import { TodayTasksCard } from '../../src/components/TodayTasksCard';
 import { getDatabase } from '../../src/db/database';
-import { getActiveTimetableMode } from '../../src/db/timetableModeRepository';
-import type { TimetableMode } from '../../src/db/types';
+import { getActiveTimetableSet } from '../../src/db/timetableSetRepository';
+import type { TimetableSet } from '../../src/db/types';
 import { fontSize, spacing } from '../../src/theme';
 import { useActiveTheme } from '../../src/theme/provider';
 import { msUntilNextLocalMidnight } from '../../src/utils/date';
@@ -16,15 +16,15 @@ import { msUntilNextLocalMidnight } from '../../src/utils/date';
 export default function TodayScreen() {
   const { theme } = useActiveTheme();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [timetableMode, setTimetableMode] = useState<TimetableMode>('regular');
+  const [timetableSet, setTimetableSet] = useState<TimetableSet | null>(null);
   const { colors } = theme;
   const bump = useCallback(() => setRefreshKey((value) => value + 1), []);
 
   useFocusEffect(useCallback(() => {
     let active = true;
     void getDatabase()
-      .then(getActiveTimetableMode)
-      .then((mode) => { if (active) setTimetableMode(mode); })
+      .then((database) => getActiveTimetableSet(database))
+      .then((saved) => { if (active) setTimetableSet(saved); })
       .catch(() => undefined)
       .finally(() => { if (active) bump(); });
     return () => { active = false; };
@@ -44,7 +44,7 @@ export default function TodayScreen() {
   return <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
     <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>오늘도 해보자! ✨</Text>
     <PermissionGuide theme={theme} banner={{ onPress: () => router.push('/manage') }} />
-    <TodayScheduleCard refreshKey={refreshKey} theme={theme} timetableMode={timetableMode} />
+    {timetableSet && <TodayScheduleCard refreshKey={refreshKey} theme={theme} setId={timetableSet.id} />}
     <TodayTasksCard theme={theme} refreshKey={refreshKey} onChanged={bump} />
     <GemSummaryLine theme={theme} refreshKey={refreshKey} onPress={() => router.replace('/stickers')} />
   </ScrollView>;

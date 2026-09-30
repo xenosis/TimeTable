@@ -8,7 +8,7 @@ describe('replaceRollingNotificationsFromDatabase', () => {
     const { replaceAndroidRollingSchedule } = jest.requireMock('../src/notifications/secureAlarmPoc') as { replaceAndroidRollingSchedule: jest.Mock };
     const database = { getAllAsync: jest.fn().mockResolvedValueOnce([{ id: 1, weekday: 1, startTime: '09:00', title: '국어', category: 'school', alertMode: 'notify', alertBeforeMin: 0 }]).mockResolvedValueOnce([]) };
 
-    await expect(replaceTimetableRollingNotificationsFromDatabase(database, new Date(2026, 8, 14, 8, 0))).resolves.toBe(1);
+    await expect(replaceTimetableRollingNotificationsFromDatabase(database, 1, new Date(2026, 8, 14, 8, 0))).resolves.toBe(1);
 
     expect(replaceAndroidRollingSchedule).toHaveBeenLastCalledWith([{ id: '1:2026-09-14', title: '국어', triggerAt: new Date(2026, 8, 14, 9, 0).getTime(), mode: 'notify' }], 'timetable');
   });

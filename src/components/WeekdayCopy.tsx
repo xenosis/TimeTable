@@ -3,12 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { copyTimetableWeekday } from '../db/timetableRepository';
-import type { TimetableMode } from '../db/types';
+import type { TimetableSetId } from '../db/types';
 import { borderRadius, fontSize, spacing, touchTarget, type ThemeDefinition } from '../theme';
 
 const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
-export function WeekdayCopy({ theme, onCopied, timetableMode }: { readonly theme: ThemeDefinition; readonly onCopied: () => Promise<void>; readonly timetableMode: TimetableMode }) {
+export function WeekdayCopy({ theme, onCopied, setId }: { readonly theme: ThemeDefinition; readonly onCopied: () => Promise<void>; readonly setId: TimetableSetId }) {
   const [source, setSource] = useState<number | null>(null);
   const [target, setTarget] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
@@ -17,7 +17,7 @@ export function WeekdayCopy({ theme, onCopied, timetableMode }: { readonly theme
     if (source == null || target == null) { setMessage('원본과 대상 요일을 모두 골라 주세요.'); return; }
     setSaving(true);
     try {
-      await copyTimetableWeekday(await getDatabase(), source, target, 'local-family', timetableMode);
+      await copyTimetableWeekday(await getDatabase(), source, target, setId);
       try { await onCopied(); setMessage(`${weekdays[source]}요일 시간표를 ${weekdays[target]}요일에 복사했고 알림 예약도 새로 만들었어요.`); }
       catch { setMessage(`${weekdays[source]}요일 시간표는 복사했지만 알림 예약을 다시 만들지 못했어요. 알림 준비 권한을 확인해 주세요.`); }
     }

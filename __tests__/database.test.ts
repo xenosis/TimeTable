@@ -2,7 +2,6 @@ import { databaseVersion, migrateDatabase, schemaV1, schemaV3, schemaV4 } from '
 import { copyTimetableWeekday, createTimetableItem, createTimetableItems, deleteTimetableItem, getEditableTimetableItemById, updateTimetableItem } from '../src/db/timetableRepository';
 import { getPeriods, savePeriods } from '../src/db/periodRepository';
 import { getDayExceptionsInRange } from '../src/db/dayExceptionRepository';
-import { getActiveTimetableMode, setActiveTimetableMode } from '../src/db/timetableModeRepository';
 
 function migrationDatabase(version: number) {
   const calls: string[] = [];
@@ -42,41 +41,41 @@ describe('timetable item persistence', () => {
   it('keeps semantic color and icon keys instead of a rendered color value', async () => {
     const database = { runAsync: jest.fn(async () => undefined) };
     await createTimetableItem(database, {
-      weekday: 1, periodNo: 2, title: '수학', category: 'school', colorKey: 'math', iconKey: 'number', alertMode: 'notify', alertBeforeMin: 5,
+      weekday: 1, periodNo: 2, title: '수학', category: 'school', colorKey: 'math', iconKey: 'number', alertMode: 'notify', alertBeforeMin: 5, setId: 3,
     });
-    expect(database.runAsync).toHaveBeenCalledWith(expect.stringContaining('color_key, icon_key'), 'local-family', 1, 2, null, null, '수학', 'school', 'math', 'number', 'notify', 5, 'regular');
+    expect(database.runAsync).toHaveBeenCalledWith(expect.stringContaining('color_key, icon_key'), 'local-family', 1, 2, null, null, '수학', 'school', 'math', 'number', 'notify', 5, 3);
   });
 
   it('rejects an ambiguous item with both a period and a time range', async () => {
     const database = { runAsync: jest.fn(async () => undefined) };
     await expect(createTimetableItem(database, {
-      weekday: 1, periodNo: 2, startTime: '09:00', endTime: '09:40', title: '수학', category: 'school', colorKey: 'math', iconKey: 'number',
+      weekday: 1, periodNo: 2, startTime: '09:00', endTime: '09:40', title: '수학', category: 'school', colorKey: 'math', iconKey: 'number', setId: 3,
     })).rejects.toThrow('both a period and a time range');
   });
 
   it('creates selected weekdays independently and scopes update and delete to the family', async () => {
     const database = { execAsync: jest.fn(async () => undefined), getAllAsync: jest.fn(async <T,>() => [{ count: 2 }] as T[]), runAsync: jest.fn(async () => undefined) };
-    const item = { periodNo: 1, title: '국어', category: 'school' as const, colorKey: 'korean' as const, iconKey: 'text' as const };
+    const item = { periodNo: 1, title: '국어', category: 'school' as const, colorKey: 'korean' as const, iconKey: 'text' as const, setId: 3 };
     await createTimetableItems(database, [1, 3, 1], item);
     await updateTimetableItem(database, 4, { ...item, weekday: 2, title: '수정' });
-    await deleteTimetableItem(database, 4);
+    await deleteTimetableItem(database, 4, 3);
     expect(database.runAsync).toHaveBeenCalledTimes(4);
     const calls = database.runAsync.mock.calls as unknown[][];
     expect(calls[0].slice(1, 4)).toEqual(['local-family', 1, 1]);
     expect(calls[1].slice(1, 4)).toEqual(['local-family', 3, 1]);
-    expect(calls[2][0]).toContain('WHERE id = ? AND family_id = ? AND timetable_mode = ?');
-    expect(calls[3]).toEqual(['DELETE FROM timetable_items WHERE id = ? AND family_id = ? AND timetable_mode = ?', 4, 'local-family', 'regular']);
+    expect(calls[2][0]).toContain('WHERE id = ? AND family_id = ? AND set_id = ?');
+    expect(calls[3]).toEqual(['DELETE FROM timetable_items WHERE id = ? AND family_id = ? AND set_id = ?', 4, 'local-family', 3]);
   });
 
   it('replaces the target weekday with an exact copy in one transaction', async () => {
     const database = { execAsync: jest.fn(async () => undefined), getAllAsync: async <T,>() => [{ count: 2 }] as unknown as T[], runAsync: jest.fn(async () => undefined) };
-    await copyTimetableWeekday(database, 1, 3);
+    await copyTimetableWeekday(database, 1, 3, 3);
     expect(database.execAsync.mock.calls).toEqual([['BEGIN IMMEDIATE'], ['COMMIT']]);
     const calls = database.runAsync.mock.calls as unknown[][];
-    expect(calls[0]).toEqual(['DELETE FROM timetable_items WHERE family_id = ? AND weekday = ? AND timetable_mode = ?', 'local-family', 3, 'regular']);
+    expect(calls[0]).toEqual(['DELETE FROM timetable_items WHERE family_id = ? AND weekday = ? AND set_id = ?', 'local-family', 3, 3]);
     expect(calls[1][0]).toContain('SELECT family_id, ?');
-    await expect(copyTimetableWeekday(database, 1, 1)).rejects.toThrow('must differ');
-    await expect(copyTimetableWeekday({ ...database, getAllAsync: async <T,>() => [{ count: 0 }] as unknown as T[] }, 1, 3)).rejects.toThrow('source weekday has no items');
+    await expect(copyTimetableWeekday(database, 1, 1, 3)).rejects.toThrow('must differ');
+    await expect(copyTimetableWeekday({ ...database, getAllAsync: async <T,>() => [{ count: 0 }] as unknown as T[] }, 1, 3, 3)).rejects.toThrow('source weekday has no items');
   });
 
   it('loads a period item with its resolved period times for an alarm link', async () => {
@@ -84,19 +83,6 @@ describe('timetable item persistence', () => {
     const database = { getFirstAsync: async <T,>(...args: unknown[]) => { calls.push(args); return { id: 4, title: '수학', startTime: '10:00', endTime: '10:40' } as T; } };
     await expect(getEditableTimetableItemById(database, 4)).resolves.toMatchObject({ id: 4, startTime: '10:00', endTime: '10:40' });
     expect(calls[0]).toEqual([expect.stringContaining('COALESCE(periods.start_time, timetable_items.start_time)'), 4, 'local-family']);
-  });
-});
-
-describe('vacation timetable mode', () => {
-  it('stores the selected mode and keeps regular as the empty-state default', async () => {
-    const calls: unknown[][] = [];
-    const database = {
-      getFirstAsync: async <T,>(...args: unknown[]) => { calls.push(args); return null as T | null; },
-      runAsync: async (...args: unknown[]) => { calls.push(args); },
-    };
-    await expect(getActiveTimetableMode(database)).resolves.toBe('regular');
-    await setActiveTimetableMode(database, 'vacation');
-    expect(calls[1]).toEqual([expect.stringContaining('timetable_settings'), 'local-family', 'vacation']);
   });
 });
 

@@ -3,15 +3,15 @@ import { Text } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getTimetableItemsForWeekday, type TimetableItem } from '../db/timetableRepository';
-import type { TimetableMode } from '../db/types';
+import type { TimetableSetId } from '../db/types';
 import { fontSize, type ThemeDefinition } from '../theme';
 import type { GridDay } from '../utils/timetableGrid';
 import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
 import { WeekTimeGrid } from './WeekTimeGrid';
 
-export function WeekOverviewGrid({ theme, timetableMode, today, refreshKey, onSelectDay, showHeader = true }: {
+export function WeekOverviewGrid({ theme, setId, today, refreshKey, onSelectDay, showHeader = true }: {
   readonly theme: ThemeDefinition;
-  readonly timetableMode: TimetableMode;
+  readonly setId: TimetableSetId;
   readonly today: number;
   readonly refreshKey: number;
   readonly onSelectDay: (weekday: number) => void;
@@ -23,11 +23,11 @@ export function WeekOverviewGrid({ theme, timetableMode, today, refreshKey, onSe
   useEffect(() => {
     let active = true;
     void getDatabase().then((database) => Promise.all(
-      SCHOOL_WEEKDAYS.map(({ day }) => getTimetableItemsForWeekday(database, day, 'local-family', timetableMode).then((items) => ({ day, items }))),
+      SCHOOL_WEEKDAYS.map(({ day }) => getTimetableItemsForWeekday(database, day, setId).then((items) => ({ day, items }))),
     )).then((result) => { if (active) { setDays(result); setFailed(false); } })
       .catch(() => { if (active) setFailed(true); });
     return () => { active = false; };
-  }, [timetableMode, refreshKey]);
+  }, [setId, refreshKey]);
 
   const hasAnyItem = days.some(({ items }) => items.length > 0);
 

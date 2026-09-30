@@ -3,6 +3,7 @@ import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 
 import { borderRadius, fontSize, spacing, touchTarget } from '../src/theme';
 import { PeriodSettings } from '../src/components/PeriodSettings';
+import { TimetableSetPanel } from '../src/components/TimetableSetPanel';
 import { TimetableEditor } from '../src/components/TimetableEditor';
 import { WeekdayCopy } from '../src/components/WeekdayCopy';
 import { PinGate } from '../src/components/PinGate';
@@ -13,8 +14,8 @@ import { RewardGoalEditor } from '../src/components/RewardGoalEditor';
 import { PermissionGuide } from '../src/components/PermissionGuide';
 import { TaskEditor } from '../src/components/TaskEditor';
 import { getDatabase } from '../src/db/database';
-import { getActiveTimetableMode, setActiveTimetableMode } from '../src/db/timetableModeRepository';
-import type { TimetableMode } from '../src/db/types';
+import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
+import type { TimetableSet } from '../src/db/types';
 import { requestRollingScheduleRefresh } from '../src/notifications/rollingRefresh';
 import { requestTaskRollingScheduleRefresh } from '../src/notifications/taskRollingSchedule';
 
@@ -26,13 +27,12 @@ export default function ManageScreen() {
   const [isOpeningAlarmSettings, setIsOpeningAlarmSettings] = useState(false);
   const [fullScreenAlarmAllowed, setFullScreenAlarmAllowed] = useState<boolean | null>(null);
   const [scheduleRefresh, setScheduleRefresh] = useState(0);
-  const [timetableMode, setTimetableMode] = useState<TimetableMode>('regular');
-  const [isChangingTimetableMode, setIsChangingTimetableMode] = useState(false);
+  const [timetableSet, setTimetableSet] = useState<TimetableSet | null>(null);
 
   const { colors, categories: categoryPalette } = theme;
 
   useEffect(() => {
-    void getDatabase().then(getActiveTimetableMode).then(setTimetableMode).catch(() => setStatus('시간표 모드를 불러오지 못했어요.'));
+    void getDatabase().then((database) => getActiveTimetableSet(database)).then(setTimetableSet).catch(() => setStatus('시간표를 불러오지 못했어요.'));
   }, []);
 
   const refreshFullScreenAlarmPermission = () => {
@@ -50,19 +50,9 @@ export default function ManageScreen() {
     return () => subscription.remove();
   }, []);
 
-  const changeTimetableMode = async (mode: TimetableMode) => {
-    setIsChangingTimetableMode(true);
-    try {
-      await setActiveTimetableMode(await getDatabase(), mode);
-      await requestRollingScheduleRefresh();
-      setTimetableMode(mode);
-      setScheduleRefresh((value) => value + 1);
-      setStatus(mode === 'vacation' ? '방학 시간표로 바꿨어요.' : '평소 시간표로 바꿨어요.');
-    } catch {
-      setStatus('시간표 모드를 바꾸지 못했어요.');
-    } finally {
-      setIsChangingTimetableMode(false);
-    }
+  const applyTimetableSet = (set: TimetableSet) => {
+    setTimetableSet(set);
+    setScheduleRefresh((value) => value + 1);
   };
 
   const refreshAfterScheduleChange = async () => {
@@ -127,21 +117,10 @@ export default function ManageScreen() {
       <PinGate theme={theme}>
         <TaskEditor theme={theme} onChanged={refreshAfterTaskChange} />
         <RewardGoalEditor theme={theme} onChanged={() => undefined} />
-        <Text style={[styles.title, { color: colors.text }]}>시간표 모드</Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>지금은 {timetableMode === 'vacation' ? '방학' : '평소'} 시간표를 보여 주고 있어요.</Text>
-        <View style={styles.modeButtons}>
-          {(['regular', 'vacation'] as const).map((mode) => <Pressable
-            key={mode}
-            accessibilityRole="button"
-            accessibilityLabel={mode === 'regular' ? '평소 시간표로 전환' : '방학 시간표로 전환'}
-            disabled={isChangingTimetableMode}
-            onPress={() => void changeTimetableMode(mode)}
-            style={({ pressed }) => [styles.modeButton, { borderColor: colors.primary, backgroundColor: mode === timetableMode ? colors.primary : colors.surface }, (pressed || isChangingTimetableMode) && styles.buttonPressed]}
-          ><Text style={{ color: mode === timetableMode ? colors.onPrimary : colors.primary }}>{mode === 'regular' ? '평소' : '방학'}</Text></Pressable>)}
-        </View>
+        {timetableSet && <TimetableSetPanel theme={theme} activeSet={timetableSet} refreshKey={scheduleRefresh} onApplied={applyTimetableSet} onRenamed={setTimetableSet} />}
         <PeriodSettings onSaved={refreshAfterScheduleChange} />
-        <TimetableEditor key={timetableMode} refreshKey={scheduleRefresh} theme={theme} timetableMode={timetableMode} onChanged={refreshAfterScheduleChange} />
-        <WeekdayCopy theme={theme} timetableMode={timetableMode} onCopied={refreshAfterScheduleChange} />
+        {timetableSet && <TimetableEditor key={timetableSet.id} refreshKey={scheduleRefresh} theme={theme} setId={timetableSet.id} onChanged={refreshAfterScheduleChange} />}
+        {timetableSet && <WeekdayCopy theme={theme} setId={timetableSet.id} onCopied={refreshAfterScheduleChange} />}
       </PinGate>
       <Text style={[styles.title, { color: colors.text }]}>일반 알림 확인 🎈</Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>아래 버튼을 누른 뒤 1분 후 알림이 오는지 확인해 주세요.</Text>
@@ -225,8 +204,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
   },
-  modeButtons: { flexDirection: 'row', gap: spacing.sm },
-  modeButton: { alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: touchTarget.minimum },
   categoryChip: {
     minHeight: touchTarget.minimum,
     minWidth: touchTarget.minimum,
