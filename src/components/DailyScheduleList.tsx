@@ -65,12 +65,12 @@ export function DailyScheduleList({ weekday, isToday, theme, setId, refreshKey }
 }
 
 const styles = StyleSheet.create({
-  list: { gap: spacing.sm, width: '100%' },
-  row: { alignItems: 'center', borderRadius: borderRadius.lg, borderWidth: 3, flexDirection: 'row', gap: spacing.md, minHeight: 72, padding: spacing.md },
-  icon: { fontSize: 28, fontWeight: '700' },
+  list: { gap: spacing.xs, width: '100%' },
+  row: { alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 2, flexDirection: 'row', gap: spacing.sm, minHeight: 52, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  icon: { fontSize: 24, fontWeight: '700' },
   copy: { flex: 1 },
-  title: { fontSize: fontSize.md, fontWeight: '700' },
-  time: { fontSize: fontSize.sm },
+  title: { fontSize: 18, fontWeight: '700' },
+  time: { fontSize: 14 },
   badge: { fontSize: fontSize.sm, fontWeight: '700' },
   empty: { fontSize: fontSize.md, textAlign: 'center' },
 });

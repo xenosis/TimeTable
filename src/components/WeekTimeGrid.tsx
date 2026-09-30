@@ -13,7 +13,7 @@ import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
 export const WEEK_HINT = '요일(월~금)을 누르면 그 요일 시간표를 볼 수 있어요';
 
 const SIZES = {
-  portrait: { timeWidth: 40, minRow: 36, maxRow: 64, dpPerMinute: 1.2, title: 11, time: 9, timeLabel: 10 },
+  portrait: { timeWidth: 40, minRow: 32, maxRow: 52, dpPerMinute: 0.9, title: 11, time: 9, timeLabel: 10 },
   landscape: { timeWidth: 56, minRow: 28, maxRow: 48, dpPerMinute: 0.8, title: 13, time: 11, timeLabel: 10 },
 } as const;
 

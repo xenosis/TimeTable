@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { borderRadius, fontSize, spacing, touchTarget, type ThemeDefinition } from '../theme';
+import { borderRadius, spacing, type ThemeDefinition } from '../theme';
 import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
 
 export function WeekdayTabs({ selected, today, theme, onSelect }: {
@@ -30,7 +30,7 @@ export function WeekdayTabs({ selected, today, theme, onSelect }: {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.xs, width: '100%' },
-  chip: { alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: touchTarget.minimum },
-  label: { fontSize: fontSize.md, fontWeight: '700' },
-  dot: { borderRadius: 4, height: 6, marginTop: 4, width: 6 },
+  chip: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: 44 },
+  label: { fontSize: 18, fontWeight: '700' },
+  dot: { borderRadius: 3, height: 5, marginTop: 2, width: 5 },
 });
