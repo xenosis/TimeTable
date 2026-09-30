@@ -1,6 +1,6 @@
 import type { TimetableDatabase } from './types';
 
-export const databaseVersion = 10;
+export const databaseVersion = 11;
 
 export const schemaV1 = [
   `CREATE TABLE IF NOT EXISTS periods (
@@ -178,6 +178,11 @@ export const schemaV10 = [
   'CREATE INDEX IF NOT EXISTS timetable_items_set_weekday ON timetable_items(family_id, set_id, weekday)',
 ] as const;
 
+/** V11: 시간표 항목에 짧은 한 줄 메모(예: '일루스터 16:45 차'). 기존 항목은 빈 메모가 된다. */
+export const schemaV11 = [
+  "ALTER TABLE timetable_items ADD COLUMN memo TEXT NOT NULL DEFAULT ''",
+] as const;
+
 type UserVersionRow = { user_version: number };
 
 export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsync' | 'getFirstAsync'>): Promise<void> {
@@ -224,6 +229,10 @@ export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsy
     }
     if (version < 10) {
       for (const statement of schemaV10) await database.execAsync(statement);
+      await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
+    }
+    if (version < 11) {
+      for (const statement of schemaV11) await database.execAsync(statement);
       await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
     }
     await database.execAsync('COMMIT');

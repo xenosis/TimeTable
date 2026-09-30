@@ -80,13 +80,13 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
             return <View
               key={cell.item.id}
               accessible
-              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${cell.item.title}`}
+              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}`}
               style={[styles.cell, {
                 top: rect.top, height: rect.height, left: `${rect.leftRatio * 100}%`, width: `${rect.widthRatio * 100}%`,
                 backgroundColor: category.backgroundColor,
               }]}
             >
-              <Text style={[styles.cellTitle, { fontSize: size.title, color: category.textColor }]} numberOfLines={3}>{icon.glyph} {cell.item.title}</Text>
+              <Text style={[styles.cellTitle, { fontSize: size.title, color: category.textColor }]} numberOfLines={3}>{cell.item.memo ? '📝' : ''}{icon.glyph} {cell.item.title}</Text>
               {own && <Text style={[styles.cellTime, { fontSize: size.time, color: category.textColor }]}>{size === SIZES.landscape ? range : `${cell.item.startTime}~\n${cell.item.endTime}`}</Text>}
             </View>;
           })}

@@ -24,6 +24,8 @@ export type TimetableItemInput = {
   readonly iconKey: IconKey;
   readonly alertMode?: AlertMode;
   readonly alertBeforeMin?: number;
+  /** 짧은 한 줄 메모. 앞뒤 공백을 지워 저장하고 비어 있으면 빈 문자열. 최대 60글자 */
+  readonly memo?: string;
   readonly setId: TimetableSetId;
 };
 

@@ -3,14 +3,14 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getPeriods, type Period } from '../db/periodRepository';
-import { createTimetableItems, deleteTimetableItem, getEditableTimetableItems, updateTimetableItem, type EditableTimetableItem } from '../db/timetableRepository';
+import { createTimetableItems, deleteTimetableItem, getEditableTimetableItems, MAX_MEMO_LENGTH, updateTimetableItem, type EditableTimetableItem } from '../db/timetableRepository';
 import { timetableCategories, type TimetableCategory, type TimetableSetId } from '../db/types';
 import { borderRadius, colorKeys, fontSize, iconKeys, resolveThemeColor, resolveThemeIcon, spacing, touchTarget, type ThemeDefinition } from '../theme';
 import { formatTimeInput } from '../utils/timeInput';
 
-type Draft = { readonly id?: number; readonly weekdays: readonly number[]; readonly title: string; readonly periodNo: number | null; readonly startTime: string; readonly endTime: string; readonly category: TimetableCategory; readonly colorKey: (typeof colorKeys)[number]; readonly iconKey: (typeof iconKeys)[number]; readonly alertMode: 'none' | 'notify' | 'alarm'; readonly alertBeforeMin: string };
+type Draft = { readonly id?: number; readonly weekdays: readonly number[]; readonly title: string; readonly periodNo: number | null; readonly startTime: string; readonly endTime: string; readonly category: TimetableCategory; readonly colorKey: (typeof colorKeys)[number]; readonly iconKey: (typeof iconKeys)[number]; readonly alertMode: 'none' | 'notify' | 'alarm'; readonly alertBeforeMin: string; readonly memo: string };
 const categoryLabels: Record<TimetableCategory, string> = { school: '학교', academy: '학원', care: '돌봄', life: '생활' };
-const emptyDraft = (): Draft => ({ weekdays: [new Date().getDay()], title: '', periodNo: null, startTime: '', endTime: '', category: 'academy', colorKey: 'other', iconKey: 'other', alertMode: 'none', alertBeforeMin: '0' });
+const emptyDraft = (): Draft => ({ weekdays: [new Date().getDay()], title: '', periodNo: null, startTime: '', endTime: '', category: 'academy', colorKey: 'other', iconKey: 'other', alertMode: 'none', alertBeforeMin: '0', memo: '' });
 const weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
 
 function Button({ label, onPress, selected = false, disabled = false }: { readonly label: string; readonly onPress: () => void; readonly selected?: boolean; readonly disabled?: boolean }) {
@@ -29,12 +29,14 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId }: { reado
   }).catch(() => setMessage('시간표 항목을 불러오지 못했어요.'));
   useEffect(reload, [refreshKey, setId]);
 
-  const select = (item: EditableTimetableItem) => setDraft({ id: item.id, weekdays: [item.weekday], title: item.title, periodNo: item.periodNo ?? null, startTime: item.startTime ?? '', endTime: item.endTime ?? '', category: item.category, colorKey: item.colorKey, iconKey: item.iconKey, alertMode: item.alertMode ?? 'none', alertBeforeMin: String(item.alertBeforeMin ?? 0) });
+  const select = (item: EditableTimetableItem) => setDraft({ id: item.id, weekdays: [item.weekday], title: item.title, periodNo: item.periodNo ?? null, startTime: item.startTime ?? '', endTime: item.endTime ?? '', category: item.category, colorKey: item.colorKey, iconKey: item.iconKey, alertMode: item.alertMode ?? 'none', alertBeforeMin: String(item.alertBeforeMin ?? 0), memo: item.memo ?? '' });
+  const memoLength = Array.from(draft.memo.trim()).length; // 저장할 때 앞뒤 공백은 지우므로 같은 기준으로 센다
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
   const toggleWeekday = (weekday: number) => set('weekdays', draft.id ? [weekday] : draft.weekdays.includes(weekday) ? draft.weekdays.filter((day) => day !== weekday) : [...draft.weekdays, weekday]);
-  const input = () => ({ title: draft.title, periodNo: draft.periodNo, startTime: draft.periodNo == null ? draft.startTime : null, endTime: draft.periodNo == null ? draft.endTime : null, category: draft.category, colorKey: draft.colorKey, iconKey: draft.iconKey, alertMode: draft.alertMode, alertBeforeMin: Number(draft.alertBeforeMin), setId });
+  const input = () => ({ title: draft.title, periodNo: draft.periodNo, startTime: draft.periodNo == null ? draft.startTime : null, endTime: draft.periodNo == null ? draft.endTime : null, category: draft.category, colorKey: draft.colorKey, iconKey: draft.iconKey, alertMode: draft.alertMode, alertBeforeMin: Number(draft.alertBeforeMin), memo: draft.memo, setId });
 
   const save = async () => {
+    if (memoLength > MAX_MEMO_LENGTH) { setMessage(`메모는 ${MAX_MEMO_LENGTH}글자까지 쓸 수 있어요. 조금 줄여 주세요.`); return; }
     setSaving(true);
     try {
       const database = await getDatabase();
@@ -58,6 +60,8 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId }: { reado
     {draft.id != null && <Button label="새 항목 입력" onPress={() => setDraft(emptyDraft())} disabled={saving} />}
     <View style={styles.list}>{items.map((item) => <Button key={item.id} label={`${weekdayLabels[item.weekday]} · ${item.title}`} onPress={() => select(item)} selected={draft.id === item.id} />)}</View>
     <TextInput accessibilityLabel="과목 이름" editable={!saving} value={draft.title} onChangeText={(value) => set('title', value)} placeholder="과목 또는 일정" style={styles.input} />
+    <TextInput accessibilityLabel="메모" editable={!saving} value={draft.memo} onChangeText={(value) => set('memo', value)} placeholder="메모 (예: 16:45 차 타고 이동)" style={styles.input} />
+    <Text style={{ color: memoLength > MAX_MEMO_LENGTH ? theme.colors.danger : theme.colors.textMuted }}>{`메모 ${memoLength}/${MAX_MEMO_LENGTH}글자`}</Text>
     <Text style={[styles.label, { color: theme.colors.text }]}>반복할 요일</Text><Text style={{ color: theme.colors.textMuted }}>오늘 요일이 미리 선택돼 있어요. 필요한 요일만 골라요.</Text><View style={styles.wrap}>{weekdayLabels.map((label, day) => <Button key={label} label={label} onPress={() => toggleWeekday(day)} selected={draft.weekdays.includes(day)} disabled={saving} />)}</View>
     {draft.id && <Text style={{ color: theme.colors.textMuted }}>기존 항목은 한 요일씩 수정해요.</Text>}
     <Text style={[styles.label, { color: theme.colors.text }]}>시간</Text><View style={styles.wrap}><Button label="교시" onPress={() => set('periodNo', periods[0]?.periodNo ?? null)} selected={draft.periodNo != null} disabled={saving} /><Button label="직접 입력" onPress={() => set('periodNo', null)} selected={draft.periodNo == null} disabled={saving} />{draft.periodNo != null && periods.map((period) => <Button key={period.periodNo} label={`${period.periodNo}교시`} onPress={() => set('periodNo', period.periodNo)} selected={draft.periodNo === period.periodNo} disabled={saving} />)}</View>

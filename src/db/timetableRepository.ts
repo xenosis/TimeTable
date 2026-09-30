@@ -3,6 +3,13 @@ import type { ColorKey, IconKey } from '../theme';
 
 const clockPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/** 메모 최대 길이(글자 수). 이모지도 한 글자로 센다 */
+export const MAX_MEMO_LENGTH = 60;
+
+function cleanMemo(memo: string | undefined): string {
+  return (memo ?? '').trim();
+}
+
 function requireValidItem(item: TimetableItemInput): void {
   if (!Number.isInteger(item.weekday) || item.weekday < 0 || item.weekday > 6) throw new Error('weekday must be between 0 and 6');
   if (!item.title.trim()) throw new Error('title is required');
@@ -18,27 +25,29 @@ function requireValidItem(item: TimetableItemInput): void {
   if (!alertModes.includes(item.alertMode ?? 'none')) throw new Error('unknown alert mode');
   if (!Number.isInteger(item.alertBeforeMin ?? 0) || (item.alertBeforeMin ?? 0) < 0) throw new Error('alert lead time cannot be negative');
   if (!Number.isInteger(item.setId) || item.setId < 1) throw new Error('timetable set id must be positive');
+  if (Array.from(cleanMemo(item.memo)).length > MAX_MEMO_LENGTH) throw new Error(`memo must be ${MAX_MEMO_LENGTH} characters or fewer`);
 }
 
 export async function createTimetableItem(database: Pick<TimetableDatabase, 'runAsync'>, item: TimetableItemInput): Promise<void> {
   requireValidItem(item);
   await database.runAsync(
     `INSERT INTO timetable_items
-      (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, set_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, memo, set_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     item.familyId?.trim() || 'local-family', item.weekday, item.periodNo ?? null, item.startTime ?? null, item.endTime ?? null, item.title.trim(), item.category,
-    item.colorKey, item.iconKey, item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.setId,
+    item.colorKey, item.iconKey, item.alertMode ?? 'none', item.alertBeforeMin ?? 0, cleanMemo(item.memo), item.setId,
   );
 }
 
+/** memo를 넘기지 않으면(undefined) 기존 메모를 그대로 두고, 빈 문자열을 넘기면 메모를 지운다. */
 export async function updateTimetableItem(database: Pick<TimetableDatabase, 'runAsync'>, id: number, item: TimetableItemInput): Promise<void> {
   if (!Number.isInteger(id) || id < 1) throw new Error('item id must be positive');
   requireValidItem(item);
   await database.runAsync(
-    `UPDATE timetable_items SET weekday = ?, period_no = ?, start_time = ?, end_time = ?, title = ?, category = ?, color_key = ?, icon_key = ?, alert_mode = ?, alert_before_min = ?, set_id = ?
+    `UPDATE timetable_items SET weekday = ?, period_no = ?, start_time = ?, end_time = ?, title = ?, category = ?, color_key = ?, icon_key = ?, alert_mode = ?, alert_before_min = ?, memo = COALESCE(?, memo), set_id = ?
      WHERE id = ? AND family_id = ? AND set_id = ?`,
     item.weekday, item.periodNo ?? null, item.startTime ?? null, item.endTime ?? null, item.title.trim(), item.category, item.colorKey, item.iconKey,
-    item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.setId, id, item.familyId?.trim() || 'local-family', item.setId,
+    item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.memo === undefined ? null : cleanMemo(item.memo), item.setId, id, item.familyId?.trim() || 'local-family', item.setId,
   );
 }
 
@@ -56,8 +65,8 @@ export async function copyTimetableWeekday(database: Pick<TimetableDatabase, 'ex
     if (!sourceCount?.count) throw new Error('source weekday has no items');
     await database.runAsync('DELETE FROM timetable_items WHERE family_id = ? AND weekday = ? AND set_id = ?', familyId, targetWeekday, setId);
     await database.runAsync(
-      `INSERT INTO timetable_items (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, set_id)
-       SELECT family_id, ?, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, set_id
+      `INSERT INTO timetable_items (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, memo, set_id)
+       SELECT family_id, ?, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, memo, set_id
        FROM timetable_items WHERE family_id = ? AND weekday = ? AND set_id = ?`, targetWeekday, familyId, sourceWeekday, setId,
     );
     await database.execAsync('COMMIT');
@@ -74,6 +83,8 @@ export type TimetableItem = {
   readonly title: string;
   readonly colorKey: ColorKey;
   readonly iconKey: IconKey;
+  /** 짧은 한 줄 메모. 비어 있으면 빈 문자열 */
+  readonly memo?: string;
 };
 
 export type EditableTimetableItem = TimetableItemInput & { readonly id: number };
@@ -85,7 +96,7 @@ export async function getEditableTimetableItemById(database: Pick<TimetableDatab
       COALESCE(periods.start_time, timetable_items.start_time) AS startTime,
       COALESCE(periods.end_time, timetable_items.end_time) AS endTime,
       timetable_items.title, timetable_items.category, timetable_items.color_key AS colorKey, timetable_items.icon_key AS iconKey,
-      timetable_items.alert_mode AS alertMode, timetable_items.alert_before_min AS alertBeforeMin, timetable_items.set_id AS setId
+      timetable_items.alert_mode AS alertMode, timetable_items.alert_before_min AS alertBeforeMin, timetable_items.memo, timetable_items.set_id AS setId
     FROM timetable_items LEFT JOIN periods ON periods.family_id = timetable_items.family_id AND periods.period_no = timetable_items.period_no
     WHERE timetable_items.id = ? AND timetable_items.family_id = ?`,
     id, familyId,
@@ -95,7 +106,7 @@ export async function getEditableTimetableItemById(database: Pick<TimetableDatab
 export async function getEditableTimetableItems(database: Pick<TimetableDatabase, 'getAllAsync'>, setId: TimetableSetId, familyId = 'local-family'): Promise<readonly EditableTimetableItem[]> {
   return database.getAllAsync<EditableTimetableItem>(
     `SELECT id, weekday, period_no AS periodNo, start_time AS startTime, end_time AS endTime, title, category,
-      color_key AS colorKey, icon_key AS iconKey, alert_mode AS alertMode, alert_before_min AS alertBeforeMin, set_id AS setId
+      color_key AS colorKey, icon_key AS iconKey, alert_mode AS alertMode, alert_before_min AS alertBeforeMin, memo, set_id AS setId
     FROM timetable_items WHERE family_id = ? AND set_id = ? ORDER BY weekday, COALESCE(period_no, 999), start_time, id`, familyId, setId,
   );
 }
@@ -120,7 +131,7 @@ export async function getTimetableItemsForWeekday(
   return database.getAllAsync<TimetableItem>(
     `SELECT timetable_items.id, timetable_items.period_no AS periodNo, COALESCE(periods.start_time, timetable_items.start_time) AS startTime,
       COALESCE(periods.end_time, timetable_items.end_time) AS endTime, timetable_items.title, timetable_items.category,
-      timetable_items.color_key AS colorKey, timetable_items.icon_key AS iconKey
+      timetable_items.color_key AS colorKey, timetable_items.icon_key AS iconKey, timetable_items.memo
     FROM timetable_items LEFT JOIN periods
       ON periods.family_id = timetable_items.family_id AND periods.period_no = timetable_items.period_no
     WHERE timetable_items.family_id = ? AND timetable_items.weekday = ? AND timetable_items.set_id = ?

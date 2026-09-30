@@ -79,8 +79,8 @@ export async function createTimetableSet(database: WriteDb, name: string, option
     const newId = await insertSet(database, cleanName, familyId);
     if (copyFromSetId != null) {
       await database.runAsync(
-        `INSERT INTO timetable_items (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, set_id)
-         SELECT family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, ?
+        `INSERT INTO timetable_items (family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, memo, set_id)
+         SELECT family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, memo, ?
          FROM timetable_items WHERE family_id = ? AND set_id = ?`, newId, familyId, copyFromSetId,
       );
     }

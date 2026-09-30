@@ -43,7 +43,7 @@ describe('timetable item persistence', () => {
     await createTimetableItem(database, {
       weekday: 1, periodNo: 2, title: '수학', category: 'school', colorKey: 'math', iconKey: 'number', alertMode: 'notify', alertBeforeMin: 5, setId: 3,
     });
-    expect(database.runAsync).toHaveBeenCalledWith(expect.stringContaining('color_key, icon_key'), 'local-family', 1, 2, null, null, '수학', 'school', 'math', 'number', 'notify', 5, 3);
+    expect(database.runAsync).toHaveBeenCalledWith(expect.stringContaining('color_key, icon_key'), 'local-family', 1, 2, null, null, '수학', 'school', 'math', 'number', 'notify', 5, '', 3); // 메모가 없으면 빈 문자열
   });
 
   it('rejects an ambiguous item with both a period and a time range', async () => {

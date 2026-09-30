@@ -22,6 +22,7 @@ function ScheduleRow({ item, state, theme }: { readonly item: TimetableItem; rea
     <View style={styles.copy}>
       <Text style={[styles.title, { color: dimmed ? theme.colors.textMuted : category.textColor }]}>{item.title}</Text>
       <Text style={[styles.time, { color: dimmed ? theme.colors.textMuted : category.textColor }]}>{item.startTime} ~ {item.endTime}</Text>
+      {!!item.memo && <Text style={[styles.memo, { color: dimmed ? theme.colors.textMuted : category.textColor }]} numberOfLines={1}>📝 {item.memo}</Text>}
     </View>
     {state === 'current' && <Text style={[styles.badge, { color: theme.colors.primary }]}>지금</Text>}
   </View>;
@@ -71,6 +72,7 @@ const styles = StyleSheet.create({
   copy: { flex: 1 },
   title: { fontSize: 18, fontWeight: '700' },
   time: { fontSize: 14 },
+  memo: { fontSize: 14 },
   badge: { fontSize: fontSize.sm, fontWeight: '700' },
   empty: { fontSize: fontSize.md, textAlign: 'center' },
 });

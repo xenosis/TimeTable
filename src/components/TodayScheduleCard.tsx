@@ -16,6 +16,7 @@ function ScheduleItemCard({ label, item, theme }: { readonly label: string; read
     <View style={styles.copy}>
       <Text style={[styles.itemTitle, { color: category.textColor }]}>{label} {item.title}</Text>
       <Text style={[styles.itemTime, { color: category.textColor }]}>{item.startTime} ~ {item.endTime}</Text>
+      {!!item.memo && <Text style={[styles.itemMemo, { color: category.textColor }]} numberOfLines={1}>📝 {item.memo}</Text>}
     </View>
   </View>;
 }
@@ -70,6 +71,6 @@ const styles = StyleSheet.create({
   card: { borderRadius: borderRadius.lg, borderWidth: 2, gap: spacing.sm, padding: spacing.lg, width: '100%' },
   heading: { fontSize: fontSize.lg, fontWeight: '700' },
   item: { alignItems: 'center', borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.md, minHeight: 96, padding: spacing.md },
-  icon: { fontSize: 32, fontWeight: '700' }, copy: { flex: 1 }, itemTitle: { fontSize: fontSize.lg, fontWeight: '700' }, itemTime: { fontSize: fontSize.md },
+  icon: { fontSize: 32, fontWeight: '700' }, copy: { flex: 1 }, itemTitle: { fontSize: fontSize.lg, fontWeight: '700' }, itemTime: { fontSize: fontSize.md }, itemMemo: { fontSize: fontSize.md },
   empty: { fontSize: fontSize.md }, next: { fontSize: fontSize.sm },
 });
