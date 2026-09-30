@@ -8,7 +8,7 @@ function dateKey(date: Date): string { return [date.getFullYear(), String(date.g
 
 /** P4.8 owns task lookup and 30-minute reminder generation. */
 export async function buildTaskNotificationsFromDatabase(database: Pick<TimetableDatabase, 'getAllAsync'>, now = new Date(), familyId = 'local-family') {
-  const tasks = await database.getAllAsync<TaskReminder>('SELECT id, title, repeat_weekdays AS repeatWeekdays, task_date AS taskDate, effective_from AS effectiveFrom, remind_time AS remindTime, alert_mode AS alertMode FROM tasks WHERE family_id = ? AND alert_mode <> \'none\' AND remind_time IS NOT NULL', familyId);
+  const tasks = await database.getAllAsync<TaskReminder>('SELECT id, title, repeat_weekdays AS repeatWeekdays, task_date AS taskDate, effective_from AS effectiveFrom, effective_until AS effectiveUntil, remind_time AS remindTime, alert_mode AS alertMode FROM tasks WHERE family_id = ? AND alert_mode <> \'none\' AND remind_time IS NOT NULL', familyId);
   const end = dateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 6));
   const completed = await database.getAllAsync<{ readonly taskId: number; readonly completionDate: string }>('SELECT task_id AS taskId, completion_date AS completionDate FROM task_completions WHERE completion_date BETWEEN ? AND ?', dateKey(now), end);
   return buildTaskRollingNotifications(tasks, new Set(completed.map(({ taskId, completionDate }) => `${taskId}:${completionDate}`)), now);

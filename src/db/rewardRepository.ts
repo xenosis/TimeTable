@@ -79,7 +79,7 @@ async function rebuildRewards(database: RewardDatabase): Promise<readonly Reward
 }
 
 async function isFullCompletion(database: RewardDatabase, date: string, weekday: number): Promise<boolean> {
-  const incomplete = await database.getFirstAsync<CountRow>(`SELECT COUNT(*) AS count FROM tasks LEFT JOIN task_completions ON task_completions.task_id = tasks.id AND task_completions.completion_date = ? WHERE tasks.family_id = ? AND (tasks.task_date = ? OR (instr(',' || tasks.repeat_weekdays || ',', ',' || ? || ',') > 0 AND tasks.effective_from <= ?)) AND task_completions.id IS NULL`, date, familyId, date, String(weekday), date);
+  const incomplete = await database.getFirstAsync<CountRow>(`SELECT COUNT(*) AS count FROM tasks LEFT JOIN task_completions ON task_completions.task_id = tasks.id AND task_completions.completion_date = ? WHERE tasks.family_id = ? AND (tasks.task_date = ? OR (instr(',' || tasks.repeat_weekdays || ',', ',' || ? || ',') > 0 AND tasks.effective_from <= ?)) AND (tasks.effective_until IS NULL OR tasks.effective_until >= ?) AND task_completions.id IS NULL`, date, familyId, date, String(weekday), date, date);
   return (await hasTasksOn(database, date, weekday)) && (incomplete?.count ?? 0) === 0;
 }
 
@@ -97,7 +97,11 @@ async function awardIfNew(database: RewardDatabase, date: string, weekday: numbe
     .sort((left, right) => rank(right.reward) - rank(left.reward) || right.reward.amount - left.reward.amount)[0]?.reward ?? null;
 }
 
-async function transaction<T>(database: RewardDatabase, action: () => Promise<T>): Promise<T> {
+// 앱은 하나의 DB 연결을 쓰므로, 화면의 체크와 위젯 체크 반영이 동시에 트랜잭션을 열면 서로의 문장이 섞이거나
+// 'transaction within a transaction' 오류가 난다. 순서대로 하나씩 실행한다.
+let transactionQueue: Promise<unknown> = Promise.resolve();
+
+async function runTransaction<T>(database: RewardDatabase, action: () => Promise<T>): Promise<T> {
   await database.execAsync('BEGIN IMMEDIATE');
   try {
     const result = await action();
@@ -107,6 +111,12 @@ async function transaction<T>(database: RewardDatabase, action: () => Promise<T>
     await database.execAsync('ROLLBACK');
     throw error;
   }
+}
+
+function transaction<T>(database: RewardDatabase, action: () => Promise<T>): Promise<T> {
+  const run = transactionQueue.then(() => runTransaction(database, action));
+  transactionQueue = run.catch(() => undefined);
+  return run;
 }
 
 export async function setTaskCompletionWithRewards(database: RewardDatabase, taskId: number, date: string, weekday: number, completed: boolean): Promise<GemReward | null> {

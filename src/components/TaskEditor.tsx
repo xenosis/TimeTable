@@ -22,9 +22,11 @@ export function TaskEditor({ theme, onChanged }: { readonly theme: ThemeDefiniti
   const endToday = async (task: EndableTask) => {
     setSaving(true);
     try {
-      await endRecurringTask(await getDatabase(), task.id, today());
+      const database = await getDatabase();
+      const now = new Date();
+      await editTaskWithRewards(database, today(), now.getDay(), () => endRecurringTask(database, task.id, today()));
       load();
-      try { await onChanged(); setMessage(`${task.title}을(를) 오늘부터 그만두기로 했어요.`); } catch { setMessage('그만두기는 저장했지만 알림 예약을 다시 만들지 못했어요.'); }
+      try { await onChanged(); setMessage(`${task.title}을(를) 오늘까지만 하고 그만두기로 했어요. 내일부터 목록에서 빠져요.`); } catch { setMessage('그만두기는 저장했지만 알림 예약을 다시 만들지 못했어요.'); }
     } catch (error) { setMessage(error instanceof Error ? error.message : '그만두기를 저장하지 못했어요.'); } finally { setSaving(false); }
   };
   useEffect(load, []);
@@ -36,8 +38,8 @@ export function TaskEditor({ theme, onChanged }: { readonly theme: ThemeDefiniti
     <Text style={[styles.heading, { color: theme.colors.text }]}>할 일 편집</Text>
     {tasks.map((task) => <Pressable key={task.id} onPress={() => select(task)} style={[styles.item, { borderColor: theme.colors.border }]}><Text style={{ color: theme.colors.text }}>{task.title}</Text></Pressable>)}
     {endableTasks.length > 0 && <>
-      <Text style={{ color: theme.colors.textMuted }}>완료 기록이 있어 이름·요일은 못 바꾸지만, 오늘부터 그만둘 수 있어요.</Text>
-      {endableTasks.map((task) => <View key={task.id} style={[styles.item, styles.row, { borderColor: theme.colors.border }]}><Text style={{ color: theme.colors.text }}>{task.title}</Text><Pressable disabled={saving} onPress={() => void endToday(task)} style={[styles.action, { backgroundColor: theme.colors.danger }]}><Text style={{ color: theme.colors.onPrimary }}>오늘부터 그만두기</Text></Pressable></View>)}
+      <Text style={{ color: theme.colors.textMuted }}>완료 기록이 있어 이름·요일은 못 바꾸지만, 오늘까지만 하고 그만둘 수 있어요.</Text>
+      {endableTasks.map((task) => <View key={task.id} style={[styles.item, styles.row, { borderColor: theme.colors.border }]}><Text style={{ color: theme.colors.text }}>{task.title}</Text><Pressable disabled={saving} onPress={() => void endToday(task)} style={[styles.action, { backgroundColor: theme.colors.danger }]}><Text style={{ color: theme.colors.onPrimary }}>오늘까지만 하고 그만두기</Text></Pressable></View>)}
     </>}
     <TextInput accessibilityLabel="할 일 이름" editable={!saving} value={draft.title} onChangeText={(title) => setDraft((current) => ({ ...current, title }))} placeholder="숙제, 준비물" style={styles.input} />
     <Text style={{ color: theme.colors.text }}>반복 요일 또는 날짜 하나를 고르세요.</Text><View style={styles.row}>{labels.map((label, day) => <Pressable key={label} disabled={saving} onPress={() => toggle(day)} style={[styles.day, { borderColor: theme.colors.primary }, draft.weekdays.includes(day) && { backgroundColor: theme.colors.primary }]}><Text style={{ color: draft.weekdays.includes(day) ? theme.colors.onPrimary : theme.colors.primary }}>{label}</Text></Pressable>)}</View>
