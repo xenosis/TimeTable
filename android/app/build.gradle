@@ -97,8 +97,8 @@ android {
         applicationId 'com.sewoong.kidtimetable'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 94
-        versionName "1.36.0"
+        versionCode 98
+        versionName "1.39.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -172,6 +172,11 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+
+    // 위젯의 날짜·시간 계산을 검증하는 단위 테스트 전용 의존성이다(앱에는 포함되지 않는다).
+    // org.json은 안드로이드에서는 시스템이 주지만 JVM 단위 테스트에서는 스텁이라 실제 구현을 테스트에만 추가한다.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
