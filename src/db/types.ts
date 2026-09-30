@@ -1,6 +1,7 @@
 import type { ColorKey, IconKey } from '../theme';
 
-export const timetableCategories = ['school', 'academy', 'life'] as const;
+/** 일정 종류: 학교(정규 수업), 학원, 돌봄(방과후 돌봄·방학 돌봄), 생활. 위젯은 학교만 빼고 보여준다. */
+export const timetableCategories = ['school', 'academy', 'care', 'life'] as const;
 export type TimetableCategory = (typeof timetableCategories)[number];
 
 export const alertModes = ['none', 'notify', 'alarm'] as const;

@@ -1,4 +1,4 @@
-import { alertModes, timetableCategories, type TimetableDatabase, type TimetableItemInput, type TimetableSetId } from './types';
+import { alertModes, timetableCategories, type TimetableCategory, type TimetableDatabase, type TimetableItemInput, type TimetableSetId } from './types';
 import type { ColorKey, IconKey } from '../theme';
 
 const clockPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -67,6 +67,8 @@ export async function copyTimetableWeekday(database: Pick<TimetableDatabase, 'ex
 export type TimetableItem = {
   readonly id: number;
   readonly periodNo?: number | null;
+  /** 일정 종류(학교·학원·생활). 위젯은 정규 수업(학교)을 뺀다. */
+  readonly category: TimetableCategory;
   readonly startTime: string;
   readonly endTime: string;
   readonly title: string;
@@ -117,7 +119,7 @@ export async function getTimetableItemsForWeekday(
   if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) throw new Error('weekday must be between 0 and 6');
   return database.getAllAsync<TimetableItem>(
     `SELECT timetable_items.id, timetable_items.period_no AS periodNo, COALESCE(periods.start_time, timetable_items.start_time) AS startTime,
-      COALESCE(periods.end_time, timetable_items.end_time) AS endTime, timetable_items.title,
+      COALESCE(periods.end_time, timetable_items.end_time) AS endTime, timetable_items.title, timetable_items.category,
       timetable_items.color_key AS colorKey, timetable_items.icon_key AS iconKey
     FROM timetable_items LEFT JOIN periods
       ON periods.family_id = timetable_items.family_id AND periods.period_no = timetable_items.period_no

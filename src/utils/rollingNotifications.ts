@@ -1,10 +1,12 @@
+import type { TimetableCategory } from '../db/types';
+
 export type RollingAlertMode = 'notify' | 'alarm';
 export type RollingScheduleItem = {
   readonly id: number;
   readonly weekday: number;
   readonly startTime: string;
   readonly title: string;
-  readonly category: 'school' | 'academy' | 'life';
+  readonly category: TimetableCategory;
   readonly alertMode: 'none' | RollingAlertMode;
   readonly alertBeforeMin: number;
 };

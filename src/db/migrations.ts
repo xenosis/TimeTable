@@ -1,6 +1,6 @@
 import type { TimetableDatabase } from './types';
 
-export const databaseVersion = 9;
+export const databaseVersion = 10;
 
 export const schemaV1 = [
   `CREATE TABLE IF NOT EXISTS periods (
@@ -141,6 +141,43 @@ export const schemaV9 = [
   'CREATE INDEX IF NOT EXISTS timetable_items_set_weekday ON timetable_items(family_id, set_id, weekday)',
 ] as const;
 
+/**
+ * 일정 종류에 '돌봄'(care)을 추가한다.
+ * SQLite는 CHECK 제약을 직접 바꿀 수 없어 테이블을 새로 만들어 데이터를 옮긴다.
+ * 다른 테이블이 timetable_items를 참조하지 않으므로 외래키 검사를 끄지 않아도 안전하다.
+ * 컬럼과 값(옛 timetable_mode 포함)은 그대로 옮기고, 이 테이블에 딸린 인덱스는 테이블을 지우면 사라지므로 다시 만든다.
+ */
+export const schemaV10 = [
+  `CREATE TABLE timetable_items_v10 (
+    id INTEGER PRIMARY KEY,
+    family_id TEXT NOT NULL DEFAULT 'local-family' CHECK (length(trim(family_id)) > 0),
+    weekday INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+    period_no INTEGER,
+    start_time TEXT,
+    end_time TEXT,
+    title TEXT NOT NULL CHECK (length(trim(title)) > 0),
+    category TEXT NOT NULL CHECK (category IN ('school', 'academy', 'care', 'life')),
+    color_key TEXT NOT NULL CHECK (color_key IN ('korean', 'math', 'english', 'science', 'music', 'art', 'physical-education', 'academy', 'life', 'other')),
+    icon_key TEXT NOT NULL CHECK (icon_key IN ('text', 'number', 'alphabet', 'experiment', 'music-note', 'art-tool', 'activity', 'academy', 'life', 'other')),
+    alert_mode TEXT NOT NULL DEFAULT 'none' CHECK (alert_mode IN ('none', 'notify', 'alarm')),
+    alert_before_min INTEGER NOT NULL DEFAULT 0 CHECK (alert_before_min >= 0),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timetable_mode TEXT NOT NULL DEFAULT 'regular' CHECK (timetable_mode IN ('regular', 'vacation')),
+    set_id INTEGER REFERENCES timetable_sets(id) ON DELETE CASCADE,
+    FOREIGN KEY (family_id, period_no) REFERENCES periods(family_id, period_no),
+    CHECK ((period_no IS NOT NULL AND start_time IS NULL AND end_time IS NULL)
+      OR (period_no IS NULL AND start_time IS NOT NULL AND end_time IS NOT NULL))
+  )`,
+  `INSERT INTO timetable_items_v10 (id, family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, created_at, timetable_mode, set_id)
+   SELECT id, family_id, weekday, period_no, start_time, end_time, title, category, color_key, icon_key, alert_mode, alert_before_min, created_at, timetable_mode, set_id FROM timetable_items`,
+  'DROP TABLE timetable_items',
+  'ALTER TABLE timetable_items_v10 RENAME TO timetable_items',
+  'CREATE INDEX IF NOT EXISTS timetable_items_weekday_period ON timetable_items(family_id, weekday, period_no)',
+  'CREATE INDEX IF NOT EXISTS timetable_items_weekday_time ON timetable_items(family_id, weekday, start_time)',
+  'CREATE INDEX IF NOT EXISTS timetable_items_mode_weekday ON timetable_items(family_id, timetable_mode, weekday)',
+  'CREATE INDEX IF NOT EXISTS timetable_items_set_weekday ON timetable_items(family_id, set_id, weekday)',
+] as const;
+
 type UserVersionRow = { user_version: number };
 
 export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsync' | 'getFirstAsync'>): Promise<void> {
@@ -183,6 +220,10 @@ export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsy
     }
     if (version < 9) {
       for (const statement of schemaV9) await database.execAsync(statement);
+      await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
+    }
+    if (version < 10) {
+      for (const statement of schemaV10) await database.execAsync(statement);
       await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
     }
     await database.execAsync('COMMIT');
