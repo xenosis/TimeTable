@@ -8,13 +8,18 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import androidx.core.app.NotificationCompat
 
 /** Owns the looping alarm sound in a foreground service so it plays even while the phone is
  * actively in use and Android only shows a heads-up banner instead of launching AlarmActivity. */
 class AlarmSoundService : Service() {
   private var player: MediaPlayer? = null
+  private val handler = Handler(Looper.getMainLooper())
+  // 끄기 버튼·알람 화면이 막힌 상황(앱 일시정지 등)에서도 소리가 무한 반복되지 않게 하는 안전장치
+  private val autoStop = Runnable { stopAlarm() }
 
   override fun onBind(intent: Intent?): IBinder? = null
 
@@ -30,10 +35,14 @@ class AlarmSoundService : Service() {
     // 이미 다른 알람의 전체화면이 떠 있으면 마지막 일정으로 바꾼다(알림 갱신은 전체화면을 다시 띄우지 않는다)
     AlarmActivity.showLatestIfShowing(scheduleId, title)
     startSound()
+    // 연속 알람이 오면 마지막 알람 기준으로 1분을 다시 센다
+    handler.removeCallbacks(autoStop)
+    handler.postDelayed(autoStop, MAX_RING_MILLIS)
     return START_NOT_STICKY
   }
 
   override fun onDestroy() {
+    handler.removeCallbacks(autoStop)
     stopSound()
     super.onDestroy()
   }
@@ -100,6 +109,8 @@ class AlarmSoundService : Service() {
 
   companion object {
     const val ACTION_STOP = "com.sewoong.kidtimetable.alarm.STOP"
+    /** 알람 소리 최대 지속 시간(1분). 이후 소리와 알림을 자동으로 끈다. */
+    const val MAX_RING_MILLIS = 60_000L
 
     fun start(context: android.content.Context, scheduleId: String, title: String) {
       val intent = Intent(context, AlarmSoundService::class.java).putExtra("scheduleId", scheduleId).putExtra("title", title)
