@@ -2457,7 +2457,7 @@
     },
     {
       "id": "P3.10",
-      "status": "todo",
+      "status": "cancelled",
       "priority": "P2",
       "category": "feature",
       "title": "재부팅 뒤 잠금 해제 전에도 알람 예약 복구 (Direct Boot)",
@@ -2471,10 +2471,17 @@
       "done_when": "재부팅 뒤 잠금을 풀기 전에도 미래 롤링 알람(timetable·tasks 두 owner)이 dumpsys alarm에 복구됨. 딸 폰 실기기에서 알람 항목을 만든 뒤 재부팅하고 잠금을 풀지 않은 채 dumpsys alarm으로 확인. 세대 저장소를 DE로 옮기는 경우 기존 저장 세대 이전(마이그레이션)과 단위 테스트, npm run check 통과",
       "est_min": 45,
       "gate": null,
-      "owner": null,
+      "owner": "claude",
       "claimed_at": null,
-      "updated_at": "2026-09-30T15:51:07.592Z",
-      "log": []
+      "updated_at": "2026-10-01T03:54:34.113Z",
+      "log": [
+        {
+          "at": "2026-10-01T03:54:34.113Z",
+          "owner": "claude",
+          "status": "cancelled",
+          "note": "사용자 결정 2026-10-01: 재부팅 뒤 잠금 해제 전 알람 복구는 하지 않는다. 아이가 쓰는 용도이고 알람을 많이 쓰지 않을 수 있어 재부팅 상황까지는 다루지 않음. 현재 동작(재부팅 뒤 첫 잠금 해제 후 복구)은 docs/build-commands.md에 안내됨"
+        }
+      ]
     },
     {
       "id": "P4",
@@ -3161,7 +3168,7 @@
     },
     {
       "id": "P4.12",
-      "status": "todo",
+      "status": "done",
       "priority": null,
       "category": "infra",
       "title": "expo-animation 스킬 설치 (스티커·칭찬 연출 착수 전)",
@@ -3175,10 +3182,31 @@
       "done_when": ".claude/skills/expo-animation이 설치되어 있고, P4.6·P4.7 착수 전에 사용자에게 설치 여부를 확인함",
       "est_min": 5,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-30T06:21:28.645Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-01T03:54:35.136Z",
+      "updated_at": "2026-10-01T03:57:27.094Z",
+      "log": [
+        {
+          "at": "2026-10-01T03:54:35.136Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 결정 2026-10-01 반영 착수"
+        },
+        {
+          "at": "2026-10-01T03:54:37.038Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "사용자 요청으로 설치: npx skills add expo/skills@expo-animation. 보안 평가 Gen Safe/Socket 0 alerts/Snyk Low Risk, SKILL.md 확인. .claude/skills/expo-animation 설치됨"
+        },
+        {
+          "at": "2026-10-01T03:57:27.094Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "사용자 요청으로 설치(요청이 곧 설치 확인). P4.6·P4.7은 이미 착수된 상태라 남은 애니메이션 작업부터 스킬 적용. 스킬 설치가 Reanimated/Gesture Handler/expo-haptics 추가 승인은 아님: 라이브러리가 필요하면 별도로 질문"
+        }
+      ],
+      "done_at": "2026-10-01",
+      "evidence": ".claude/skills/expo-animation/{SKILL.md,RECIPES.md,LICENSE,agents}, skills-lock.json의 expo-animation 항목. 설치 명령 출력의 보안 평가: Gen Safe, Socket 0 alerts, Snyk Low Risk · 검증: SKILL.md 열람(외부 호출·위험 명령 없음); critical-reviewer·backlog-explainer 실행·반영. 스킬 폴더는 공개 저장소라 커밋 제외"
     },
     {
       "id": "P5",
@@ -3848,7 +3876,7 @@
     },
     {
       "id": "P6.1",
-      "status": "todo",
+      "status": "done",
       "priority": null,
       "category": "infra",
       "title": "결정(D4, D7): Supabase 프로젝트 · PIN 확인 방식",
@@ -3860,10 +3888,31 @@
       "done_when": "D4·D7 결정 기록",
       "est_min": 15,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-01T03:54:36.113Z",
+      "updated_at": "2026-10-01T03:57:28.070Z",
+      "log": [
+        {
+          "at": "2026-10-01T03:54:36.113Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 결정 2026-10-01 반영 착수"
+        },
+        {
+          "at": "2026-10-01T03:54:37.997Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "사용자 결정 2026-10-01: D7 딸 폰 PIN 권한 확인은 서버가 아니라 로컬에서 한다(중요도 낮음). D4 Supabase는 기존 Doro 때 쓰던 계정을 그대로 쓰고 이 앱 테이블만 새로 만든다"
+        },
+        {
+          "at": "2026-10-01T03:57:28.070Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "사용자 결정 2026-10-01. D7: 딸 폰 PIN은 로컬 확인(딸 계정에 시간표·할 일 수정 권한 부여, 서버 RPC·parent_pin_hash 없음). D4: Doro 때 쓰던 Supabase 계정 사용, 이 앱 테이블만 새로 생성 — 같은 프로젝트 추가인지 새 프로젝트인지는 P6.2에서 확정(테이블 접두사·사용자 풀 공유 주의)"
+        }
+      ],
+      "done_at": "2026-10-01",
+      "evidence": "docs/research.md D4·D7 행과 'PIN 관리자 모드' 절 갱신, docs/tasks.md 6-3·6-10 반영, P6.10 취소 · 검증: critical-reviewer·backlog-explainer 실행. 리뷰의 서버 권한 충돌 지적을 반영해 D7 결과(딸 쓰기 권한, P6.10 취소)를 문서에 기록. D4 같은 프로젝트 여부는 P6.2 몫"
     },
     {
       "id": "P6.2",
@@ -4035,7 +4084,7 @@
     },
     {
       "id": "P6.10",
-      "status": "todo",
+      "status": "cancelled",
       "priority": null,
       "category": "security",
       "title": "딸 폰 PIN 관리자 모드 (서버 RPC)",
@@ -4050,10 +4099,17 @@
       "done_when": "서버 확인 PIN이 임시 PIN을 대체하고 실패 제한·자동 해제가 동작함",
       "est_min": 45,
       "gate": null,
-      "owner": null,
+      "owner": "claude",
       "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "updated_at": "2026-10-01T03:57:26.114Z",
+      "log": [
+        {
+          "at": "2026-10-01T03:57:26.114Z",
+          "owner": "claude",
+          "status": "cancelled",
+          "note": "D7 사용자 결정 2026-10-01(PIN은 로컬 확인)로 서버 RPC PIN 확인이 필요 없어짐. 로컬 PIN(src/security/pin.ts)은 이미 구현됨. 되돌리려면 todo로 복구"
+        }
+      ]
     },
     {
       "id": "P6.11",
