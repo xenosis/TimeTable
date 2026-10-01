@@ -28,41 +28,46 @@ class WidgetChecksTest {
   }
 
   @Test fun 못_한_일을_누르면_완료로_바꾸고_대기_목록에_남긴다() {
-    val result = WidgetChecks.complete(snapshot(), null, 1, "2026-10-01")
+    val result = WidgetChecks.toggle(snapshot(), null, 1, "2026-10-01")
     assertNotNull(result)
     assertEquals(true, completedOf(result!!.snapshotJson, "2026-10-01", 1))
     assertEquals(listOf(PendingCheck(1, "2026-10-01", true)), WidgetChecks.parse(result.pendingJson))
   }
 
-  @Test fun 이미_끝낸_일을_눌러도_아무것도_바뀌지_않아_완료가_취소되지_않는다() {
-    assertNull(WidgetChecks.complete(snapshot(), null, 2, "2026-10-01"))
+  @Test fun 이미_끝낸_일을_누르면_미완료로_되돌리고_대기_목록에_남긴다() {
+    val result = WidgetChecks.toggle(snapshot(), null, 2, "2026-10-01")!!
+    assertEquals(false, completedOf(result.snapshotJson, "2026-10-01", 2))
+    assertEquals(listOf(PendingCheck(2, "2026-10-01", false)), WidgetChecks.parse(result.pendingJson))
   }
 
-  @Test fun 완료한_일을_연달아_눌러도_취소되지_않고_대기_기록은_한_건이다() {
-    val first = WidgetChecks.complete(snapshot(), null, 1, "2026-10-01")!!
-    assertNull(WidgetChecks.complete(first.snapshotJson, first.pendingJson, 1, "2026-10-01"))
-    assertEquals(listOf(PendingCheck(1, "2026-10-01", true)), WidgetChecks.parse(first.pendingJson))
+  @Test fun 연달아_누르면_번갈아_바뀌고_대기_기록은_마지막_상태_한_건이다() {
+    val first = WidgetChecks.toggle(snapshot(), null, 1, "2026-10-01")!!
+    val second = WidgetChecks.toggle(first.snapshotJson, first.pendingJson, 1, "2026-10-01")!!
+    assertEquals(false, completedOf(second.snapshotJson, "2026-10-01", 1))
+    assertEquals(listOf(PendingCheck(1, "2026-10-01", false)), WidgetChecks.parse(second.pendingJson))
+    val third = WidgetChecks.toggle(second.snapshotJson, second.pendingJson, 1, "2026-10-01")!!
+    assertEquals(listOf(PendingCheck(1, "2026-10-01", true)), WidgetChecks.parse(third.pendingJson))
   }
 
   @Test fun 다른_날짜의_같은_할_일은_건드리지_않는다() {
-    val result = WidgetChecks.complete(snapshot(), null, 1, "2026-10-01")!!
+    val result = WidgetChecks.toggle(snapshot(), null, 1, "2026-10-01")!!
     assertEquals(false, completedOf(result.snapshotJson, "2026-10-02", 1))
   }
 
   @Test fun 다른_할_일을_누르면_대기_목록_뒤에_붙는다() {
-    val first = WidgetChecks.complete(snapshot(), null, 1, "2026-10-01")!!
-    val second = WidgetChecks.complete(first.snapshotJson, first.pendingJson, 1, "2026-10-02")!!
+    val first = WidgetChecks.toggle(snapshot(), null, 1, "2026-10-01")!!
+    val second = WidgetChecks.toggle(first.snapshotJson, first.pendingJson, 1, "2026-10-02")!!
     assertEquals(listOf(PendingCheck(1, "2026-10-01", true), PendingCheck(1, "2026-10-02", true)), WidgetChecks.parse(second.pendingJson))
   }
 
   @Test fun 데이터에_없는_할_일이나_날짜는_아무것도_바꾸지_않는다() {
-    assertNull(WidgetChecks.complete(snapshot(), null, 99, "2026-10-01"))
-    assertNull(WidgetChecks.complete(snapshot(), null, 1, "2026-12-25"))
+    assertNull(WidgetChecks.toggle(snapshot(), null, 99, "2026-10-01"))
+    assertNull(WidgetChecks.toggle(snapshot(), null, 1, "2026-12-25"))
   }
 
   @Test fun 깨진_데이터는_null이다() {
-    assertNull(WidgetChecks.complete("not-json", null, 1, "2026-10-01"))
-    assertNull(WidgetChecks.complete("{}", null, 1, "2026-10-01"))
+    assertNull(WidgetChecks.toggle("not-json", null, 1, "2026-10-01"))
+    assertNull(WidgetChecks.toggle("{}", null, 1, "2026-10-01"))
   }
 
   @Test fun 앱이_새로_쓴_데이터에_대기_체크를_다시_입힌다() {

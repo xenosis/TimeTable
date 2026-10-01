@@ -94,14 +94,14 @@ describe('메모 저장·수정·조회', () => {
     expect(saved?.memo).toBe('차 타고 이동');
   });
 
-  it('메모는 최대 60글자이고 한글·이모지도 한 글자로 센다', async () => {
+  it('메모는 최대 100글자이고 한글·이모지도 한 글자로 센다', async () => {
     const database = await freshDatabase();
     const setId = (await getActiveTimetableSet(database)).id;
-    expect(MAX_MEMO_LENGTH).toBe(60);
-    await createTimetableItem(database, item(setId, '한글 60자', '가'.repeat(60)));
-    await createTimetableItem(database, item(setId, '이모지 60자', '🚌'.repeat(60)));
-    await expect(createTimetableItem(database, item(setId, '61자', '가'.repeat(61)))).rejects.toThrow('memo');
-    await expect(createTimetableItem(database, item(setId, '이모지 61자', '🚌'.repeat(61)))).rejects.toThrow('memo');
+    expect(MAX_MEMO_LENGTH).toBe(100);
+    await createTimetableItem(database, item(setId, '한글 100자', '가'.repeat(100)));
+    await createTimetableItem(database, item(setId, '이모지 100자', '🚌'.repeat(100)));
+    await expect(createTimetableItem(database, item(setId, '101자', '가'.repeat(101)))).rejects.toThrow('memo');
+    await expect(createTimetableItem(database, item(setId, '이모지 101자', '🚌'.repeat(101)))).rejects.toThrow('memo');
     expect(await getEditableTimetableItems(database, setId)).toHaveLength(2);
   });
 
@@ -110,9 +110,9 @@ describe('메모 저장·수정·조회', () => {
     const setId = (await getActiveTimetableSet(database)).id;
     await createTimetableItem(database, item(setId, '피아노', '원래 메모'));
     const id = (await getEditableTimetableItems(database, setId))[0].id;
-    await expect(updateTimetableItem(database, id, item(setId, '피아노', '가'.repeat(61)))).rejects.toThrow('memo');
+    await expect(updateTimetableItem(database, id, item(setId, '피아노', '가'.repeat(101)))).rejects.toThrow('memo');
     expect((await getEditableTimetableItemById(database, id))?.memo).toBe('원래 메모');
-    await updateTimetableItem(database, id, item(setId, '피아노', ` ${' '.repeat(80)} 짧은 메모`));
+    await updateTimetableItem(database, id, item(setId, '피아노', ` ${' '.repeat(120)} 짧은 메모`));
     expect((await getEditableTimetableItemById(database, id))?.memo).toBe('짧은 메모');
   });
 

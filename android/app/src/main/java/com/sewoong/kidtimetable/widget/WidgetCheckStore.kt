@@ -9,12 +9,12 @@ object WidgetCheckStore {
   private const val DATA_FILE = "widget-data.json"
   private val lock = Any()
 
-  /** 위젯 줄을 눌렀을 때: 위젯 데이터에서 그 할 일을 완료로 바꾸고 대기 목록에 남긴다. 바꿨으면 true. */
-  fun complete(context: Context, taskId: Int, date: String): Boolean = synchronized(lock) {
+  /** 위젯 줄을 눌렀을 때: 위젯 데이터에서 그 할 일의 완료 상태를 뒤집고 대기 목록에 남긴다. 바꿨으면 true. */
+  fun toggle(context: Context, taskId: Int, date: String): Boolean = synchronized(lock) {
     val data = File(context.filesDir, DATA_FILE)
     if (!data.exists()) return false
     val pending = File(context.filesDir, PENDING_FILE)
-    val result = WidgetChecks.complete(data.readText(Charsets.UTF_8), readOrNull(pending), taskId, date) ?: return false
+    val result = WidgetChecks.toggle(data.readText(Charsets.UTF_8), readOrNull(pending), taskId, date) ?: return false
     // 대기 목록을 먼저 쓴다: 그 뒤에 죽더라도 '눌렀는데 기록이 없는' 일은 없다(최악은 위젯 표시만 예전 상태)
     writeAtomically(pending, result.pendingJson)
     writeAtomically(data, result.snapshotJson)

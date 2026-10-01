@@ -4,7 +4,7 @@ import type { ColorKey, IconKey } from '../theme';
 const clockPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** 메모 최대 길이(글자 수). 이모지도 한 글자로 센다 */
-export const MAX_MEMO_LENGTH = 60;
+export const MAX_MEMO_LENGTH = 100;
 
 function cleanMemo(memo: string | undefined): string {
   return (memo ?? '').trim();

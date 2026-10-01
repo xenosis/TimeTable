@@ -45,9 +45,18 @@ class WidgetTaskViewTest {
   }
 
   @Test fun 모두_끝냈으면_칭찬_문구를_보여준다() {
-    val view = build(day(task(1, "숙제", true), task(2, "준비물", true)))
+    val view = build(day(task(1, "숙제", true), task(2, "준비물", true)), capacity = 4)
     assertEquals(WidgetTaskView.ALL_DONE_MESSAGE, view.message)
     assertEquals("오늘 할 일 2/2", view.heading)
+    // 줄은 그대로 보여서 다시 눌러 되돌릴 수 있다
+    assertEquals(listOf("숙제", "준비물"), view.rows.map { it.title })
+    assertEquals(0, view.moreCount)
+  }
+
+  @Test fun 모두_끝낸_뒤_줄이_모자라면_칭찬_문구_한_줄을_빼고_나머지를_더보기로_센다() {
+    val view = build(day(task(1, "가", true), task(2, "나", true), task(3, "다", true), task(4, "라", true)), capacity = 3)
+    assertEquals(1, view.rows.size)
+    assertEquals(3, view.moreCount)
   }
 
   @Test fun 앱이_상한_때문에_못_담은_할_일이_있으면_다_했다고_하지_않는다() {

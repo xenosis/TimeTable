@@ -4,6 +4,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.StrikethroughSpan
 import android.view.View
 import android.widget.RemoteViews
 import com.sewoong.kidtimetable.R
@@ -53,15 +56,15 @@ object TaskWidgetRenderer {
         val color = if (row.completed) WidgetRenderSupport.withAlpha(muted, 0xAA) else text
         setTextViewText(ids[1], if (row.completed) "☑" else "☐")
         setTextColor(ids[1], if (row.completed) color else primary)
-        setTextViewText(ids[2], row.title)
+        // 끝낸 일은 제목에 취소선을 그어 한눈에 구분한다
+        setTextViewText(ids[2], if (row.completed) SpannableString(row.title).apply { setSpan(StrikethroughSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } else row.title)
         setTextColor(ids[2], color)
-        // 못 한 일만 눌러서 완료한다. 끝낸 줄은 눌러도 앱이 열릴 뿐 바뀌지 않아, 잘못 눌러 완료가 취소되는 일이 없다
-        // 줄에 이전에 걸어 둔 '완료' 동작이 남아 다른 할 일을 완료하지 않도록, 끝낸 줄에도 앱 열기를 명시해서 덮어쓴다
-        setOnClickPendingIntent(ids[0], if (row.completed) WidgetRenderSupport.openAppIntent(context, OPEN_APP_REQUEST_CODE) else toggleIntent(context, index, row.id, view.date))
-        setContentDescription(ids[0], if (row.completed) "${row.title}, 했어요" else "${row.title}, 아직 안 했어요. 누르면 했다고 표시해요")
+        // 줄을 누를 때마다 완료와 미완료가 번갈아 바뀐다
+        setOnClickPendingIntent(ids[0], toggleIntent(context, index, row.id, view.date))
+        setContentDescription(ids[0], if (row.completed) "${row.title}, 했어요. 누르면 아직 안 했다고 되돌려요" else "${row.title}, 아직 안 했어요. 누르면 했다고 표시해요")
       }
 
-      if (view.moreCount > 0 && view.message == null) {
+      if (view.moreCount > 0) {
         setViewVisibility(R.id.task_more, View.VISIBLE)
         setTextViewText(R.id.task_more, "+ ${view.moreCount}개")
         setTextColor(R.id.task_more, muted)

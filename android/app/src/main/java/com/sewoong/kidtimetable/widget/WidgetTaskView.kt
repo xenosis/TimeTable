@@ -42,8 +42,13 @@ object WidgetTaskView {
     // 앱이 상한 때문에 못 담은 할 일이 있으면 완료 여부를 알 수 없어 '다 했다'고 하지 않고 개수도 세지 않는다
     val complete = day.hiddenTaskCount == 0
     val heading = if (complete) "오늘 할 일 $done/${tasks.size}" else "오늘 할 일"
-    if (complete && done == tasks.size) return TaskView(day.date, heading, emptyList(), 0, ALL_DONE_MESSAGE)
     val lines = capacity.coerceIn(MIN_ROWS, MAX_ROWS)
+    if (complete && done == tasks.size) {
+      // 모두 끝내도 줄은 그대로 두어(취소선) 잘못 눌렀을 때 다시 눌러 되돌릴 수 있게 한다. 칭찬 문구가 한 줄을 쓴다
+      val room = lines - 1
+      val count = if (tasks.size <= room) tasks.size else room - 1
+      return TaskView(day.date, heading, tasks.take(count).map { TaskRow(it.id, it.title, it.completed) }, tasks.size - count, ALL_DONE_MESSAGE)
+    }
     val needMore = tasks.size > lines || day.hiddenTaskCount > 0
     val maxRows = if (tasks.size + (if (needMore) 1 else 0) <= lines) tasks.size else lines - 1
     // 줄이 모자라면 못 한 일을 먼저 남기고 끝낸 일을 뺀다(안 한 일이 잘려 나가지 않게). 보이는 줄은 원래 순서를 지켜,

@@ -16,29 +16,30 @@ data class CompleteResult(
 /**
  * 위젯의 할 일 줄을 눌렀을 때의 순수 계산. 안드로이드 API를 쓰지 않아 JUnit으로 검증한다.
  * DB에는 직접 쓰지 않는다: 보석 계산과 중복 방지 규칙은 앱(JS)의 한 곳에만 두고, 위젯은 누른 사실만 남겨 앱이 같은 함수로 기록하게 한다.
- * 위젯에서는 완료만 할 수 있다(완료 취소는 앱에서). 아이가 잘못 눌러 보석이 회수되는 일을 막기 위해서다.
+ * 줄을 누를 때마다 완료와 미완료가 번갈아 바뀐다(앱 안에서 체크하는 것과 같다).
  */
 object WidgetChecks {
   /**
-   * snapshotJson의 [date] 날짜에서 [taskId] 할 일을 완료로 바꾸고 대기 목록에 남긴다.
-   * 그 날짜나 할 일이 데이터에 없거나 이미 완료면 null(아무것도 바꾸지 않는다).
+   * snapshotJson의 [date] 날짜에서 [taskId] 할 일의 완료 상태를 뒤집고 대기 목록에 남긴다.
+   * 그 날짜나 할 일이 데이터에 없으면 null(아무것도 바꾸지 않는다).
    */
-  fun complete(snapshotJson: String, pendingJson: String?, taskId: Int, date: String): CompleteResult? = try {
+  fun toggle(snapshotJson: String, pendingJson: String?, taskId: Int, date: String): CompleteResult? = try {
     val snapshot = JSONObject(snapshotJson)
     val days = snapshot.optJSONArray("days") ?: return null
-    var changed = false
+    var newState: Boolean? = null
     for (index in 0 until days.length()) {
       val day = days.optJSONObject(index) ?: continue
       if (day.optString("date") != date) continue
       val tasks = day.optJSONArray("tasks") ?: continue
       for (position in 0 until tasks.length()) {
         val task = tasks.optJSONObject(position) ?: continue
-        if (task.optInt("id", -1) != taskId || task.optBoolean("completed")) continue
-        task.put("completed", true)
-        changed = true
+        if (task.optInt("id", -1) != taskId) continue
+        val next = !task.optBoolean("completed")
+        task.put("completed", next)
+        newState = next
       }
     }
-    if (!changed) null else CompleteResult(snapshot.toString(), withCheck(pendingJson, PendingCheck(taskId, date, true)))
+    newState?.let { CompleteResult(snapshot.toString(), withCheck(pendingJson, PendingCheck(taskId, date, it))) }
   } catch (_: Exception) { null }
 
   /**
