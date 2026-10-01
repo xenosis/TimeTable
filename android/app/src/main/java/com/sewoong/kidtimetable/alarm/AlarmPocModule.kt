@@ -27,7 +27,7 @@ class AlarmPocModule(private val context: ReactApplicationContext) : ReactContex
   try {
    val scheduled = (0 until entries.size()).map { index ->
     val entry = entries.getMap(index) ?: throw IllegalArgumentException("Missing schedule entry")
-    RollingAlarmScheduler.Entry(entry.getString("id") ?: throw IllegalArgumentException("Missing id"), entry.getString("title") ?: "일정", entry.getDouble("triggerAt").toLong(), entry.getString("mode") == "alarm")
+    RollingAlarmScheduler.Entry(entry.getString("id") ?: throw IllegalArgumentException("Missing id"), entry.getString("title") ?: "일정", entry.getDouble("triggerAt").toLong(), entry.getString("mode") == "alarm", entry.getString("memo") ?: "")
    }
    var scheduledCount = 0
    synchronized(RollingAlarmScheduler) {

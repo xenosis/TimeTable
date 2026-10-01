@@ -45,8 +45,8 @@ class AlarmActivity : Activity() {
   }
 
   /** 이미 떠 있는 화면을 가장 최근 알람의 내용으로 바꾼다. */
-  private fun showLatest(newScheduleId: String, title: String) {
-    intent = Intent(intent).putExtra("scheduleId", newScheduleId).putExtra("title", title)
+  private fun showLatest(newScheduleId: String, title: String, memo: String) {
+    intent = Intent(intent).putExtra("scheduleId", newScheduleId).putExtra("title", title).putExtra("memo", memo)
     scheduleId = newScheduleId
     setContentView(createContent())
   }
@@ -79,7 +79,7 @@ class AlarmActivity : Activity() {
       setTextColor(0xFF3B1D63.toInt())
     })
     addView(TextView(context).apply {
-      text = "${intent.getStringExtra("title") ?: "할 일"} 시간이에요."
+      text = AlarmMemoText.body(intent.getStringExtra("title") ?: "할 일", intent.getStringExtra("memo") ?: "")
       textSize = 20f
       gravity = Gravity.CENTER
       setPadding(0, dp(16), 0, dp(32))
@@ -144,9 +144,9 @@ class AlarmActivity : Activity() {
 
     /** 알람이 연달아 울릴 때: 같은 알림 id의 갱신은 전체화면 인텐트를 다시 실행하지 않으므로
      * (그래서 onNewIntent가 오지 않는다) 서비스가 떠 있는 화면을 직접 마지막 일정으로 바꿔 준다. */
-    fun showLatestIfShowing(scheduleId: String, title: String) {
+    fun showLatestIfShowing(scheduleId: String, title: String, memo: String = "") {
       val activity = current ?: return
-      activity.runOnUiThread { activity.showLatest(scheduleId, title) }
+      activity.runOnUiThread { activity.showLatest(scheduleId, title, memo) }
     }
   }
 }

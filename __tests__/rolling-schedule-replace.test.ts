@@ -10,7 +10,14 @@ describe('replaceRollingNotificationsFromDatabase', () => {
 
     await expect(replaceTimetableRollingNotificationsFromDatabase(database, 1, new Date(2026, 8, 14, 8, 0))).resolves.toBe(1);
 
-    expect(replaceAndroidRollingSchedule).toHaveBeenLastCalledWith([{ id: '1:2026-09-14', title: '국어', triggerAt: new Date(2026, 8, 14, 9, 0).getTime(), mode: 'notify' }], 'timetable');
+    expect(replaceAndroidRollingSchedule).toHaveBeenLastCalledWith([{ id: '1:2026-09-14', title: '국어', memo: '', triggerAt: new Date(2026, 8, 14, 9, 0).getTime(), mode: 'notify' }], 'timetable');
+  });
+
+  it('시간표 항목의 메모를 알림·알람 항목에 함께 넘긴다', async () => {
+    const { replaceAndroidRollingSchedule } = jest.requireMock('../src/notifications/secureAlarmPoc') as { replaceAndroidRollingSchedule: jest.Mock };
+    const database = { getAllAsync: jest.fn().mockResolvedValueOnce([{ id: 2, weekday: 1, startTime: '16:00', title: '영어 학원', category: 'academy', alertMode: 'alarm', alertBeforeMin: 0, memo: '16:45 차 타고 이동' }]).mockResolvedValueOnce([]) };
+    await replaceTimetableRollingNotificationsFromDatabase(database, 1, new Date(2026, 8, 14, 8, 0));
+    expect(replaceAndroidRollingSchedule).toHaveBeenLastCalledWith([{ id: '2:2026-09-14', title: '영어 학원', memo: '16:45 차 타고 이동', triggerAt: new Date(2026, 8, 14, 16, 0).getTime(), mode: 'alarm' }], 'timetable');
   });
 
   it('sends only future rolling entries to the native replacement boundary', async () => {

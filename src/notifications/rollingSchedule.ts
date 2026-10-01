@@ -12,11 +12,11 @@ export async function buildNotificationsFromDatabase(database: Pick<TimetableDat
 }
 
 export async function buildTimetableNotificationsFromDatabase(database: Pick<TimetableDatabase, 'getAllAsync'>, setId: number, now = new Date(), familyId = 'local-family'): Promise<readonly RollingNotification[]> {
-  const items = await database.getAllAsync<RollingScheduleItem>(`SELECT timetable_items.id, timetable_items.weekday, COALESCE(periods.start_time, timetable_items.start_time) AS startTime, timetable_items.title, timetable_items.category, timetable_items.alert_mode AS alertMode, timetable_items.alert_before_min AS alertBeforeMin FROM timetable_items LEFT JOIN periods ON periods.family_id = timetable_items.family_id AND periods.period_no = timetable_items.period_no WHERE timetable_items.family_id = ? AND timetable_items.set_id = ?`, familyId, setId);
+  const items = await database.getAllAsync<RollingScheduleItem>(`SELECT timetable_items.id, timetable_items.weekday, COALESCE(periods.start_time, timetable_items.start_time) AS startTime, timetable_items.title, timetable_items.category, timetable_items.alert_mode AS alertMode, timetable_items.alert_before_min AS alertBeforeMin, timetable_items.memo FROM timetable_items LEFT JOIN periods ON periods.family_id = timetable_items.family_id AND periods.period_no = timetable_items.period_no WHERE timetable_items.family_id = ? AND timetable_items.set_id = ?`, familyId, setId);
   return buildNotificationsFromDatabase(database, items, now, 7, familyId);
 }
 
 export async function replaceTimetableRollingNotificationsFromDatabase(database: Pick<TimetableDatabase, 'getAllAsync'>, setId: number, now = new Date(), familyId = 'local-family'): Promise<number> {
   const notifications = await buildTimetableNotificationsFromDatabase(database, setId, now, familyId);
-  return replaceAndroidRollingSchedule(notifications.map(({ id, title, triggerAt, mode }) => ({ id, title, triggerAt: triggerAt.getTime(), mode })), 'timetable');
+  return replaceAndroidRollingSchedule(notifications.map(({ id, title, memo, triggerAt, mode }) => ({ id, title, memo, triggerAt: triggerAt.getTime(), mode })), 'timetable');
 }

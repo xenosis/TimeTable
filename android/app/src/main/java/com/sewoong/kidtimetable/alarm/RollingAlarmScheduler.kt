@@ -76,15 +76,15 @@ object RollingAlarmScheduler {
   private fun interruptForTest(stage: String) {
     if (testInterruptionStage == stage) throw IllegalStateException("Debug replacement interruption at $stage")
   }
-  private fun encode(entries: List<Entry>) = JSONArray().apply { entries.forEach { put(JSONObject().put("id", it.id).put("title", it.title).put("triggerAt", it.triggerAt).put("isAlarm", it.isAlarm)) } }.toString()
+  private fun encode(entries: List<Entry>) = JSONArray().apply { entries.forEach { put(JSONObject().put("id", it.id).put("title", it.title).put("memo", it.memo).put("triggerAt", it.triggerAt).put("isAlarm", it.isAlarm)) } }.toString()
   private fun entriesFrom(preferences: android.content.SharedPreferences, key: String): List<Entry> = try {
     val values = JSONArray(preferences.getString(key, "[]"))
-    (0 until values.length()).map { index -> values.getJSONObject(index).let { Entry(it.getString("id"), it.getString("title"), it.getLong("triggerAt"), it.getBoolean("isAlarm")) } }
+    (0 until values.length()).map { index -> values.getJSONObject(index).let { Entry(it.getString("id"), it.getString("title"), it.getLong("triggerAt"), it.getBoolean("isAlarm"), it.optString("memo", "")) } }
   } catch (_: Exception) { emptyList() }
 
   private fun schedule(context: Context, entry: Entry) {
     val receiver = if (entry.isAlarm) AlarmReceiver::class.java else RollingNotificationReceiver::class.java
-    val intent = Intent(context, receiver).setData(uri(entry.id)).putExtra("scheduleId", entry.id).putExtra("title", entry.title)
+    val intent = Intent(context, receiver).setData(uri(entry.id)).putExtra("scheduleId", entry.id).putExtra("title", entry.title).putExtra("memo", entry.memo)
     val operation = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     if (entry.isAlarm) {
@@ -99,22 +99,23 @@ object RollingAlarmScheduler {
     }
   }
 
-  fun postGeneralNotification(context: Context, id: String, title: String) {
+  fun postGeneralNotification(context: Context, id: String, title: String, memo: String = "") {
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     TimeTableNotificationChannels.ensure(context)
     manager.notify(id, 0, NotificationCompat.Builder(context, GENERAL_CHANNEL_ID)
       .setSmallIcon(com.sewoong.kidtimetable.R.drawable.notification_icon)
       .setContentTitle(AlarmNavigation.displayTitle(id, isAlarm = false))
-      .setContentText("$title 시간이에요.")
+      .setContentText(AlarmMemoText.body(title, memo))
+      .setStyle(NotificationCompat.BigTextStyle().bigText(AlarmMemoText.body(title, memo)))
       .setContentIntent(AlarmNavigation.pageIntent(context, id))
       .setAutoCancel(true)
       .build())
   }
 
   private fun uri(id: String) = Uri.parse("kidtimetable://scheduled/${Uri.encode(id)}")
-  data class Entry(val id: String, val title: String, val triggerAt: Long, val isAlarm: Boolean)
+  data class Entry(val id: String, val title: String, val triggerAt: Long, val isAlarm: Boolean, val memo: String = "")
 }
 
 class RollingNotificationReceiver : android.content.BroadcastReceiver() {
-  override fun onReceive(context: Context, intent: Intent) = RollingAlarmScheduler.postGeneralNotification(context, intent.getStringExtra("scheduleId") ?: "unknown", intent.getStringExtra("title") ?: "일정")
+  override fun onReceive(context: Context, intent: Intent) = RollingAlarmScheduler.postGeneralNotification(context, intent.getStringExtra("scheduleId") ?: "unknown", intent.getStringExtra("title") ?: "일정", intent.getStringExtra("memo") ?: "")
 }

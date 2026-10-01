@@ -9,7 +9,7 @@ type SecureAlarmModule = {
   scheduleTestAlarm(delayMilliseconds: number): Promise<{ triggerAt: number }>;
   getPermissionStatus(): Promise<{ notifications: boolean; exactAlarms: boolean; fullScreen: boolean; battery: boolean }>;
   openPermissionSettings(kind: 'notifications' | 'exactAlarms' | 'fullScreen' | 'battery'): Promise<void>;
-  replaceRollingSchedule(entries: readonly { id: string; title: string; triggerAt: number; mode: 'notify' | 'alarm' }[], owner: 'timetable' | 'tasks'): Promise<number>;
+  replaceRollingSchedule(entries: readonly { id: string; title: string; memo?: string; triggerAt: number; mode: 'notify' | 'alarm' }[], owner: 'timetable' | 'tasks'): Promise<number>;
 };
 
 function getModule(): SecureAlarmModule {
@@ -28,7 +28,7 @@ export async function requestAndroidNotificationPermission(): Promise<boolean> {
   if (Number(Platform.Version) < 33) return (await getAndroidPermissionStatus()).notifications;
   return (await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS)) === PermissionsAndroid.RESULTS.GRANTED;
 }
-export async function replaceAndroidRollingSchedule(entries: readonly { id: string; title: string; triggerAt: number; mode: 'notify' | 'alarm' }[], owner: 'timetable' | 'tasks' = 'timetable'): Promise<number> { requireAndroid(); return getModule().replaceRollingSchedule(entries, owner); }
+export async function replaceAndroidRollingSchedule(entries: readonly { id: string; title: string; memo?: string; triggerAt: number; mode: 'notify' | 'alarm' }[], owner: 'timetable' | 'tasks' = 'timetable'): Promise<number> { requireAndroid(); return getModule().replaceRollingSchedule(entries, owner); }
 
 function requireAndroid(): void {
   if (Platform.OS !== 'android') throw new Error('잠금 화면 알람 PoC는 Android에서만 확인할 수 있어요.');

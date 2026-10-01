@@ -30,10 +30,11 @@ class AlarmSoundService : Service() {
     if (intent.action == ACTION_STOP) { stopAlarm(); return START_NOT_STICKY }
     val scheduleId = intent.getStringExtra("scheduleId") ?: "unknown"
     val title = intent.getStringExtra("title") ?: "할 일"
+    val memo = intent.getStringExtra("memo") ?: ""
     TimeTableNotificationChannels.ensure(this)
-    startForeground(AlarmReceiver.NOTIFICATION_ID, buildNotification(scheduleId, title))
+    startForeground(AlarmReceiver.NOTIFICATION_ID, buildNotification(scheduleId, title, memo))
     // 이미 다른 알람의 전체화면이 떠 있으면 마지막 일정으로 바꾼다(알림 갱신은 전체화면을 다시 띄우지 않는다)
-    AlarmActivity.showLatestIfShowing(scheduleId, title)
+    AlarmActivity.showLatestIfShowing(scheduleId, title, memo)
     startSound()
     // 연속 알람이 오면 마지막 알람 기준으로 1분을 다시 센다
     handler.removeCallbacks(autoStop)
@@ -47,7 +48,7 @@ class AlarmSoundService : Service() {
     super.onDestroy()
   }
 
-  private fun buildNotification(scheduleId: String, title: String): Notification {
+  private fun buildNotification(scheduleId: String, title: String, memo: String): Notification {
     val stopIntent = PendingIntent.getService(
       this, 0, Intent(this, AlarmSoundService::class.java).setAction(ACTION_STOP),
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
@@ -56,7 +57,7 @@ class AlarmSoundService : Service() {
       this, 0,
       Intent(this, AlarmActivity::class.java)
         .setData(Uri.parse("kidtimetable://alarm/${Uri.encode(scheduleId)}"))
-        .putExtra("scheduleId", scheduleId).putExtra("title", title)
+        .putExtra("scheduleId", scheduleId).putExtra("title", title).putExtra("memo", memo)
         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK),
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
@@ -64,7 +65,8 @@ class AlarmSoundService : Service() {
     return NotificationCompat.Builder(this, TimeTableNotificationChannels.ALARM_CHANNEL_ID)
       .setSmallIcon(com.sewoong.kidtimetable.R.drawable.notification_icon)
       .setContentTitle(label)
-      .setContentText("$title 시간이에요.")
+      .setContentText(AlarmMemoText.body(title, memo))
+      .setStyle(NotificationCompat.BigTextStyle().bigText(AlarmMemoText.body(title, memo)))
       .setCategory(NotificationCompat.CATEGORY_ALARM)
       .setPriority(NotificationCompat.PRIORITY_MAX)
       .setOngoing(true)
@@ -112,8 +114,8 @@ class AlarmSoundService : Service() {
     /** 알람 소리 최대 지속 시간(1분). 이후 소리와 알림을 자동으로 끈다. */
     const val MAX_RING_MILLIS = 60_000L
 
-    fun start(context: android.content.Context, scheduleId: String, title: String) {
-      val intent = Intent(context, AlarmSoundService::class.java).putExtra("scheduleId", scheduleId).putExtra("title", title)
+    fun start(context: android.content.Context, scheduleId: String, title: String, memo: String = "") {
+      val intent = Intent(context, AlarmSoundService::class.java).putExtra("scheduleId", scheduleId).putExtra("title", title).putExtra("memo", memo)
       context.startForegroundService(intent)
     }
 

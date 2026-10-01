@@ -4701,7 +4701,7 @@
     },
     {
       "id": "P2.18",
-      "status": "needs_info",
+      "status": "done",
       "priority": "P3",
       "category": "feature",
       "title": "메모 표시: 오늘·요일별·주간 화면에 메모 보이기",
@@ -4717,7 +4717,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-30T23:27:50.905Z",
-      "updated_at": "2026-09-30T23:33:19.534Z",
+      "updated_at": "2026-10-01T02:26:35.404Z",
       "log": [
         {
           "at": "2026-09-30T07:56:46.841Z",
@@ -4742,8 +4742,28 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "오늘·요일별 화면 메모 한 줄, 주간표 칸 📝 마커 구현 + 에뮬레이터 세로 확인. 남은 것: (1) 가로 화면 확인 (2) 사용자 결정: 주간표를 마커(현재)/첫 글자/작은 글씨 중 무엇으로 할지 (3) 알림 본문·잠금 화면 알람·홈 위젯에도 메모를 보일지"
+        },
+        {
+          "at": "2026-10-01T02:18:21.376Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 결정 2026-10-01: 주간표는 지금처럼 표시만(내용 숨김), 알림·잠금 화면 알람에도 메모 표시. 구현 착수"
+        },
+        {
+          "at": "2026-10-01T02:18:22.323Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·검증: 알림/알람 본문에 메모(JUnit AlarmMemoText, Jest, 에뮬레이터 알림 확인), 세로·가로 화면 확인, npm run check 통과. 리뷰 대기"
+        },
+        {
+          "at": "2026-10-01T02:26:35.404Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "사용자 결정 2026-10-01 반영: 주간표 📝 표시만, 알림·잠금 화면 알람에 메모 표시, 홈 위젯 제외. 리뷰 반영: 버전 1.42.0/102, JS 타입에 memo 추가"
         }
-      ]
+      ],
+      "done_at": "2026-10-01",
+      "evidence": "TodayScheduleCard·DailyScheduleList 메모 한 줄, WeekTimeGrid 📝, AlarmMemoText.kt + alarm 경로 memo 전달, rollingSchedule.ts. 에뮬레이터: 알림 본문·확장 본문, 전체화면 알람에 100글자 메모(끄기 버튼 정상, 알람 화면은 세로 고정), 요일별 화면 세로·가로 · 검증: npm run check 통과(Jest 196, JUnit AlarmMemoTextTest); critical-reviewer·backlog-explainer 실행·반영. 미확인: 실기기, 주간표 가로 화면, UI 컴포넌트 렌더 자동 테스트 없음"
     },
     {
       "id": "P2.19",

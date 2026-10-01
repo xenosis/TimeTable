@@ -9,9 +9,10 @@ export type RollingScheduleItem = {
   readonly category: TimetableCategory;
   readonly alertMode: 'none' | RollingAlertMode;
   readonly alertBeforeMin: number;
+  readonly memo?: string;
 };
 export type DayException = { readonly startDate: string; readonly endDate: string };
-export type RollingNotification = { readonly id: string; readonly itemId: number; readonly mode: RollingAlertMode; readonly title: string; readonly triggerAt: Date };
+export type RollingNotification = { readonly id: string; readonly itemId: number; readonly mode: RollingAlertMode; readonly title: string; readonly memo: string; readonly triggerAt: Date };
 
 function dateKey(date: Date): string { return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-'); }
 function atTime(date: Date, time: string, leadMinutes: number): Date { const [hours, minutes] = time.split(':').map(Number); return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes - leadMinutes); }
@@ -25,7 +26,7 @@ export function buildRollingNotifications(items: readonly RollingScheduleItem[],
     for (const item of items) {
       if (item.weekday !== date.getDay() || item.alertMode === 'none' || (item.category === 'school' && isException(date, exceptions))) continue;
       const triggerAt = atTime(date, item.startTime, item.alertBeforeMin);
-      if (triggerAt >= now && triggerAt < windowEnd) result.push({ id: `${item.id}:${dateKey(date)}`, itemId: item.id, mode: item.alertMode, title: item.title, triggerAt });
+      if (triggerAt >= now && triggerAt < windowEnd) result.push({ id: `${item.id}:${dateKey(date)}`, itemId: item.id, mode: item.alertMode, title: item.title, memo: item.memo ?? '', triggerAt });
     }
   }
   return result.sort((left, right) => left.triggerAt.getTime() - right.triggerAt.getTime() || left.itemId - right.itemId);

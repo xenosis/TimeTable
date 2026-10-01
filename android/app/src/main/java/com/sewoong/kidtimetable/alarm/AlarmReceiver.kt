@@ -10,8 +10,9 @@ class AlarmReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     val scheduleId = intent.getStringExtra("scheduleId") ?: "unknown"
     val title = intent.getStringExtra("title") ?: "할 일"
+    val memo = intent.getStringExtra("memo") ?: ""
     TimeTableNotificationChannels.ensure(context)
-    AlarmSoundService.start(context, scheduleId, title)
+    AlarmSoundService.start(context, scheduleId, title, memo)
   }
   companion object { const val CHANNEL_ID = TimeTableNotificationChannels.ALARM_CHANNEL_ID; const val NOTIFICATION_ID = 8108 }
 }
