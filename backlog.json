@@ -3916,7 +3916,7 @@
     },
     {
       "id": "P6.2",
-      "status": "todo",
+      "status": "needs_info",
       "priority": null,
       "category": "infra",
       "title": "Supabase 스키마",
@@ -3930,14 +3930,33 @@
       "done_when": "전체 테이블 마이그레이션 파일이 존재하고 적용됨",
       "est_min": 45,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-01T04:09:13.665Z",
+      "updated_at": "2026-10-01T04:19:33.951Z",
+      "log": [
+        {
+          "at": "2026-10-01T04:09:13.665Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 지시 2026-10-01: P6 진행. supabase/migrations에 SQL 작성 착수(D7 반영: 딸 계정 쓰기 권한, tt_ 접두사)"
+        },
+        {
+          "at": "2026-10-01T04:09:14.597Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "SQL 파일 작성(tt_schema.sql, tt_rls.sql), supabase/README.md, 정적 검사 Jest 8개. 실제 Postgres/Supabase에는 아직 적용·실행 못 함. 리뷰 대기"
+        },
+        {
+          "at": "2026-10-01T04:19:33.951Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "SQL 작성·정적 검사(Jest 8)·리뷰 반영 완료(원장 FK cascade 제거, 푸시 토큰 unique 변경 등). 남은 것: (1) 어느 Supabase 프로젝트에 적용할지(Doro와 같은 프로젝트/새 프로젝트) 와 실제 적용 — 프로젝트 접속 필요 (2) 로컬에 psql/docker가 없어 SQL을 실행 검증 못 함"
+        }
+      ]
     },
     {
       "id": "P6.3",
-      "status": "todo",
+      "status": "needs_info",
       "priority": null,
       "category": "security",
       "title": "RLS 정책",
@@ -3951,10 +3970,29 @@
       "done_when": "역할별 RLS 정책이 테스트로 검증됨",
       "est_min": 45,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-01T04:09:15.544Z",
+      "updated_at": "2026-10-01T04:19:34.890Z",
+      "log": [
+        {
+          "at": "2026-10-01T04:09:15.544Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 지시 2026-10-01: P6 진행. supabase/migrations에 SQL 작성 착수(D7 반영: 딸 계정 쓰기 권한, tt_ 접두사)"
+        },
+        {
+          "at": "2026-10-01T04:09:16.482Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "SQL 파일 작성(tt_schema.sql, tt_rls.sql), supabase/README.md, 정적 검사 Jest 8개. 실제 Postgres/Supabase에는 아직 적용·실행 못 함. 리뷰 대기"
+        },
+        {
+          "at": "2026-10-01T04:19:34.890Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "RLS SQL 작성·리뷰 반영 완료. 남은 것: (1) 사용자 확인: 딸 계정에 보상 목표·보석 원장·교시·휴일 쓰기와 과거 날짜 체크까지 허용해도 되는지 (2) 실제 Postgres에서 역할별(anon/다른 가족/child/parent) 허용·거부 시나리오 실행 검증 — 환경 필요"
+        }
+      ]
     },
     {
       "id": "P6.4",
@@ -4261,7 +4299,7 @@
     },
     {
       "id": "P7.3",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "docs",
       "title": "문서화: 빌드 · 업데이트 절차",
@@ -4277,7 +4315,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-30T23:36:24.671Z",
-      "updated_at": "2026-09-30T23:39:14.432Z",
+      "updated_at": "2026-10-01T04:00:55.944Z",
       "log": [
         {
           "at": "2026-09-30T23:36:24.671Z",
@@ -4296,8 +4334,28 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "docs/build-commands.md 작성·리뷰 반영(서명 설명 정정, 키 현재 위치·git 미커밋 확인 기록). 사용자 결정 필요: 서명 키 저장소 밖 백업 위치를 지금 정해 기록할지, P7.6(배포 직전)으로 넘기고 P7.3 범위에서 뺄지"
+        },
+        {
+          "at": "2026-10-01T04:00:54.023Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 결정으로 백업 위치 기록 제외 확정, 마무리"
+        },
+        {
+          "at": "2026-10-01T04:00:54.979Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "리뷰 반영 완료"
+        },
+        {
+          "at": "2026-10-01T04:00:55.944Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "사용자 결정 2026-10-01: 서명 키 외부 백업 위치 기록은 배포 직전 P7.6으로 미룬다"
         }
-      ]
+      ],
+      "done_at": "2026-10-01",
+      "evidence": "docs/build-commands.md(빌드·업데이트 절차, APK 대상 구분, 서명 설명, 서명 키 현재 위치) · 검증: critical-reviewer·backlog-explainer 실행·반영(서명 설명 정정, 키 파일 git 이력 없음 확인). 백업 위치는 P7.6 범위"
     },
     {
       "id": "P7.4",
