@@ -19,12 +19,12 @@ const legacyPalette = [
   ['science', '#2563EB', '#FFFFFF'], ['music', '#DB2777', '#FFFFFF'], ['art', '#7C3AED', '#FFFFFF'],
   ['physical-education', '#F97316', '#1E293B'], ['other', '#14B8A6', '#1E293B'],
 ];
-const legacyColors = {
-  background: '#F8FAFC', surface: '#FFFFFF', primary: '#4F46E5', onPrimary: '#FFFFFF', secondary: '#10B981',
-  text: '#1E293B', textMuted: '#64748B', border: '#E2E8F0', success: '#22C55E', warning: '#F59E0B', danger: '#EF4444',
+const cloudColors = {
+  background: '#F0F9FF', surface: '#FFFFFF', primary: '#075985', onPrimary: '#FFFFFF', secondary: '#0E7490',
+  text: '#172554', textMuted: '#475569', border: '#BAE6FD', success: '#22C55E', warning: '#F59E0B', danger: '#EF4444',
 };
-const legacyDecorations = {
-  cardBackground: '#FFFFFF', cardBorder: '#E2E8F0', accentShape: 'circle', stickerShape: 'star', stickerAccent: '#A16207',
+const cloudDecorations = {
+  cardBackground: '#FFFFFF', cardBorder: '#BAE6FD', accentShape: 'heart', stickerShape: 'heart', stickerAccent: '#075985',
 };
 const alternateTheme = {
   ...defaultTheme,
@@ -89,20 +89,21 @@ describe('theme registry', () => {
     expect(resolveThemeIcon(defaultTheme, undefined).key).toBe('other');
   });
 
-  it('keeps the previous default-theme exports and validates the registry', () => {
+  it('uses the cloud default and preserves semantic subject colors while validating the registry', () => {
     expect(themes).toContain(defaultTheme);
     expect(themes).toHaveLength(2);
+    expect(themes.map(({ id }) => id)).toEqual(['cinnamon-cloud', 'kuromi-star']);
     expect(new Set(themes.map((theme) => theme.id)).size).toBe(themes.length);
     expect(colors).toBe(defaultTheme.colors);
     expect(categoryPalette).toBe(defaultTheme.categories);
     expect(categoryPalette.map(({ key, backgroundColor, textColor }) => [key, backgroundColor, textColor])).toEqual(expect.arrayContaining(legacyPalette));
-    expect(colors).toEqual(legacyColors);
-    expect(defaultTheme.decorations).toEqual(legacyDecorations);
+    expect(colors).toEqual(cloudColors);
+    expect(defaultTheme.decorations).toEqual(cloudDecorations);
     expect(Object.isFrozen(defaultTheme)).toBe(true);
     expect(Object.isFrozen(defaultTheme.colors)).toBe(true);
     expect(() => assertValidTheme({ ...defaultTheme, categories: [] })).toThrow('비어 있을 수 없습니다');
     expect(() => assertValidRegistry([defaultTheme, { ...defaultTheme }])).toThrow('레지스트리에서 고유');
-    expect(() => assertValidRegistry([{ ...defaultTheme, colors: { ...defaultTheme.colors, primary: '#075985' } }])).toThrow('기본 테마 정의는 변경할 수 없습니다');
+    expect(() => assertValidRegistry([{ ...defaultTheme, colors: { ...defaultTheme.colors, primary: '#0369A1' } }])).toThrow('기본 테마 정의는 변경할 수 없습니다');
     expect(() => assertValidRegistry([defaultTheme, { ...defaultTheme, id: 'missing-math', categories: defaultTheme.categories.filter(({ key }) => key !== 'math') }])).toThrow('color_key를 모두 지원');
     expect(() => assertValidRegistry([defaultTheme, { ...defaultTheme, id: 'missing-music', icons: defaultTheme.icons.filter(({ key }) => key !== 'music-note') }])).toThrow('icon_key를 모두 지원');
     expect(resolveThemeColor({ ...defaultTheme }, 'math').key).toBe('math');
@@ -122,7 +123,8 @@ describe('theme registry', () => {
     expect(defaultTheme.categories.find(({ key }) => key === 'math')?.backgroundColor).toBe('#10B981');
     expect(resolveThemeColor(twoThemeRegistry[1]!, 'math', twoThemeRegistry).backgroundColor).toBe('#047857');
     expect(resolveThemeIcon(twoThemeRegistry[1]!, 'music-note', twoThemeRegistry).glyph).toBe('♫');
-    expect(getTheme('sky-cloud')).toMatchObject({ id: 'sky-cloud' });
+    expect(getTheme('sky-cloud')).toMatchObject({ id: 'cinnamon-cloud' });
+    expect(getTheme('daylight')).toMatchObject({ id: 'cinnamon-cloud' });
     expect(() => getTheme(defaultThemeId, [defaultTheme])).toThrow('검증되지 않은 테마 레지스트리');
     expect(() => assertValidTheme({ ...defaultTheme, categories: defaultTheme.categories.map((category) => category.key === 'math' ? { ...category, textColor: '#10B981' } : category) })).toThrow('대비는 4.5:1');
     expect(() => assertValidTheme({ ...defaultTheme, colors: { ...defaultTheme.colors, text: '#F8FAFC' } })).toThrow('대비는 4.5:1');

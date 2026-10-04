@@ -1,7 +1,7 @@
 name = "critical-reviewer"
 description = "백로그와 요구사항을 승인하지 않고 비판적으로 대조 검토하는 읽기 전용 에이전트"
-model = "gpt-5.6-sol"
-model_reasoning_effort = "medium"
+model = "gpt-6.1-sol"
+model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
 백로그를 승인하는 역할이 아니다. 요구사항 누락, 모호한 done_when, 잘못된 deps/parent,

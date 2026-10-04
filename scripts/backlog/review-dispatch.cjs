@@ -161,12 +161,12 @@ async function main() {
   try {
     const results = await Promise.all([
       runAgent({
-        name: 'critical-reviewer', model: 'gpt-5.6-sol', reasoningEffort: 'medium', sandbox: 'read-only',
+        name: 'critical-reviewer', model: 'gpt-6.1-sol', reasoningEffort: 'high', sandbox: 'read-only',
         prompt: buildPrompt('critical-reviewer', snapshot), input: snapshot,
         outputPath: path.join(runDirectory, 'critical-reviewer.md'),
       }),
       runAgent({
-        name: 'backlog-explainer', model: 'gpt-5.6-luna', reasoningEffort: 'low', sandbox: 'workspace-write',
+        name: 'backlog-explainer', model: 'gpt-6-luna', reasoningEffort: 'medium', sandbox: 'workspace-write',
         prompt: buildPrompt('backlog-explainer', snapshot), input: snapshot,
         outputPath: path.join(runDirectory, 'backlog-explainer.md'),
       }),

@@ -1,6 +1,6 @@
 import type { TimetableDatabase } from './types';
 
-export const databaseVersion = 11;
+export const databaseVersion = 12;
 
 export const schemaV1 = [
   `CREATE TABLE IF NOT EXISTS periods (
@@ -183,6 +183,27 @@ export const schemaV11 = [
   "ALTER TABLE timetable_items ADD COLUMN memo TEXT NOT NULL DEFAULT ''",
 ] as const;
 
+/** V12: 연속 달성으로 얻는 "실물 보석을 받을 자격"(요청·지급 상태). 날짜마다 최대 1개. */
+export const schemaV12 = [
+  `CREATE TABLE IF NOT EXISTS gem_rights (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    family_id TEXT NOT NULL DEFAULT 'local-family',
+    child_id TEXT NOT NULL DEFAULT 'local-child',
+    earned_date TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'available' CHECK (state IN ('available', 'requested', 'given')),
+    requested_at TEXT,
+    given_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (family_id, child_id, earned_date)
+  )`,
+  // 옛 정책에서 '하루 완료'마다 쌓인 보석은 합계가 그대로 남도록 하나의 조정 행으로 옮기고, 원래 행은 완료 기록(0)만 남긴다.
+  // 그래야 체크를 취소해도 딸이 적어 둔 보석 개수가 줄어들지 않는다.
+  `INSERT INTO sticker_ledger (family_id, child_id, delta, reason)
+    SELECT family_id, child_id, SUM(delta), 'legacy-daily-completions' FROM sticker_ledger
+    WHERE reason LIKE 'daily-completion:%' AND delta != 0 GROUP BY family_id, child_id HAVING SUM(delta) != 0`,
+  "UPDATE sticker_ledger SET delta = 0 WHERE reason LIKE 'daily-completion:%' AND delta != 0",
+] as const;
+
 type UserVersionRow = { user_version: number };
 
 export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsync' | 'getFirstAsync'>): Promise<void> {
@@ -233,6 +254,10 @@ export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsy
     }
     if (version < 11) {
       for (const statement of schemaV11) await database.execAsync(statement);
+      await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
+    }
+    if (version < 12) {
+      for (const statement of schemaV12) await database.execAsync(statement);
       await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
     }
     await database.execAsync('COMMIT');

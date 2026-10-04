@@ -4,6 +4,7 @@ import { useFocusEffect, useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DailyScheduleList } from '../../src/components/DailyScheduleList';
+import { CharacterHeader } from '../../src/components/CharacterHeader';
 import { WeekdayTabs } from '../../src/components/WeekdayTabs';
 import { WeekOverviewGrid } from '../../src/components/WeekOverviewGrid';
 import { WeekDayHeader } from '../../src/components/WeekTimeGrid';
@@ -91,7 +92,7 @@ export default function TimetableScreen() {
   // 요일 확대 보기는 스크롤 없이 남은 화면에 표를 맞춘다(DailyScheduleList가 높이를 재서 행 높이를 조절한다)
   if (!weekView) {
     return <View style={[styles.dayRoot, { backgroundColor: colors.background }]}>
-      {!compact && <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text>}
+      {!compact && <CharacterHeader theme={theme} compact><Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text></CharacterHeader>}
       {buttons}
       <WeekdayTabs selected={selectedDay} today={todayDay} theme={theme} onSelect={setSelectedDay} />
       {timetableSet && <DailyScheduleList weekday={selectedDay} isToday={selectedDay === todayDay} active={focused} theme={theme} setId={timetableSet.id} refreshKey={refreshKey} />}
@@ -99,7 +100,7 @@ export default function TimetableScreen() {
   }
 
   return <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
-    {!compact && <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text>}
+    {!compact && <CharacterHeader theme={theme} compact><Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text></CharacterHeader>}
     {buttons}
     {card}
   </ScrollView>;

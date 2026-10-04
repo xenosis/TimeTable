@@ -6,6 +6,7 @@ import { borderRadius, touchTarget } from '../src/theme';
 import { AdminCollapsible } from '../src/components/AdminCollapsible';
 import { AdminSectionMenu } from '../src/components/AdminSectionMenu';
 import { DeviceTestPanel } from '../src/components/DeviceTestPanel';
+import { GemRequestsPanel } from '../src/components/GemRequestsPanel';
 import { PeriodSettings } from '../src/components/PeriodSettings';
 import { TimetableSetPanel } from '../src/components/TimetableSetPanel';
 import { TimetableEditor } from '../src/components/TimetableEditor';
@@ -87,7 +88,11 @@ export default function ManageScreen() {
           {timetableSet && <AdminCollapsible title="요일 시간표 복사" theme={theme}><WeekdayCopy theme={theme} setId={timetableSet.id} onCopied={refreshAfterScheduleChange} /></AdminCollapsible>}
         </>}
         {section === 'tasks' && <TaskEditor theme={theme} onChanged={refreshAfterTaskChange} onFormState={reportFormState} />}
-        {section === 'rewards' && <RewardGoalEditor theme={theme} onChanged={() => undefined} />}
+        {section === 'rewards' && <>
+          {/* 딸이 요청한 실물 보석을 확인하고 '줬어요'로 처리한다(앱의 보석 개수는 바꾸지 않는다). 정책은 docs/backlog/P4.13.md */}
+          <GemRequestsPanel theme={theme} />
+          <RewardGoalEditor theme={theme} onChanged={() => undefined} />
+        </>}
         {section === 'etc' && <>
           <AdminCollapsible title="기기 테스트 (알림·알람)" theme={theme}><DeviceTestPanel theme={theme} /></AdminCollapsible>
           <AdminCollapsible title="진단: 과목 색상 미리보기" theme={theme}>

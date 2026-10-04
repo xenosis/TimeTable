@@ -1,5 +1,6 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 let rawInput = '';
 process.stdin.setEncoding('utf8');
@@ -24,6 +25,12 @@ process.stdin.on('end', () => {
   }
 
   const projectRoot = findProjectRoot(input.cwd || process.cwd());
+  const sessionId = String(input.session_id || 'default').replace(/[^\w-]/g, '_');
+  const flagPath = path.join(projectRoot, 'node_modules', '.cache', 'codex-quality-edited', sessionId);
+  if (!fs.existsSync(flagPath)) {
+    console.log('{}');
+    process.exit(0);
+  }
   const result = spawnSync(process.execPath, ['scripts/run-quality-checks.cjs'], {
     cwd: projectRoot,
     encoding: 'utf8',
@@ -32,6 +39,7 @@ process.stdin.on('end', () => {
   });
 
   if (result.status === 0 && !result.error) {
+    fs.unlinkSync(flagPath);
     console.log('{}');
     process.exit(0);
   }
@@ -60,7 +68,6 @@ process.stdin.on('end', () => {
 });
 
 function findProjectRoot(startPath) {
-  const fs = require('fs');
   let current = path.resolve(startPath);
   while (true) {
     if (fs.existsSync(path.join(current, 'scripts', 'run-quality-checks.cjs'))) return current;

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useImmersive } from '../../src/store/immersiveMode';
 import { fontSize, spacing, touchTarget } from '../../src/theme';
 import { useActiveTheme } from '../../src/theme/provider';
+import { GemCollectionArtwork } from '../../src/components/GemCollectionArtwork';
 
 const tabs = [
   { path: '/', label: '오늘', icon: '🏠' },
@@ -36,9 +37,9 @@ export default function TabsLayout() {
           accessibilityState={{ selected: active }}
           accessibilityLabel={`${label} 탭`}
           onPress={() => router.replace(path)}
-          style={styles.tabButton}
+          style={({ pressed }) => [styles.tabButton, { backgroundColor: active ? theme.character?.softColor ?? theme.colors.background : theme.colors.surface, opacity: pressed ? 0.7 : 1 }]}
         >
-          <Text style={styles.tabIcon}>{icon}</Text>
+          {path === '/stickers' ? <GemCollectionArtwork kind="gem" size={28} /> : <Text accessible={false} style={styles.tabIcon}>{icon}</Text>}
           <Text style={[styles.tabLabel, { color: active ? theme.colors.primary : theme.colors.textMuted, fontWeight: active ? '700' : '600' }]}>{label}</Text>
         </Pressable>;
       })}
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   gearButton: { alignItems: 'center', justifyContent: 'center', minHeight: touchTarget.minimum, minWidth: touchTarget.minimum },
   gearGlyph: { fontSize: fontSize.lg },
   tabBar: { borderTopWidth: 1, flexDirection: 'row', paddingTop: spacing.xs },
-  tabButton: { alignItems: 'center', flex: 1, gap: 2, justifyContent: 'center', minHeight: touchTarget.minimum, paddingVertical: spacing.xs },
+  tabButton: { alignItems: 'center', flex: 1, gap: 3, justifyContent: 'center', minHeight: touchTarget.minimum, paddingVertical: spacing.xs, borderRadius: 18, marginHorizontal: 4 },
   tabIcon: { fontSize: 24 },
   tabLabel: { fontSize: fontSize.sm },
 });

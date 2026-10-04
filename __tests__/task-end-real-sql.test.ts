@@ -19,6 +19,7 @@ beforeEach(async () => {
   await migrateDatabase(database);
   await createTask(database, { title: '학원 숙제', repeatWeekdays: everyDay, taskDate: '', effectiveFrom: '2026-10-01' });
   await createTask(database, { title: '책 읽기', repeatWeekdays: everyDay, taskDate: '', effectiveFrom: '2026-10-01' });
+  await database.runAsync("UPDATE tasks SET created_at = '2026-01-01 00:00:00'"); // 새 규칙: 할 일은 만든 날부터만 센다 → 테스트의 날짜들보다 이전에 만든 것으로 맞춘다
 });
 
 // 2026-10-01은 목요일(4), 2026-10-02는 금요일(5)
@@ -57,7 +58,7 @@ describe('완료 이력이 있는 반복 할 일 종료 (실제 SQLite)', () => 
   });
 });
 
-describe('종료한 할 일과 보석(전체 완료) 계산 (실제 SQLite)', () => {
+describe('종료한 할 일과 전체 완료 기록 (실제 SQLite)', () => {
   const dailyRows = async () => (await database.getAllAsync<{ reason: string }>("SELECT reason FROM sticker_ledger WHERE reason LIKE 'daily-completion:%'")).map(({ reason }) => reason);
 
   it('그만둔 할 일이 남아 있어도 나머지를 다 하면 그날 전체 완료가 기록된다', async () => {
@@ -85,7 +86,7 @@ describe('종료한 할 일과 보석(전체 완료) 계산 (실제 SQLite)', ()
   });
 });
 
-describe('종료한 할 일과 주간 보석·알림 예약 (실제 SQLite)', () => {
+describe('종료한 할 일의 자동 보석 지급 없음·알림 예약 (실제 SQLite)', () => {
   // 한 주(2026-09-27~10-03)에서 목요일(10-01)에만 있는 '책 읽기'와 매일 있는 '학원 숙제'를 쓴다
   const weekRows = async () => (await database.getAllAsync<{ reason: string }>("SELECT reason FROM sticker_ledger WHERE reason LIKE 'gem-reward:week:%'")).map(({ reason }) => reason);
 
@@ -98,9 +99,9 @@ describe('종료한 할 일과 주간 보석·알림 예약 (실제 SQLite)', ()
     await setTaskCompletionWithRewards(database, reading, '2026-10-01', 4, true);
   }
 
-  it('종료일 뒤에는 그 할 일만 있던 날을 필요한 날로 세지 않아 주간 완료가 기록된다', async () => {
+  it('반복 할 일을 종료하고 전체 완료해도 주간 보석을 자동 지급하지 않는다', async () => {
     await finishThursday(true);
-    expect((await weekRows()).length).toBeGreaterThan(0);
+    expect(await weekRows()).toEqual([]);
   });
 
   it('비교: 그만두지 않았다면 금·토요일의 안 한 학원 숙제 때문에 주간 완료가 기록되지 않는다', async () => {

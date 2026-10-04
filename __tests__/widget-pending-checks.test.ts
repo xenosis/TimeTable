@@ -9,6 +9,7 @@ let database: ReturnType<typeof openTestDatabase>;
 
 async function makeTask(title: string): Promise<number> {
   await createTask(database, { title, repeatWeekdays: [0, 1, 2, 3, 4, 5, 6], taskDate: '', effectiveFrom: '2026-01-01' });
+  await database.runAsync("UPDATE tasks SET created_at = '2026-01-01 00:00:00'"); // 새 규칙: 할 일은 만든 날부터만 센다 → 테스트의 날짜들보다 이전에 만든 것으로 맞춘다
   return (await database.getFirstAsync<{ id: number }>('SELECT id FROM tasks WHERE title = ?', title))!.id;
 }
 

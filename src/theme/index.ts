@@ -1,8 +1,5 @@
 import { contrastRatio } from './contrast';
-
-// 아이 친화적 디자인 토큰
-// - 글자를 크게, 터치 영역을 넓게, 과목별로 색을 다르게 (docs/research.md 10장 참고)
-// - 시간표 데이터에는 색상 코드가 아닌 category key를 저장한다. 현재 테마가 그 키를 표시값으로 해석한다.
+import { createCharacterThemes, type ThemeCharacter } from './characterThemes';
 
 export type ThemeColors = {
   readonly background: string;
@@ -68,6 +65,7 @@ export type ThemeDefinition = {
   readonly categories: readonly ThemeCategory[];
   readonly icons: readonly ThemeIcon[];
   readonly decorations: ThemeDecorations;
+  readonly character?: ThemeCharacter;
 };
 
 const themeColorKeys = ['background', 'surface', 'primary', 'onPrimary', 'secondary', 'text', 'textMuted', 'border', 'success', 'warning', 'danger'] as const satisfies readonly (keyof ThemeColors)[];
@@ -131,25 +129,9 @@ const daylightTheme = {
   },
 } satisfies ThemeDefinition;
 
-const skyTheme = {
-  ...daylightTheme,
-  id: 'sky-cloud',
-  name: '하늘 구름 테마',
-  description: '맑은 하늘과 구름처럼 부드러운 파란색 테마',
-  colors: { ...daylightTheme.colors, background: '#F0F9FF', surface: '#FFFFFF', primary: '#0369A1', onPrimary: '#FFFFFF', secondary: '#0E7490', text: '#172554', textMuted: '#475569', border: '#BAE6FD' },
-  categories: daylightCategories.map((category) => {
-    const palette: Partial<Record<ColorKey, readonly [string, string]>> = {
-      korean: ['#075985', '#FFFFFF'], math: ['#047857', '#FFFFFF'], english: ['#6D28D9', '#FFFFFF'], science: ['#1D4ED8', '#FFFFFF'],
-      music: ['#9D174D', '#FFFFFF'], art: ['#6B21A8', '#FFFFFF'], 'physical-education': ['#9A3412', '#FFFFFF'], academy: ['#115E59', '#FFFFFF'], life: ['#7C2D12', '#FFFFFF'], other: ['#0F766E', '#FFFFFF'],
-    };
-    const [backgroundColor, textColor] = palette[category.key]!;
-    return { ...category, backgroundColor, textColor };
-  }),
-  icons: daylightIcons.map((icon) => icon.key === 'music-note' ? { ...icon, glyph: '♫' } : icon),
-  decorations: { ...daylightTheme.decorations, cardBackground: '#FFFFFF', cardBorder: '#BAE6FD', accentShape: 'heart', stickerShape: 'heart', stickerAccent: '#0369A1' },
-} satisfies ThemeDefinition;
-
-export const defaultThemeId = daylightTheme.id;
+const characterThemes = createCharacterThemes(daylightTheme);
+const defaultThemeDefinition = characterThemes[0]!;
+export const defaultThemeId = defaultThemeDefinition.id;
 const validatedRegistries = new WeakSet<object>();
 
 function isHexColor(value: string): boolean {
@@ -204,6 +186,7 @@ function freezeTheme(theme: ThemeDefinition): ThemeDefinition {
     categories: Object.freeze(theme.categories.map((category) => Object.freeze({ ...category }))),
     icons: Object.freeze(theme.icons.map((icon) => Object.freeze({ ...icon }))),
     decorations: Object.freeze({ ...theme.decorations }),
+    ...(theme.character ? { character: Object.freeze({ ...theme.character }) } : {}),
   });
 }
 
@@ -212,7 +195,7 @@ export function assertValidRegistry(registry: readonly ThemeDefinition[]): reado
   if (new Set(registry.map((theme) => theme.id)).size !== registry.length) throw new Error('테마 id는 레지스트리에서 고유해야 합니다.');
   const suppliedDefaultTheme = registry.find((theme) => theme.id === defaultThemeId);
   if (!suppliedDefaultTheme) throw new Error(`기본 테마가 레지스트리에 필요합니다: ${defaultThemeId}`);
-  if (JSON.stringify(suppliedDefaultTheme) !== JSON.stringify(daylightTheme)) {
+  if (JSON.stringify(suppliedDefaultTheme) !== JSON.stringify(defaultThemeDefinition)) {
     throw new Error(`기본 테마 정의는 변경할 수 없습니다: ${defaultThemeId}`);
   }
   for (const theme of registry) {
@@ -230,7 +213,7 @@ export function assertValidRegistry(registry: readonly ThemeDefinition[]): reado
   return validated;
 }
 
-export const themes = assertValidRegistry([daylightTheme, skyTheme]);
+export const themes = assertValidRegistry(characterThemes);
 export const defaultTheme: ThemeDefinition = themes.find((theme) => theme.id === defaultThemeId)
   ?? (() => { throw new Error(`기본 테마를 찾을 수 없습니다: ${defaultThemeId}`); })();
 

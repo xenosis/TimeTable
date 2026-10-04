@@ -36,17 +36,18 @@ describe('sticker summary', () => {
     await expect(addRewardGoal(database, '영화', 0)).rejects.toThrow('1 이상');
   });
 
-  it('spends every gem on achieve so the next goal starts from zero', async () => {
+  it('does not change the gem counts when a reward goal is achieved (gems are physical)', async () => {
     const database = fakeRewardDatabase([
       { reason: 'gem-reward:week:2026-09-19:gem', delta: 5 },
       { reason: 'gem-reward:month:2026-09-30:large-gem', delta: 2 },
     ]);
     await markRewardAchieved(database, 9);
-    await expect(getStickerSummary(database)).resolves.toMatchObject({ gems: 0, largeGems: 0 });
+    await expect(getStickerSummary(database)).resolves.toMatchObject({ gems: 5, largeGems: 2 });
+    expect(database.calls().every(([sql]) => !String(sql).startsWith('INSERT INTO sticker_ledger'))).toBe(true);
   });
 
   it('does nothing when the reward is already achieved', async () => {
-    const database = { runAsync: async () => ({ changes: 0 }), getAllAsync: async () => { throw new Error('should not read the ledger'); }, getFirstAsync: async () => { throw new Error('should not read the ledger'); } };
+    const database = { runAsync: async () => ({ changes: 0 }) };
     await expect(markRewardAchieved(database, 9)).resolves.toBeUndefined();
   });
 });

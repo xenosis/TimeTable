@@ -58,10 +58,10 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
     let scheduleRefreshFailed = false;
     try {
       const database = await getDatabase();
-      const earned = await setTaskCompletionWithRewards(database, task.id, date, weekday, !task.completed);
+      await setTaskCompletionWithRewards(database, task.id, date, weekday, !task.completed);
       try { await requestTaskRollingScheduleRefresh(); } catch { scheduleRefreshFailed = true; }
       const updated = await getTodayTasks(database, date, weekday);
-      if (!task.completed && updated.length && updated.every((item) => item.completed)) setCelebration({ date, message: earned ? (earned.kind === 'large-gem' ? '큰 보석을 받았어요! 💎' : '보석을 받았어요! 💎') : '오늘 할 일을 모두 끝냈어요! ✨' });
+      if (!task.completed && updated.length && updated.every((item) => item.completed)) setCelebration({ date, message: '오늘 할 일을 모두 끝냈어요! ✨' });
       else setCelebration(null);
       if (date === dateKey(new Date())) {
         await load();
@@ -77,25 +77,27 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
   const remaining = visibleTasks.length - completed;
   const remainingCopy = !visibleTasks.length ? '' : remaining > 0 ? `아직 ${remaining}개 남았어요` : '오늘 할 일을 다 했어요! ✨';
   return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
-    <Text style={[styles.title, { color: theme.colors.text }]}>오늘의 할 일</Text>
+    <View style={styles.titleRow}><Text style={[styles.title, { color: theme.colors.text }]}>오늘의 할 일</Text><Text style={[styles.badge, { color: theme.colors.primary, backgroundColor: theme.colors.background }]}>{completed} / {visibleTasks.length}</Text></View>
     <View style={styles.countRow}>
       <Text style={[styles.count, { color: theme.colors.textMuted }]}>{completed}/{visibleTasks.length} 완료</Text>
-      {!!remainingCopy && <Text style={[styles.remaining, { color: remaining > 0 ? theme.colors.textMuted : theme.colors.success }]}>{remainingCopy}</Text>}
+      {!!remainingCopy && <Text style={[styles.remaining, { color: remaining > 0 ? theme.colors.textMuted : theme.colors.text }]}>{remainingCopy}</Text>}
     </View>
     <View style={[styles.progress, { backgroundColor: theme.colors.border }]}><View style={[styles.bar, { backgroundColor: theme.colors.primary, width: `${visibleTasks.length ? (completed / visibleTasks.length) * 100 : 0}%` }]} /></View>
-    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed) }} disabled={busy || loadedDate !== date} onPress={() => void toggle(task)} style={[styles.task, { borderColor: theme.colors.border }, Boolean(task.completed) && { backgroundColor: theme.colors.success }]}><Text style={[styles.taskMark, { color: theme.colors.text }]}>{task.completed ? '✓' : '○'}</Text><Text style={[styles.taskTitle, { color: theme.colors.text }]}>{task.title}</Text></Pressable>)}
+    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed), disabled: busy || loadedDate !== date }} disabled={busy || loadedDate !== date} onPress={() => void toggle(task)} style={({ pressed }) => [styles.task, { borderColor: theme.colors.border, backgroundColor: task.completed ? theme.colors.background : theme.colors.surface, opacity: pressed ? 0.7 : 1 }]}><View style={[styles.check, { borderColor: task.completed ? theme.colors.primary : theme.colors.border, backgroundColor: task.completed ? theme.colors.primary : theme.colors.surface }]}><Text style={[styles.taskMark, { color: theme.colors.onPrimary }]}>{task.completed ? '✓' : ''}</Text></View><Text style={[styles.taskTitle, { color: task.completed ? theme.colors.textMuted : theme.colors.text, textDecorationLine: task.completed ? 'line-through' : 'none' }]}>{task.title}</Text></Pressable>)}
     {error ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedDate === date ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
     {celebration?.date === date && <Animated.Text accessibilityLiveRegion="polite" style={[styles.celebration, { color: theme.colors.text, transform: [{ scale: rewardScale }] }]}>{celebration.message}</Animated.Text>}
   </View>;
 }
 const styles = StyleSheet.create({
-  card: { borderWidth: 2, borderRadius: borderRadius.lg, gap: spacing.sm, padding: spacing.lg, width: '100%' },
-  title: { fontSize: fontSize.lg, fontWeight: '700' },
-  countRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  card: { borderWidth: 1, borderRadius: borderRadius.lg, gap: 12, padding: 20, width: '100%' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  title: { fontSize: fontSize.lg, fontWeight: '800', flexShrink: 1 }, badge: { fontSize: 16, fontWeight: '700', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
+  countRow: { gap: 4 },
   count: { fontSize: fontSize.sm }, remaining: { fontSize: fontSize.sm, fontWeight: '700' },
-  progress: { borderRadius: 8, height: 12, overflow: 'hidden' }, bar: { height: '100%' },
+  progress: { borderRadius: 8, height: 8, overflow: 'hidden', marginBottom: 4 }, bar: { height: '100%' },
   task: { alignItems: 'center', borderWidth: 1, borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'flex-start', minHeight: touchTarget.minimum + 16, paddingHorizontal: spacing.md },
-  taskMark: { fontSize: fontSize.lg, fontWeight: '700', width: 32 }, taskTitle: { flex: 1, fontSize: fontSize.md, fontWeight: '600' },
+  check: { width: 28, height: 28, borderRadius: 9, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
+  taskMark: { fontSize: 18, fontWeight: '800' }, taskTitle: { flex: 1, fontSize: fontSize.md, fontWeight: '600', paddingVertical: 12 },
   empty: { fontSize: fontSize.sm }, error: { fontSize: fontSize.sm, fontWeight: '700' },
   celebration: { fontSize: fontSize.lg, fontWeight: '700' },
 });

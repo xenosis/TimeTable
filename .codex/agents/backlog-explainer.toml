@@ -1,6 +1,6 @@
 name = "backlog-explainer"
 description = "백로그 전체를 처음 보는 사람용 작업별 문서로 설명하는 문서화 에이전트"
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 developer_instructions = """

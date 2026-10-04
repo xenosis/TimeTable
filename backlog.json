@@ -3167,7 +3167,7 @@
     },
     {
       "id": "P4.6",
-      "status": "needs_info",
+      "status": "cancelled",
       "priority": null,
       "category": "feature",
       "title": "스티커 적립",
@@ -3183,7 +3183,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T16:04:13.249Z",
-      "updated_at": "2026-09-27T18:45:19.817Z",
+      "updated_at": "2026-10-04T09:34:21.877Z",
       "log": [
         {
           "at": "2026-09-18T16:04:13.249Z",
@@ -3208,6 +3208,18 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "반영한 수정: rewardRepository.ts에 hasTasksOn/requiredDates를 추가해 할 일 없는 날을 주간·월간 완료 요건에서 제외(그 날은 사실상 '해당 없음' 처리). stickerRepository.markRewardAchieved가 달성 시 현재 보석·큰 보석 전량을 소멸시키는 보정 원장을 기록해 다음 목표가 0부터 시작하도록 수정. 같은 날 주간·월간이 동시에 완료되면 즉석 축하 메시지가 큰 보석을 우선 표시하도록 수정(이전엔 완료한 날짜와 정확히 같은 triggerDate만 찾아 빈 요일이 낀 주에서는 즉석 축하가 누락될 수 있었음). 단위 테스트 다수 추가(빈 요일 주, 소멸, 우선순위). npm run check 전체 통과. 딸 폰 실기기 확인 대기: 실제 할 일로 일주일 완료(주말 등 할 일 없는 날 포함)해 보석 지급 확인, 보상 받기 버튼으로 다음 목표가 0부터 시작하는지 확인."
+        },
+        {
+          "at": "2026-10-04T09:34:19.401Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-05 정책 변경 확인 중(자동 적립 폐지)"
+        },
+        {
+          "at": "2026-10-04T09:34:21.877Z",
+          "owner": "claude",
+          "status": "cancelled",
+          "note": "2026-10-05 정책 변경으로 취소: 보석은 실물이라 앱이 완료/취소로 보석을 자동 적립·회수하지 않는다(개수는 딸이 직접 입력, codex P11). 연속 달성 자격은 P4.13으로 대체."
         }
       ]
     },
@@ -3326,7 +3338,7 @@
     },
     {
       "id": "P4.9",
-      "status": "needs_info",
+      "status": "cancelled",
       "priority": null,
       "category": "feature",
       "title": "연속 달성 칭찬",
@@ -3342,7 +3354,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-19T01:14:44.330Z",
-      "updated_at": "2026-09-27T18:42:55.657Z",
+      "updated_at": "2026-10-04T10:04:29.640Z",
       "log": [
         {
           "at": "2026-09-19T01:14:44.330Z",
@@ -3361,12 +3373,30 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "critical-reviewer 검토(코드 근거)에서 확인: 연속 일수 계산이 '오늘'부터 세어서 오늘 할 일을 아직 다 안 끝냈으면 어제까지 10일 연속이어도 항상 0일로 표시됨(디자인 원칙 '못 한 일은 아직 남았어요' 위반). 반영한 수정: completedDayStreak가 오늘이 미완료면 어제부터 세도록 수정하고 경계 테스트 4개 추가(오늘 완료/미완료/끊김/정확히 오늘 반영). npm run check 전체 통과. P4.6(스티커 적립)에 딸 폰 실기기 확인이 선행되어야 해 needs_info로 유지."
+        },
+        {
+          "at": "2026-10-04T09:33:47.966Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-05 새 보석 정책 구현(gem_rights, 연속 계산, 딸 카드, 아빠 패널)"
+        },
+        {
+          "at": "2026-10-04T09:33:51.341Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·테스트 완료(Jest 280+6개, npm run check 통과). 리뷰 대기"
+        },
+        {
+          "at": "2026-10-04T10:04:29.640Z",
+          "owner": "claude",
+          "status": "cancelled",
+          "note": "2026-10-05 보석 정책 변경으로 P4.13에 흡수되어 취소: 연속 달성 계산·표시(폰에서 '1일 연속으로 해냈어요!' 확인)와 실제 SQLite 테스트(gem-rights.test.ts 18개, UI 테스트 9개)는 P4.13에서 구현·검증하고 리뷰까지 마쳤다. 선행 P4.6이 취소되어 이 항목은 완료로 닫을 수 없다."
         }
       ]
     },
     {
       "id": "P4.10",
-      "status": "needs_info",
+      "status": "cancelled",
       "priority": null,
       "category": "test",
       "title": "단위 테스트: 스티커 계산 · 연속 달성 계산",
@@ -3383,7 +3413,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-19T01:16:40.306Z",
-      "updated_at": "2026-09-27T18:43:09.426Z",
+      "updated_at": "2026-10-04T10:04:36.778Z",
       "log": [
         {
           "at": "2026-09-19T01:16:40.306Z",
@@ -3402,6 +3432,24 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "critical-reviewer 검토에서 테스트 공백 지적(경계값 미검증): streak.test.ts 1케이스뿐, reward-repository.test.ts가 실제 SQL을 검증 안 함. 반영: streak 경계 4케이스, '할 일 없는 요일 낀 주' 보상 테스트, 보상 소멸(achieve 시 0으로 초기화) 테스트, 주간·월간 동시 완료 시 우선순위(큰 보석 우선) 테스트를 추가. npm run check 전체 통과(Jest 99개 → 이번에 여러 건 추가). P4.6 실기기 확인 선행 필요해 needs_info 유지."
+        },
+        {
+          "at": "2026-10-04T09:33:54.455Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-05 새 보석 정책 구현(gem_rights, 연속 계산, 딸 카드, 아빠 패널)"
+        },
+        {
+          "at": "2026-10-04T09:33:58.087Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·테스트 완료(Jest 280+6개, npm run check 통과). 리뷰 대기"
+        },
+        {
+          "at": "2026-10-04T10:04:36.778Z",
+          "owner": "claude",
+          "status": "cancelled",
+          "note": "2026-10-05 보석 정책 변경으로 P4.13에 흡수되어 취소: 연속 달성 계산·표시(폰에서 '1일 연속으로 해냈어요!' 확인)와 실제 SQLite 테스트(gem-rights.test.ts 18개, UI 테스트 9개)는 P4.13에서 구현·검증하고 리뷰까지 마쳤다. 선행 P4.6이 취소되어 이 항목은 완료로 닫을 수 없다."
         }
       ]
     },
@@ -3518,6 +3566,48 @@
       ],
       "done_at": "2026-10-01",
       "evidence": ".claude/skills/expo-animation/{SKILL.md,RECIPES.md,LICENSE,agents}, skills-lock.json의 expo-animation 항목. 설치 명령 출력의 보안 평가: Gen Safe, Socket 0 alerts, Snyk Low Risk · 검증: SKILL.md 열람(외부 호출·위험 명령 없음); critical-reviewer·backlog-explainer 실행·반영. 스킬 폴더는 공개 저장소라 커밋 제외"
+    },
+    {
+      "id": "P4.13",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "연속 5일 달성 → 실물 보석을 받을 자격과 요청·지급",
+      "summary": "2026-10-05 정책 확정: 보석은 실물이고 앱의 보석 개수(장부)는 딸이 직접 적는다. 할 일을 모두 끝낸 날이 5일 연속될 때마다(할 일이 없는 날은 건너뜀) 실물 보석을 받을 자격 1개가 생긴다(gem_rights, V12). 딸 화면에 연속 진행과 받을 수 있는 개수, '아빠한테 보석 달라고 하기'(요청 전체)를 보여주고, 아빠(PIN 관리자 보상 영역)는 준 만큼 '줬어요'로 지급 처리한다. 앱은 보석 개수를 늘리지도 줄이지도 않는다. 큰 보석 단계는 없다. 기간 5일은 고정이고 아빠 폰(P6)이 생기면 아빠 폰에서 설정하게 옮긴다.",
+      "where": null,
+      "parent": "P4",
+      "deps": [
+        "P4.4"
+      ],
+      "doc": null,
+      "done_when": "5일 연속(할 일 없는 날 건너뜀)마다 자격 1개 생성, 중복·취소 시 회수(요청·지급 후는 유지), 요청 전체/지급 처리(오래된 순, 초과·비숫자 거절), 보석 개수(장부) 불변이 실제 SQLite 테스트로 통과. 딸 카드·아빠 패널 렌더 테스트 통과. npm run check 통과, 리뷰 반영. 화면 확인은 실기기.",
+      "est_min": 45,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-10-04T09:34:24.660Z",
+      "updated_at": "2026-10-04T10:03:54.798Z",
+      "log": [
+        {
+          "at": "2026-10-04T09:34:24.660Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-05 새 보석 정책 구현(gem_rights, 연속 계산, 딸 카드, 아빠 패널)"
+        },
+        {
+          "at": "2026-10-04T09:34:27.331Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·테스트 완료(Jest 286개, npm run check 통과). 리뷰 대기"
+        },
+        {
+          "at": "2026-10-04T10:03:54.798Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "리뷰 반영 완료. 미확인: 폰에서 5일 연속 자격이 생긴 뒤의 요청·지급 흐름(실제 5일이 필요해 렌더 테스트와 SQLite 테스트로 대체), 소급 부여 없음(업그레이드 이전 연속은 자격에 포함되지 않음), 과거 시작일 할 일을 추가할 때의 연속 기준은 사용자 결정 대기"
+        }
+      ],
+      "done_at": "2026-10-04",
+      "evidence": "gemRightRepository(streakEndingAt/currentStreak/syncGemRightForDate/요청·지급), migrations V12(gem_rights), GemRightsCard·GemRequestsPanel; 폰 S23 Ultra: 내 보석 탭 보석 받기 카드(별 5개, 1일 연속 시 별 1개·4일 더 안내), 체크 취소 시 원복, 보석 개수 불변(0), 아빠 보상 영역 패널 표시, V12 마이그레이션 실데이터에서 정상 · 검증: npm run check 통과(Jest 294개). critical-reviewer·backlog-explainer 실행, 지적 반영(과거 날짜 수정 시 뒤 날짜 자격 재계산, 할 일 없는 날 자격 중복 방지, 옛 정책 하루 완료 보석을 개수 보존 조정 행으로 이전(V12), 줬어요 확인 창과 단일 UPDATE, 카드 로딩 실패 안내, 연속 거슬러 세기 상한 3650일)"
     },
     {
       "id": "P5",
@@ -5559,7 +5649,7 @@
     },
     {
       "id": "P11",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": null,
       "category": "feature",
       "title": "오늘·내 보석 화면 디자인 개선",
@@ -5573,13 +5663,215 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-04T07:57:52.191Z",
-      "updated_at": "2026-10-04T07:57:52.191Z",
+      "updated_at": "2026-10-04T09:14:22.541Z",
       "log": [
         {
           "at": "2026-10-04T07:57:52.191Z",
           "owner": "codex",
           "status": "in_progress",
           "note": "사용자 요청으로 오늘·내 보석 UI 재구성 착수. 시간표·관리자 변경과 보상 데이터 흐름 확인, 기존 기능 유지."
+        },
+        {
+          "at": "2026-10-04T09:14:22.541Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "오늘·내 보석 UI 구현, 세로·가로·테마 화면 확인과 전체 검사 통과. 등록 리뷰 수행했으나 외부 APK 빌드로 dispatcher freeze 실패. 사용자 요청대로 추가 보석 체계 개발은 중단하고 Claude 인계를 위해 in_review로 남김."
+        }
+      ]
+    },
+    {
+      "id": "P12",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "캐릭터 테마 구성",
+      "summary": "하늘색·구름·긴 귀 캐릭터와 보라색·장난스러운 캐릭터 테마를 각각 독자 캐릭터로 구성한다. 배경·카드·보석·빈 화면에 캐릭터를 반영해 선택 차이를 느끼게 한다.",
+      "where": null,
+      "parent": null,
+      "deps": [],
+      "doc": "docs/character-theme-plan.md",
+      "done_when": "두 캐릭터 테마의 자산·화면 적용·가독성·선택 저장을 하위 작업으로 구현하고 검증한다.",
+      "est_min": 45,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-04T09:33:00.787Z",
+      "updated_at": "2026-10-04T11:11:35.796Z",
+      "log": [
+        {
+          "at": "2026-10-04T09:33:00.787Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자 요청에 따라 P12 테마만 개발. 동시 Claude 작업으로 커밋·푸시 보류. 보석 정책·관리자·DB 파일을 수정하지 않고 캐릭터 자산과 테마 계층에서 구현."
+        },
+        {
+          "at": "2026-10-04T11:11:25.763Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "P12.1/2/3 done 확인. 사용자 승인 자산, 화면 적용, 선택저장, 추가 요청 체크리스트와 실제 QA·최종전체검사·등록 두 리뷰 결과를 부모 완료 조건과 대조."
+        },
+        {
+          "at": "2026-10-04T11:11:35.796Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "하위3개 완료 및 사용자 최신 테마 요구사항 충족. 동시 Claude 정책은 보존하고 별도 인계 기록. 커밋/푸시 보류, 실기기검증 미수행."
+        }
+      ],
+      "done_at": "2026-10-04",
+      "evidence": "P12.1/P12.2/P12.3 done; docs/character-theme-plan.md 최신 요청·체크리스트·QA·Claude인계; 동일dd5d 등록critical-reviewer/explainer 재검토 완료 · 검증: .tmp/p12-quality-resumed.log 48suites313tests 및 lint/typecheck/Androiddebug PASS; 두테마 force-stop선택유지/실제PNG/글씨1.5/가로/빈/로딩/의미색/56dp터치 검증; dashboard P12문서HTTP200"
+    },
+    {
+      "id": "P12.1",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "두 캐릭터 테마 시안과 자산",
+      "summary": "시나모롤 느낌의 하늘색 구름 캐릭터, 쿠루미 느낌의 보라색 장난꾸러기 캐릭터를 위한 독자적인 그림·배경·장식 시안을 만든다.",
+      "where": null,
+      "parent": "P12",
+      "deps": [],
+      "doc": null,
+      "done_when": "서로 확실히 구분되는 캐릭터·팔레트·배경·보석 장식 자산과 화면 시안을 제공한다.",
+      "est_min": 30,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-04T09:33:11.501Z",
+      "updated_at": "2026-10-04T09:51:58.837Z",
+      "log": [
+        {
+          "at": "2026-10-04T09:33:11.501Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "구름 친구와 보라 친구의 투명 PNG 캐릭터 및 팔레트·장식 자산 제작 착수."
+        },
+        {
+          "at": "2026-10-04T09:39:39.457Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "사용자가 독자 캐릭터보다 시나모롤·쿠로미와 최대한 닮은 평면 디자인 요청. 투명 PNG 두 자산·팔레트 제작 완료, 자산 검토 착수."
+        },
+        {
+          "at": "2026-10-04T09:51:58.837Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "최종 사용자 승인 캐릭터 2개와 일반·큰 보석 PNG 2개, 실제 자산을 사용하는 두 테마 HTML 시안 완성. dispatcher global freeze 실패는 별도 기록, 고정 SHA 자산 범위 등록 reviewer/explainer 보완 검토에서 확정 누락 없음."
+        }
+      ],
+      "done_at": "2026-10-04",
+      "evidence": "assets/characters/*.png, docs/character-theme-preview.html, docs/character-theme-plan.md, docs/backlog/P12.1.md; 사용자 최종 두 시안 승인; 등록 두 역할 동일 SHA011bbc 자산 재검토 완료 · 검증: PNG1254x1254 투명 corner alpha0 및 시각 검수; 로컬 브라우저 두 시안과 자산 표시 확인; 코드 없음, dispatcher 전체 freeze는 Claude 동시 테스트 변경으로 실패했고 자산 범위 검토와 구별"
+    },
+    {
+      "id": "P12.2",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "캐릭터 테마 화면 적용",
+      "summary": "두 테마를 오늘·시간표·내 보석과 꾸미기 선택기에 적용한다. 캐릭터 그림을 단순 색 변경보다 중심에 두고 설정을 저장한다.",
+      "where": null,
+      "parent": "P12",
+      "deps": [
+        "P12.1"
+      ],
+      "doc": null,
+      "done_when": "테마별 캐릭터·배경·카드·보석 장식과 선택 미리보기가 다르며 앱 재시작 후 선택을 유지한다.",
+      "est_min": 45,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-04T09:52:06.754Z",
+      "updated_at": "2026-10-04T11:07:38.230Z",
+      "log": [
+        {
+          "at": "2026-10-04T09:52:06.754Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "P12.1 사용자 승인 자산 적용. 원래 캐릭터와 최대한 닮은 최종 시안을 사용, 일반/큰보석 이미지 교체와 작은1·큰5점 시각적 성장 단계 추가. 보석 개수·권리·목표·DB 로직은 Claude 범위로 유지."
+        },
+        {
+          "at": "2026-10-04T10:31:32.702Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "두 캐릭터 테마 적용과 기존 테마 제거, 보석 이미지·수량별 그림, 날짜별 응원, 탭 아이콘, 구름/분홍 해골 표시 완료. 전체 검사 48 suites 313 tests 및 Android debug PASS. 에뮬레이터 세로/가로/글씨1.5와 2+큰3=17점 그림 확인. 보석 수량 0/0과 기기 설정 복원. 등록 리뷰 진행."
+        },
+        {
+          "at": "2026-10-04T11:07:38.230Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "추가 완료 체크리스트 및 두 테마 실제 force-stop 재시작 근거 보완. 등록 reviewer 동일SHA 테마범위 재검토에서 확인된 Critical/High/Medium 없음. dispatcher 동시 GemCountEditor 변경에 의한 전체freeze실패는 통과근거로 쓰지 않음."
+        }
+      ],
+      "done_at": "2026-10-04",
+      "evidence": "docs/character-theme-plan.md; 등록 critical-reviewer dd5d9a4a200c 재검토 결과; 두 캐릭터 실제 재시작 복원, 두테마만 선택, 실제 보석 PNG와 그림5단계, 구름/분홍해골, 날짜별응원·아이콘탭 · 검증: .tmp/p12-quality-resumed.log:48 suites/313 tests, lint/typecheck/Androiddebug PASS; .tmp/p12-kuromi-restart.png 및 p12-picker-final.png 등 실제 화면; theme-selection 영속·제거ID이전/대비/그림단계/응원경계 테스트 PASS"
+    },
+    {
+      "id": "P12.3",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "캐릭터 테마 화면 검증",
+      "summary": "캐릭터가 글씨와 체크 영역을 가리지 않도록 두 테마의 세로·가로·큰 글씨·빈 화면과 로딩 화면을 확인한다.",
+      "where": null,
+      "parent": "P12",
+      "deps": [
+        "P12.2"
+      ],
+      "doc": null,
+      "done_when": "의미 색·대비·터치 영역·선택 저장·두 화면의 캐릭터 차이와 전체 검사 및 리뷰를 확인한다.",
+      "est_min": 30,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-04T11:10:34.941Z",
+      "updated_at": "2026-10-04T11:10:52.063Z",
+      "log": [
+        {
+          "at": "2026-10-04T11:10:34.941Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "P12.2 완료 후 화면 검증 근거 대조 착수. 구현 단계에서 확보한 실제 세로/가로·글씨1.5·빈/로딩·재시작·터치·대비 근거와 현재 전체검사 및 등록 리뷰 결과를 확인한다."
+        },
+        {
+          "at": "2026-10-04T11:10:43.510Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "두 테마 실제화면과 저장복원·과목의미색·56dp터치·글씨1.5/가로/빈/로딩 근거 대조 완료. 현재 전체검사 48suites313tests 및 Androiddebug PASS. 동일 dd5d 입력의 등록 reviewer/explainer가 P12.3/부모 조건까지 재검토, 확인된 주요 결함 없음."
+        },
+        {
+          "at": "2026-10-04T11:10:52.063Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "P12.2done 확인, 실제 QA·전체 검사·등록 리뷰·문서 근거가 완료 조건과 일치. 실기기 설치/검증은 미수행이며 에뮬레이터 기준 완료."
+        }
+      ],
+      "done_at": "2026-10-04",
+      "evidence": "docs/character-theme-plan.md 화면 검증 기록; 등록 critical-reviewer dd5d 입력 P12.2/3/부모 재검토 주요결함없음; backlog-explainer P12계열 문서 정리 · 검증: .tmp/p12-quality-resumed.log 48suites313tests lint/typecheck/Androiddebug PASS; picker-large-font/loading-large-font/large-font/landscape/timetable-final/kuromi-restart 실제PNG; 두테마 선택유지 및 과목의미색/대비/56dp영역 확인; 테스트후0/0/font1/회전복원"
+    },
+    {
+      "id": "P13",
+      "status": "in_review",
+      "priority": null,
+      "category": "feature",
+      "title": "자동 보석 지급 중단과 아이의 보석 수 수정",
+      "summary": "할 일·주간·월간 완료에 따른 모든 자동 보석 지급을 중단하고 아이가 외부 운영에 맞춰 일반·큰 보석 수를 직접 수정한다. 기존 보유량은 보존한다.",
+      "where": "src/db/rewardRepository.ts,src/components/StickerBoard.tsx",
+      "parent": null,
+      "deps": [],
+      "doc": "docs/backlog/P13.md",
+      "done_when": "체크·취소·주간·월간 완료로 보유량이 변하지 않음·기존 보유량 보존·모든 자동 지급 중단·아이가 수를 수정하고 재시작 뒤 유지·동시 지급 보존·검사와 리뷰 확인",
+      "est_min": 45,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-04T08:41:33.457Z",
+      "updated_at": "2026-10-04T09:13:58.850Z",
+      "log": [
+        {
+          "at": "2026-10-04T08:41:33.457Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자 추가 요청에 따라 보석 정책과 아이의 수 수정 기능을 즉시 구현한다. 캐릭터 테마 P12는 별도 등록만 하고 이번 구현 범위에서 분리한다."
+        },
+        {
+          "at": "2026-10-04T09:13:58.850Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "자동 지급 중단과 아이의 개수 편집 구현 및 에뮬레이터 저장·재시작·완료 후 불변 확인. 사용자 최종 요청으로 선물 교환 추가 변경을 되돌리고 나머지 보석 체계는 Claude 인계. dispatcher freeze 실패와 기존 교환/수량 편집 경합 지적은 기록하며 완료 처리하지 않음."
         }
       ]
     }

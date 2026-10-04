@@ -1,91 +1,55 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-
-import { borderRadius, fontSize, spacing, themes } from '../theme';
-import type { ThemeDefinition } from '../theme';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { themes, type ThemeDefinition } from '../theme';
+import { ThemeMascot } from './ThemeMascot';
 
 type ThemePickerProps = {
-  theme: ThemeDefinition;
-  selectedThemeId: string;
-  onSelect: (themeId: string) => Promise<void>;
+  readonly theme: ThemeDefinition;
+  readonly selectedThemeId: string;
+  readonly onSelect: (themeId: string) => Promise<void>;
 };
+const orderedThemes = themes;
 
-function ThemePreview({ theme }: { theme: ThemeDefinition }) {
-  const examples = theme.categories.slice(0, 3);
-  return (
-    <View style={[styles.preview, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
-      <Text style={[styles.previewTitle, { color: theme.colors.text }]}>오늘의 시간표</Text>
-      <Text style={[styles.previewText, { color: theme.colors.textMuted }]}>재미있게 하루를 시작해요</Text>
-      <View style={styles.chips}>
-        {examples.map((category) => (
-          <View key={category.key} style={[styles.chip, { backgroundColor: category.backgroundColor }]}>
-            <Text style={[styles.chipText, { color: category.textColor }]}>{category.label}</Text>
-          </View>
-        ))}
-      </View>
-      <Text style={[styles.shape, { color: theme.decorations.stickerAccent }]} accessibilityLabel="스티커 미리보기">
-        {theme.decorations.stickerShape === 'heart' ? '♥' : theme.decorations.stickerShape === 'star' ? '★' : '●'}
-      </Text>
-    </View>
-  );
-}
-
-export function ThemePicker({ theme, selectedThemeId, onSelect }: ThemePickerProps) {
+export function ThemePicker({ theme: activeTheme, selectedThemeId, onSelect }: ThemePickerProps) {
+  const { width, fontScale } = useWindowDimensions();
+  const singleColumn = width < 350 || fontScale > 1.3;
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const saving = useRef(false);
   const chooseTheme = async (themeId: string) => {
-    setError(null);
-    try { await onSelect(themeId); } catch { setError('색을 바꾸지 못했어요. 다시 눌러 주세요.'); }
+    if (saving.current) return;
+    saving.current = true; setBusy(true); setError(null);
+    try { await onSelect(themeId); }
+    catch { setError('테마를 저장하지 못했어요. 다시 눌러 주세요.'); }
+    finally { saving.current = false; setBusy(false); }
   };
-  return (
-    <View style={styles.container}>
-      <Text accessibilityRole="header" style={[styles.heading, { color: theme.colors.text }]}>내가 고르는 화면 색</Text>
-      <Text style={[styles.description, { color: theme.colors.textMuted }]}>마음에 드는 카드를 누르면 바로 바뀌어요.</Text>
-      {themes.map((theme) => {
+  return <View style={styles.container}>
+    <Text accessibilityRole="header" style={[styles.heading, { color: activeTheme.colors.text }]}>함께할 친구 고르기</Text>
+    <Text style={[styles.description, { color: activeTheme.colors.textMuted }]}>마음에 드는 테마를 누르면 바로 바뀌어요.</Text>
+    <View style={styles.grid}>
+      {orderedThemes.map((theme) => {
         const selected = theme.id === selectedThemeId;
-        return (
-          <Pressable
-            key={theme.id}
-            accessibilityRole="radio"
-            accessibilityState={{ selected }}
-            accessibilityLabel={`${theme.name} 테마 선택`}
-            onPress={() => void chooseTheme(theme.id)}
-            style={({ pressed }) => [styles.option, { borderColor: selected ? theme.colors.primary : theme.colors.border }, pressed && styles.pressed]}
-          >
-            <View style={styles.optionHeader}>
-              <View style={[styles.selectionDot, { borderColor: theme.colors.primary, backgroundColor: selected ? theme.colors.primary : theme.colors.surface }]} />
-              <View style={styles.optionCopy}>
-                <Text style={[styles.optionName, { color: theme.colors.text }]}>{theme.name}</Text>
-                <Text style={[styles.optionDescription, { color: theme.colors.textMuted }]}>{theme.description}</Text>
-              </View>
-              <Text style={[styles.selectedLabel, { color: selected ? theme.colors.primary : theme.colors.textMuted }]}>{selected ? '선택됨' : '선택하기'}</Text>
-            </View>
-            <ThemePreview theme={theme} />
-          </Pressable>
-        );
+        return <Pressable key={theme.id} accessibilityRole="radio" accessibilityState={{ selected, disabled: busy }} accessibilityLabel={`${theme.name} 테마 선택`} disabled={busy} onPress={() => void chooseTheme(theme.id)} style={({ pressed }) => [styles.option, singleColumn && styles.fullWidth, { backgroundColor: theme.colors.background, borderColor: selected ? theme.colors.primary : theme.colors.border, opacity: pressed ? 0.75 : 1 }]}>
+          <View style={[styles.preview, { backgroundColor: theme.character?.softColor ?? theme.colors.surface }]}>
+            {theme.character ? <ThemeMascot theme={theme} size={132} /> : <Text accessible={false} style={[styles.classicIcon, { color: theme.colors.primary }]}>{theme.id === 'daylight' ? '☀' : '☁'}</Text>}
+            <View style={styles.chips}>{theme.categories.slice(0, 3).map((category) => <View key={category.key} style={[styles.chip, { backgroundColor: category.backgroundColor }]}><Text style={[styles.chipText, { color: category.textColor }]}>{category.label}</Text></View>)}</View>
+          </View>
+          <Text style={[styles.optionName, { color: theme.colors.text }]}>{theme.name}</Text>
+          <Text style={[styles.optionDescription, { color: theme.colors.textMuted }]}>{theme.description}</Text>
+          <View style={[styles.selection, { backgroundColor: selected ? theme.colors.primary : theme.colors.surface }]}><Text style={[styles.selectionText, { color: selected ? theme.colors.onPrimary : theme.colors.textMuted }]}>{selected ? '✓ 함께하는 중' : '이 테마 고르기'}</Text></View>
+        </Pressable>;
       })}
-      {error ? <Text accessibilityLiveRegion="polite" style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : null}
     </View>
-  );
+    {busy ? <Text accessibilityLiveRegion="polite" style={[styles.description, { color: activeTheme.colors.text }]}>테마를 저장하고 있어요…</Text> : null}
+    {error ? <Text accessibilityLiveRegion="polite" style={[styles.description, { color: activeTheme.colors.text }]}>⚠️ {error}</Text> : null}
+  </View>;
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.md, width: '100%' },
-  heading: { fontSize: fontSize.lg, fontWeight: '700' },
-  description: { fontSize: fontSize.sm },
-  option: { borderWidth: 3, borderRadius: borderRadius.lg, padding: spacing.md, gap: spacing.md },
-  pressed: { opacity: 0.78 },
-  optionHeader: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
-  selectionDot: { borderRadius: 14, borderWidth: 3, height: 28, width: 28 },
-  optionCopy: { flex: 1 },
-  optionName: { fontSize: fontSize.md, fontWeight: '700' },
-  optionDescription: { fontSize: fontSize.sm },
-  selectedLabel: { fontSize: fontSize.sm, fontWeight: '700' },
-  preview: { borderRadius: borderRadius.md, borderWidth: 1, padding: spacing.md },
-  previewTitle: { fontSize: fontSize.md, fontWeight: '700' },
-  previewText: { fontSize: fontSize.sm, marginTop: spacing.xs },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
-  chip: { borderRadius: borderRadius.full, minHeight: 40, justifyContent: 'center', paddingHorizontal: spacing.md },
-  chipText: { fontSize: fontSize.sm, fontWeight: '700' },
-  shape: { alignSelf: 'flex-end', fontSize: fontSize.xxl, lineHeight: fontSize.xxl, marginTop: spacing.sm },
-  error: { fontSize: fontSize.sm, fontWeight: '700' },
+  container: { gap: 14, width: '100%' }, heading: { fontSize: 26, fontWeight: '800' }, description: { fontSize: 16, lineHeight: 23 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 }, option: { flexBasis: '45%', flexGrow: 1, borderWidth: 3, borderRadius: 24, padding: 12, gap: 10 }, fullWidth: { flexBasis: '100%' },
+  preview: { borderRadius: 18, alignItems: 'center', paddingVertical: 8, gap: 4 }, classicIcon: { height: 132, fontSize: 80, textAlignVertical: 'center' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 4 }, chip: { paddingHorizontal: 7, paddingVertical: 4, borderRadius: 9 }, chipText: { fontSize: 12, fontWeight: '700' },
+  optionName: { fontSize: 19, fontWeight: '800' }, optionDescription: { fontSize: 14, lineHeight: 20 },
+  selection: { alignSelf: 'stretch', minHeight: 40, padding: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 12 }, selectionText: { fontSize: 14, fontWeight: '700' },
 });

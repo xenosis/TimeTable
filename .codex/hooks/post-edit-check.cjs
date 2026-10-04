@@ -15,8 +15,11 @@ process.stdin.on('end', () => {
   }
 
   const projectRoot = findProjectRoot(input.cwd || process.cwd(), 'package.json');
-  const patchText = String(input.tool_input?.command || '');
+  const toolInput = input.tool_input;
+  const patchText = typeof toolInput === 'string' ? toolInput
+    : String(toolInput?.command || toolInput?.input || toolInput?.patch || '');
   const relativeFiles = extractPatchFiles(patchText);
+  if (toolInput?.file_path) relativeFiles.push(toolInput.file_path);
   const failures = [];
 
   if (relativeFiles.some((file) => /^(?:CLAUDE|AGENTS)\.md$/i.test(file))) {
@@ -24,9 +27,18 @@ process.stdin.on('end', () => {
     if (!passed(result)) failures.push(formatFailure('지침 동기화', result, 5));
   }
 
-  const sourceFiles = relativeFiles
+  const changedSources = relativeFiles
     .map((file) => path.resolve(projectRoot, file))
-    .filter((file) => isManagedSource(projectRoot, file) && fs.existsSync(file));
+    .filter((file) => isManagedSource(projectRoot, file));
+
+  // 삭제도 소스 변경이다. 빠른 검사 실패 시에도 Stop에서 다시 검사해야 한다.
+  if (changedSources.length > 0) {
+    const sessionId = String(input.session_id || 'default').replace(/[^\w-]/g, '_');
+    const flagDirectory = path.join(projectRoot, 'node_modules', '.cache', 'codex-quality-edited');
+    fs.mkdirSync(flagDirectory, { recursive: true });
+    fs.writeFileSync(path.join(flagDirectory, sessionId), new Date().toISOString());
+  }
+  const sourceFiles = changedSources.filter((file) => fs.existsSync(file));
 
   if (sourceFiles.length > 0) {
     const lengthResult = runNode(projectRoot, ['scripts/check-file-length.cjs', ...sourceFiles], 5_000);
@@ -52,7 +64,7 @@ process.stdin.on('end', () => {
 });
 
 function extractPatchFiles(patchText) {
-  return [...patchText.matchAll(/^\*\*\* (?:Add|Update|Delete) File:\s*(.+?)\s*$/gim)]
+  return [...patchText.matchAll(/^\*\*\* (?:Add File|Update File|Delete File|Move to):\s*(.+?)\s*$/gim)]
     .map((match) => match[1].replaceAll('\\', '/'));
 }
 

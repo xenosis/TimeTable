@@ -11,12 +11,15 @@ import { getTodaySchedule } from '../utils/todaySchedule';
 function ScheduleItemCard({ label, item, theme }: { readonly label: string; readonly item: TimetableItem; readonly theme: ThemeDefinition }) {
   const category = resolveThemeColor(theme, item.colorKey);
   const icon = resolveThemeIcon(theme, item.iconKey);
-  return <View style={[styles.item, { backgroundColor: category.backgroundColor }]}>
-    <Text style={[styles.icon, { color: category.textColor }]}>{icon.glyph}</Text>
+  const current = label === '지금';
+  const foreground = current ? category.textColor : theme.colors.text;
+  return <View style={[styles.item, { backgroundColor: current ? category.backgroundColor : theme.colors.background }]}>
+    <View style={[styles.iconBadge, { backgroundColor: category.backgroundColor }]}><Text style={[styles.icon, { color: category.textColor }]}>{icon.glyph}</Text></View>
     <View style={styles.copy}>
-      <Text style={[styles.itemTitle, { color: category.textColor }]}>{label} {item.title}</Text>
-      <Text style={[styles.itemTime, { color: category.textColor }]}>{item.startTime} ~ {item.endTime}</Text>
-      {!!item.memo && <Text style={[styles.itemMemo, { color: category.textColor }]} numberOfLines={1}>📝 {item.memo}</Text>}
+      <Text style={[styles.label, { color: foreground }]}>{current ? '지금 하고 있어요' : '다음 일정'}</Text>
+      <Text style={[styles.itemTitle, { color: foreground }]}>{item.title}</Text>
+      <Text style={[styles.itemTime, { color: foreground }]}>{item.startTime} – {item.endTime}</Text>
+      {!!item.memo && <Text style={[styles.itemMemo, { color: foreground }]}>📝 {item.memo}</Text>}
     </View>
   </View>;
 }
@@ -68,9 +71,10 @@ export function TodayScheduleCard({ refreshKey, theme, setId }: { readonly refre
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: borderRadius.lg, borderWidth: 2, gap: spacing.sm, padding: spacing.lg, width: '100%' },
-  heading: { fontSize: fontSize.lg, fontWeight: '700' },
+  card: { borderRadius: borderRadius.lg, borderWidth: 1, gap: 12, padding: 20, width: '100%' },
+  heading: { fontSize: fontSize.lg, fontWeight: '800' },
   item: { alignItems: 'center', borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.md, minHeight: 96, padding: spacing.md },
-  icon: { fontSize: 32, fontWeight: '700' }, copy: { flex: 1 }, itemTitle: { fontSize: fontSize.lg, fontWeight: '700' }, itemTime: { fontSize: fontSize.md }, itemMemo: { fontSize: fontSize.md },
+  iconBadge: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  icon: { fontSize: 28, fontWeight: '700' }, copy: { flex: 1, gap: 3 }, label: { fontSize: 14, fontWeight: '700' }, itemTitle: { fontSize: fontSize.lg, fontWeight: '800' }, itemTime: { fontSize: fontSize.md, fontVariant: ['tabular-nums'] }, itemMemo: { fontSize: fontSize.md },
   empty: { fontSize: fontSize.md }, next: { fontSize: fontSize.sm },
 });

@@ -6,7 +6,6 @@ type LedgerRow = { readonly reason: string; readonly delta: number };
 type RewardRow = RewardGoal;
 
 const familyId = 'local-family';
-const childId = 'local-child';
 
 export async function getStickerSummary(database: Pick<TimetableDatabase, 'getFirstAsync' | 'getAllAsync'>): Promise<StickerSummary> {
   const ledger = await database.getAllAsync<LedgerRow>('SELECT reason, delta FROM sticker_ledger WHERE family_id = ?', familyId);
@@ -23,13 +22,11 @@ export async function addRewardGoal(database: Pick<TimetableDatabase, 'runAsync'
   await database.runAsync('INSERT INTO rewards (family_id, title, sticker_goal) VALUES (?, ?, ?)', familyId, cleanTitle, stickerGoal);
 }
 
-/** Marks the goal achieved and spends every gem currently on the board, so the next goal starts from zero. */
-export async function markRewardAchieved(database: Pick<TimetableDatabase, 'runAsync' | 'getFirstAsync' | 'getAllAsync'>, rewardId: number): Promise<void> {
-  const updated = await database.runAsync("UPDATE rewards SET achieved_at = CURRENT_TIMESTAMP WHERE id = ? AND family_id = ? AND achieved_at IS NULL", rewardId, familyId) as { readonly changes?: number };
-  if (updated.changes === 0) return;
-  const summary = await getStickerSummary(database);
-  if (summary.gems > 0) await database.runAsync('INSERT INTO sticker_ledger (family_id, child_id, delta, reason) VALUES (?, ?, ?, ?)', familyId, childId, -summary.gems, `reward-spent:${rewardId}`);
-  if (summary.largeGems > 0) await database.runAsync('INSERT INTO sticker_ledger (family_id, child_id, delta, reason) VALUES (?, ?, ?, ?)', familyId, childId, -summary.largeGems, `reward-spent:${rewardId}:large-gem`);
+/**
+ * 보상 목표를 '받았어요'로 표시한다. 보석은 실물이고 개수는 딸이 직접 적으므로, 목표를 달성해도 앱은 보석 개수를 줄이지 않는다.
+ */
+export async function markRewardAchieved(database: Pick<TimetableDatabase, 'runAsync'>, rewardId: number): Promise<void> {
+  await database.runAsync("UPDATE rewards SET achieved_at = CURRENT_TIMESTAMP WHERE id = ? AND family_id = ? AND achieved_at IS NULL", rewardId, familyId);
 }
 
 export async function getCompletedDates(database: Pick<TimetableDatabase, 'getAllAsync'>): Promise<readonly string[]> {
