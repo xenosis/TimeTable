@@ -3341,7 +3341,7 @@
     },
     {
       "id": "P5.3",
-      "status": "needs_info",
+      "status": "in_review",
       "priority": null,
       "category": "feature",
       "title": "할 일 위젯에서 체크",
@@ -3357,7 +3357,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-30T22:25:00.483Z",
-      "updated_at": "2026-10-01T01:50:45.702Z",
+      "updated_at": "2026-10-04T01:37:09.914Z",
       "log": [
         {
           "at": "2026-09-30T10:01:45.902Z",
@@ -3406,6 +3406,18 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "토글+취소선 구현·검증 완료(npm run check, 에뮬레이터). 남은 확인: 앱을 연 상태의 위젯→DB 반영 end-to-end와 딸 폰 실기기 확인 → 폰 연결 시 확인 필요"
+        },
+        {
+          "at": "2026-10-04T01:37:07.526Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-04 에뮬레이터 end-to-end 확인 착수"
+        },
+        {
+          "at": "2026-10-04T01:37:09.914Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "에뮬레이터: 위젯 탭 완료→대기 파일 completed:true→앱 실행 시 1/1 완료·보석 1개·대기 파일 삭제, 위젯 재탭 취소→0/1·보석 0개. 실기기 미확인"
         }
       ]
     },
@@ -3425,9 +3437,9 @@
       "done_when": "교시 전환 시 위젯이 자동으로 갱신됨",
       "est_min": 30,
       "gate": null,
-      "owner": "codex",
+      "owner": "claude",
       "claimed_at": "2026-09-18T06:36:37.059Z",
-      "updated_at": "2026-09-30T10:01:46.916Z",
+      "updated_at": "2026-10-04T01:51:20.601Z",
       "log": [
         {
           "at": "2026-09-18T06:36:37.059Z",
@@ -3452,12 +3464,30 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "2026-09-30 위젯 점검 결과 위젯 구조를 재구현(P5.7~P5.10)하므로, 이 항목의 기존 실기기 확인 절차는 재구현 뒤 다시 수행해야 한다. 기존 확인 기록은 옛 한 줄 위젯 기준이다."
+        },
+        {
+          "at": "2026-10-04T01:37:12.254Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-04 재구현된 위젯 기준 에뮬레이터 확인 착수"
+        },
+        {
+          "at": "2026-10-04T01:37:14.763Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "에뮬레이터: 앱을 열지 않은 채 일정 종료(01:33) 뒤 01:34 캡처에서 행이 흐려짐(자동 갱신). 시작 시각 강조 전환은 캡처로 구분 못 함. 화면 잠금·재부팅·자정 갱신, 실기기 미확인"
+        },
+        {
+          "at": "2026-10-04T01:51:20.601Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "에뮬레이터: 앱을 열지 않은 채 종료 시각 뒤 줄이 흐려짐 확인. 미확인: 시작 시각 강조 전환, 화면 잠금·절전, 재부팅 뒤 복구, 자정 갱신, 실기기 지연. 사용자 결정 필요: 위 항목을 딸 폰 확인 때까지 미룰지(P4.11처럼 대체 승인) / 위젯에 보이는 일정 전환을 '교시 전환'으로 읽어도 되는지"
         }
       ]
     },
     {
       "id": "P5.5",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "탭하면 앱 이동",
@@ -3471,9 +3501,9 @@
       "done_when": "위젯 탭 시 해당 화면으로 이동함",
       "est_min": 20,
       "gate": null,
-      "owner": "codex",
+      "owner": "claude",
       "claimed_at": "2026-09-18T08:30:13.146Z",
-      "updated_at": "2026-09-30T10:01:47.945Z",
+      "updated_at": "2026-10-04T01:51:18.214Z",
       "log": [
         {
           "at": "2026-09-18T08:30:13.146Z",
@@ -3498,8 +3528,28 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "2026-09-30 위젯 점검 결과 위젯 구조를 재구현(P5.7~P5.10)하므로, 이 항목의 기존 실기기 확인 절차는 재구현 뒤 다시 수행해야 한다. 기존 확인 기록은 옛 한 줄 위젯 기준이다."
+        },
+        {
+          "at": "2026-10-04T01:37:17.177Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-04 재구현된 위젯 기준 에뮬레이터 확인 착수"
+        },
+        {
+          "at": "2026-10-04T01:37:19.484Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "에뮬레이터: 일정·할 일 위젯의 빈 영역·문구·제목 탭 모두 앱이 열림(콜드 스타트 포함, 개발 빌드라 개발 런처 화면 경유). 실기기·특정 화면 이동 미확인"
+        },
+        {
+          "at": "2026-10-04T01:51:18.214Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "리뷰 반영: 앱이 시간표 탭에 있다가 위젯을 누르면 오늘 화면으로 이동함을 에뮬레이터에서 추가 확인, 문서를 실제 코드 기준으로 정정"
         }
-      ]
+      ],
+      "done_at": "2026-10-04",
+      "evidence": "WidgetRenderSupport.openAppIntent(kidtimetable://, MainActivity, singleTask); 에뮬레이터 2026-10-04: 일정·할 일 위젯 어디를 눌러도 앱이 열림(콜드 포함), 시간표 탭→위젯 탭→오늘 화면 · 검증: npm run check 통과; critical-reviewer·backlog-explainer 실행·반영. 미확인: 실기기"
     },
     {
       "id": "P5.6",
@@ -4940,6 +4990,181 @@
       ],
       "done_at": "2026-09-30",
       "evidence": "마이그레이션 V10: 실제 SQLite 테스트 8개 통과(V8·V9 옛 스키마의 모든 컬럼·set_id·인덱스 4개 보존, care 저장, 잘못된 종류 거절, 요일 복사·세트 복제에서 care 유지, 위젯 데이터에 care 포함·school만 제외). 딸 폰(SM-A245N)에서 v1.31.1→1.38.0 덮어 설치 시 실제 DB가 V10으로 올라가 기존 항목('국어')이 보존되고 크래시 없음, 편집기 일정 종류에 학교/학원/돌봄/생활 버튼 표시. · 검증: npm run check 통과(lint, typecheck, Jest, Android build), critical-reviewer 검토 반영. 한계: 에뮬레이터 확인은 못 했고(메모리 부족) 실기기에서 돌봄 종류 항목을 저장해 위젯에 표시되는지는 확인하지 않았다(위젯 표시는 Jest로만 검증)"
+    },
+    {
+      "id": "P9",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "관리자 화면 컴팩트화",
+      "summary": "2026-10-04 사용자 요청: 관리자 설정을 작은 글자와 여백, 한 줄 선택기, 요일별 시간표 목록, 필요할 때 여는 폼과 시간표 선택 목록으로 재구성한다. 상세 기준은 docs/admin-compact-plan.md. 개발 착수가 아닌 신규 작업 등록이다.",
+      "where": "app/manage.tsx src/components/",
+      "parent": null,
+      "deps": [
+        "P2.8",
+        "P2.6",
+        "P4.3",
+        "P8.6"
+      ],
+      "doc": "docs/backlog/P9.md",
+      "done_when": "P9.1~P9.7 모두 완료. 관리자 기본 화면의 불필요한 줄바꿈과 긴 전체 목록을 해소하고, PIN·데이터·알림·위젯·아이 화면 회귀 및 화면 확인 근거를 갖춤.",
+      "est_min": null,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:33:42.270Z",
+      "log": []
+    },
+    {
+      "id": "P9.1",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "관리자 전용 크기와 공통 한 줄 월~일 선택기",
+      "summary": "아이용 56 터치·28 제목 토큰과 분리해 관리자 본문 14~16, 제목 18~20, 여백 8~16, 조작 영역 48 기준을 도입한다. 월~일 공통 선택기를 만들고 요일 저장값 일=0 매핑과 단일/다중 선택을 지원한다.",
+      "where": "src/components/ src/theme/",
+      "parent": "P9",
+      "deps": [
+        "P2.6",
+        "P4.3"
+      ],
+      "doc": "docs/backlog/P9.1.md",
+      "done_when": "360/393dp 기본 글자에서 월~일 7개가 한 줄에 모두 보이고 48 조작 영역을 확보함. 작은 폭/확대 글자는 겹침 없이 가로 스크롤로 모두 접근 가능. 일=0 DB 매핑, 단일·다중 선택, 선택/비활성 접근성 상태를 검증. 아이 화면 공통 토큰은 유지.",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:33:47.937Z",
+      "log": []
+    },
+    {
+      "id": "P9.2",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "관리자 영역 전환 메뉴와 보조 기능 접기",
+      "summary": "PIN 뒤 시간표·할 일·보상·기타 한 줄 메뉴를 두고 선택 영역만 표시한다. 기본은 시간표. 교시·요일 복사와 진단·미리보기는 필요할 때 열고, 영역/세트 이동 중 미저장 폼 버림 확인 계약을 공통으로 둔다.",
+      "where": "app/manage.tsx src/components/",
+      "parent": "P9",
+      "deps": [
+        "P9.1"
+      ],
+      "doc": "docs/backlog/P9.2.md",
+      "done_when": "기본 진입에서 모든 편집 폼이 세로로 펼쳐지지 않음. 메뉴는 한 줄 또는 가로 스크롤. 교시·요일 복사·보상·진단·권한 안내의 접근 경로를 유지하고 기존 PIN 보호 및 백그라운드 재잠금을 검증. 변경된 미저장 폼 전환은 확인하고 저장 중 전환은 차단. docs/admin-compact-plan.md의 화면 구조 확인.",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:33:53.451Z",
+      "log": []
+    },
+    {
+      "id": "P9.3",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "할 일 요약 목록과 컴팩트 편집 폼",
+      "summary": "반복 요일 선택을 공통 월~일 한 줄로 통일한다. 할 일은 작은 요약 목록에서 추가/편집 시에만 폼을 열고, 완료 이력 할 일 종료는 더보기에서 접근하도록 한다. 설명·버튼·알림 입력의 불필요한 줄바꿈과 여백을 줄인다.",
+      "where": "src/components/TaskEditor.tsx src/components/DatePicker.tsx",
+      "parent": "P9",
+      "deps": [
+        "P9.2"
+      ],
+      "doc": "docs/backlog/P9.3.md",
+      "done_when": "360/393dp에서 반복 요일 7개가 한 줄이며 추가/편집 전 폼은 접힘. 반복/특정 날짜 상호 배타성·한글 입력·저장/삭제·완료 이력 보호·반복 종료·변경 후 알림 갱신을 유지. 확대 글자/긴 제목/키보드에서도 저장과 취소가 가능하고 미저장 입력 버림은 확인. 화면 비교 근거와 관련 회귀 확인.",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:33:59.108Z",
+      "log": []
+    },
+    {
+      "id": "P9.4",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "시간표 편집 목록을 요일별로 필터하고 폼 분리",
+      "summary": "현재 세트의 전체 일정 목록 대신 월~일 단일 요일 필터와 해당 하루 시간순 목록을 표시한다. 기본은 오늘. 작은 행의 시각·이름에서 선택/추가 시 편집 모달을 열고 필터와 폼 반복 요일을 별도 상태로 관리한다.",
+      "where": "src/components/TimetableEditor.tsx app/manage.tsx",
+      "parent": "P9",
+      "deps": [
+        "P9.2"
+      ],
+      "doc": "docs/backlog/P9.4.md",
+      "done_when": "평일 하루 4개 총20개 데이터에서 선택 하루 4개만 보이고 교시/직접 입력 시각순 정렬. 토·일/빈 요일도 추가·편집 가능. 목록 필터는 폼 반복값을 바꾸지 않으며 신규는 다중/수정은 단일 요일 규칙 유지. 세트 분리, CRUD, 저장 후 선택 요일 유지, 미저장 변경 확인·중복 저장 차단과 알림/위젯 갱신을 회귀 검증. 목록 아래로 내려가지 않고 모달에서 편집 가능.",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:34:04.631Z",
+      "log": []
+    },
+    {
+      "id": "P9.5",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "저장한 시간표 선택을 작은 목록과 더보기로 정리",
+      "summary": "기본 화면은 현재 시간표 이름과 선택 버튼 한 줄. 누르면 작은 세트 목록을 열고 이름·항목수·적용중·더보기를 표시한다. 이름 변경/삭제는 더보기, 빈 생성/복제는 추가 동작에서 열어 상시 폼과 관리 버튼을 없앤다.",
+      "where": "src/components/TimetableSetPanel.tsx src/components/TimetableSetRow.tsx src/components/TimetableSetCreate.tsx",
+      "parent": "P9",
+      "deps": [
+        "P9.4",
+        "P8.6"
+      ],
+      "doc": "docs/backlog/P9.5.md",
+      "done_when": "기본 필드는 한 줄. 기본 글자/짧은 이름 기준 3개 세트 행 합계180dp 이내이며 생성 폼과 이름변경/삭제 버튼은 상시 펼치지 않음. 전체 긴 이름 확인 경로·현재 적용 표시·적용중 삭제 차단·삭제 확인·중복 이름 오류·생성 후 자동적용 금지·세트 분리·미저장 폼 확인·적용 후 알림/위젯 갱신·재시작 후 유지 검증. 확대 글자에서도 모든 관리 기능 접근 가능.",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:34:10.069Z",
+      "log": []
+    },
+    {
+      "id": "P9.6",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "시간표 색·아이콘과 시간·알림 선택 폼 컴팩트화",
+      "summary": "색/아이콘은 현재 선택값 요약을 기본 표시하고 각각 눌렀을 때 모든10개 선택지를 한 줄 가로 목록에서 고른다. 교시/직접시간·일정종류·알림은 짧은 레이블로 정리하고 긴 보조 설명은 도움말로 옮긴다.",
+      "where": "src/components/TimetableEditor.tsx src/components/",
+      "parent": "P9",
+      "deps": [
+        "P9.4"
+      ],
+      "doc": "docs/backlog/P9.6.md",
+      "done_when": "기본 폼에서 색/아이콘 전체 선택지가 상시 두 줄로 펼쳐지지 않음. 색10개·아이콘10개 모두 별도로 선택/저장 가능하며 선택 이름·접근성 라벨·테마 의미키 유지. 기본 글자에서 짧은 선택기/버튼은 한 줄, 확대 글자와 긴 설명/오류는 내용 손실 없이 접근. 메모·한글 입력·다중 반복/단일 수정·교시/직접시간·종류·알림/미리알림·저장/삭제 기능 회귀 확인.",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:34:15.715Z",
+      "log": []
+    },
+    {
+      "id": "P9.7",
+      "status": "todo",
+      "priority": "P1",
+      "category": "feature",
+      "title": "관리자 화면 밀도와 입력·기능 회귀 검증",
+      "summary": "360/393dp 세로·가로와 글자 확대, 평일20개 일정/저장세트3개/긴 한글/주말/완료이력 할 일로 화면을 비교하고 기존 관리자 및 아이 화면 회귀를 검증한다. 에뮬레이터와 실기기 근거를 구분한다.",
+      "where": "docs/manual-device-tests.md docs/admin-compact-plan.md __tests__/",
+      "parent": "P9",
+      "deps": [
+        "P9.3",
+        "P9.5",
+        "P9.6"
+      ],
+      "doc": "docs/backlog/P9.7.md",
+      "done_when": "docs/admin-compact-plan.md 확인 기준 전부 대조. 기본 폭/글자에서 요일 한 줄·하루 목록4개·3개 세트행180dp 기준 충족, 확대 글자/키보드 조작 가능. PIN·세트분리·CRUD·반복종료·요일매핑·알림/위젯·아이화면 회귀와 npm run check 및 병렬 리뷰 근거 기록. 사용자 실기기 확인 전에는 해당 확인을 완료로 기록하지 않고 needs_info로 관리. 비교 스크린샷/수동 절차와 버전 동시 수정 확인.",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-04T01:34:21.876Z",
+      "log": []
     }
   ]
 }

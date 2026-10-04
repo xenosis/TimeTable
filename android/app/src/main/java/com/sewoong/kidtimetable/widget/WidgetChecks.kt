@@ -7,7 +7,7 @@ import org.json.JSONObject
 data class PendingCheck(val taskId: Int, val date: String, val completed: Boolean)
 
 data class CompleteResult(
-  /** 그 할 일을 완료로 바꾼 위젯 데이터(JSON). 위젯을 즉시 다시 그리는 데 쓴다 */
+  /** 그 할 일의 완료 상태를 뒤집은 위젯 데이터(JSON). 위젯을 즉시 다시 그리는 데 쓴다 */
   val snapshotJson: String,
   /** 대기 중인 체크 목록(JSON 배열). 같은 할 일·날짜는 가장 마지막 상태 하나만 남는다 */
   val pendingJson: String,

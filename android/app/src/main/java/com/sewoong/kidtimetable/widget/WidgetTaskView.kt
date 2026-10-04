@@ -46,7 +46,8 @@ object WidgetTaskView {
     if (complete && done == tasks.size) {
       // 모두 끝내도 줄은 그대로 두어(취소선) 잘못 눌렀을 때 다시 눌러 되돌릴 수 있게 한다. 칭찬 문구가 한 줄을 쓴다
       val room = lines - 1
-      val count = if (tasks.size <= room) tasks.size else room - 1
+      // 작은 위젯에서도 최소 한 줄은 남겨, 모두 끝낸 뒤 잘못 눌렀을 때 다시 눌러 되돌릴 수 있게 한다
+      val count = if (tasks.size <= room) tasks.size else maxOf(1, room - 1)
       return TaskView(day.date, heading, tasks.take(count).map { TaskRow(it.id, it.title, it.completed) }, tasks.size - count, ALL_DONE_MESSAGE)
     }
     val needMore = tasks.size > lines || day.hiddenTaskCount > 0

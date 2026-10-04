@@ -11,7 +11,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.sewoong.kidtimetable.R
 
-/** TaskView(무엇을 보일지)를 RemoteViews(어떻게 그릴지)로 옮긴다. 못 한 일의 줄을 누르면 완료로 바뀌고(WidgetTaskToggleReceiver) 나머지 영역을 누르면 앱이 열린다. */
+/** TaskView(무엇을 보일지)를 RemoteViews(어떻게 그릴지)로 옮긴다. 할 일 줄을 누를 때마다 완료와 미완료가 번갈아 바뀌고(WidgetTaskToggleReceiver) 나머지 영역을 누르면 앱이 열린다. */
 object TaskWidgetRenderer {
   private val ROWS = arrayOf(
     intArrayOf(R.id.task_row_1, R.id.task_box_1, R.id.task_title_1),

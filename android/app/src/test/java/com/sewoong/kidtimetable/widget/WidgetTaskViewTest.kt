@@ -59,6 +59,12 @@ class WidgetTaskViewTest {
     assertEquals(3, view.moreCount)
   }
 
+  @Test fun 작은_위젯에서_모두_끝내도_되돌릴_줄이_최소_한_줄_남는다() {
+    val view = build(day(task(1, "숙제", true), task(2, "준비물", true)), capacity = 2)
+    assertEquals(WidgetTaskView.ALL_DONE_MESSAGE, view.message)
+    assertEquals(1, view.rows.size)
+  }
+
   @Test fun 앱이_상한_때문에_못_담은_할_일이_있으면_다_했다고_하지_않는다() {
     val view = build(day(task(1, "숙제", true), task(2, "준비물", true), hidden = 3))
     assertNull(view.message)
