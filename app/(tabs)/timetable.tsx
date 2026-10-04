@@ -93,7 +93,7 @@ export default function TimetableScreen() {
       {!compact && <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text>}
       {buttons}
       <WeekdayTabs selected={selectedDay} today={todayDay} theme={theme} onSelect={setSelectedDay} />
-      {timetableSet && <DailyScheduleList weekday={selectedDay} isToday={selectedDay === todayDay} theme={theme} setId={timetableSet.id} refreshKey={refreshKey} />}
+      {timetableSet && <DailyScheduleList weekday={selectedDay} theme={theme} setId={timetableSet.id} refreshKey={refreshKey} />}
     </View>;
   }
 

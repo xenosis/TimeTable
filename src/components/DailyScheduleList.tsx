@@ -6,16 +6,15 @@ import { getTimetableItemsForWeekday, type TimetableItem } from '../db/timetable
 import type { TimetableSetId } from '../db/types';
 import { useNow } from '../hooks/useNow';
 import { fontSize, spacing, type ThemeDefinition } from '../theme';
-import { formatNow, minutesOfDay } from '../utils/scheduleClock';
+import { minutesOfDay } from '../utils/scheduleClock';
 import { WeekTimeGrid } from './WeekTimeGrid';
 
 /**
  * 요일별 보기: 주간표와 같은 시간축 표에서 고른 요일 한 칼럼만 크게 보여준다(그 요일에 집중해서 확대한 모습).
- * 지금 진행 중인 일정만 원래 색으로 강조하고, 오늘이 아닌 요일은 같은 시각대를 미리 보여준다는 안내를 덧붙인다.
+ * 지금 진행 중인 일정만 원래 색으로 강조한다(오늘이 아닌 요일도 같은 시각대를 보여준다). 요일은 위의 요일 탭에서 고르므로 표 안에 요일 헤더를 따로 두지 않는다.
  */
-export function DailyScheduleList({ weekday, isToday, theme, setId, refreshKey }: {
+export function DailyScheduleList({ weekday, theme, setId, refreshKey }: {
   readonly weekday: number;
-  readonly isToday: boolean;
   readonly theme: ThemeDefinition;
   readonly setId: TimetableSetId;
   readonly refreshKey: number;
@@ -38,12 +37,11 @@ export function DailyScheduleList({ weekday, isToday, theme, setId, refreshKey }
   if (!items.length) return <Text style={[styles.empty, { color: theme.colors.textMuted }]}>등록된 일정이 없어요.</Text>;
   const onArea = (event: LayoutChangeEvent) => setAreaHeight(event.nativeEvent.layout.height);
   return <View style={styles.wrap}>
-    {!isToday && <Text style={[styles.preview, { color: theme.colors.textMuted }]}>{`오늘이 아닌 요일이에요. 지금 시각(${formatNow(now)})에 해당하는 시간대를 미리 보여줘요.`}</Text>}
     {/* 남은 화면 높이를 재서 표를 그 안에 맞춘다. 행이 너무 낮아지는 아주 많은 일정일 때만 스크롤된다 */}
     <View style={styles.area} onLayout={onArea}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* 이 요일 하나만 넣어 행 경계도 이 요일의 시작·종료만 반영한다. today에 이 요일을 넣어 같은 시각대 강조(미리보기)를 켠다 */}
-        <WeekTimeGrid theme={theme} days={[{ day: weekday, items }]} today={weekday} onSelectDay={() => undefined} nowMinutes={minutesOfDay(now)} focus fitHeight={areaHeight} />
+        <WeekTimeGrid theme={theme} days={[{ day: weekday, items }]} today={weekday} onSelectDay={() => undefined} nowMinutes={minutesOfDay(now)} focus showHeader={false} fitHeight={areaHeight} />
       </ScrollView>
     </View>
   </View>;
@@ -53,6 +51,5 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, gap: spacing.xs, width: '100%' },
   area: { flex: 1, width: '100%' },
   scroll: { flexGrow: 1 },
-  preview: { fontSize: fontSize.sm, textAlign: 'center' },
   empty: { fontSize: fontSize.md, textAlign: 'center' },
 });

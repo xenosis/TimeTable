@@ -80,12 +80,12 @@ describe('일정 칸 줄 나누기와 요일 확대 보기', () => {
     expect(title.props.minimumFontScale).toBeLessThan(1);
   });
 
-  it('한 요일 확대 보기: 그 요일 칼럼 하나만 요일 이름과 함께 크게 그리고 시간 칼럼은 그대로 둔다', () => {
+  it('한 요일 확대 보기: 그 요일 칼럼 하나만 크게 그리고(헤더 줄 없이) 왼쪽 시간 칼럼은 그대로 둔다', () => {
     let tree!: ReturnType<typeof create>;
-    act(() => { tree = create(<WeekTimeGrid theme={defaultTheme} days={[days[0]]} today={1} onSelectDay={() => undefined} nowMinutes={17 * 60 + 30} focus />); });
+    act(() => { tree = create(<WeekTimeGrid theme={defaultTheme} days={[days[0]]} today={1} onSelectDay={() => undefined} nowMinutes={17 * 60 + 30} focus showHeader={false} />); });
     const labels = texts(tree.root);
-    expect(labels).toContain('시간');
-    expect(labels).toContain('월요일');
+    expect(labels).not.toContain('시간'); // 요일은 위의 요일 탭에서 고르므로 표 안에 '시간 | 월요일' 줄을 두지 않는다
+    expect(labels).not.toContain('월요일');
     expect(labels).not.toContain('화');
     expect(cells(tree.root)).toHaveLength(2); // 월요일 일정 2개만
     for (const clock of ['16:10', '17:10', '18:10']) expect(labels).toContain(clock);
