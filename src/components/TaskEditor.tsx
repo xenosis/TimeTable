@@ -80,7 +80,7 @@ export function TaskEditor({ theme, onChanged, onFormState }: { readonly theme: 
       </Pressable>
     ))}
     {formOpen && <View style={[styles.form, { borderColor: colors.border }]}>
-      <TextInput accessibilityLabel="할 일 이름" editable={!saving} value={draft.title} onChangeText={(title) => setDraft((current) => ({ ...current, title }))} placeholder="숙제, 준비물" style={styles.input} />
+      <TextInput accessibilityLabel="할 일 이름" editable={!saving} value={draft.title} onChangeText={(title) => setDraft((current) => ({ ...current, title }))} placeholder="숙제, 준비물" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
       <Text style={[styles.label, { color: colors.text }]}>반복 요일 (또는 특정 날짜 하나)</Text>
       <AdminWeekdayPicker selected={draft.weekdays} onChange={(weekdays) => setDraft((current) => ({ ...current, date: '', weekdays }))} mode="multi" theme={theme} disabled={saving} label="반복 요일" />
       <DatePicker theme={theme} disabled={saving} value={draft.date} onChange={(date) => setDraft((current) => ({ ...current, date, weekdays: [] }))} />
@@ -90,7 +90,7 @@ export function TaskEditor({ theme, onChanged, onFormState }: { readonly theme: 
           <Text style={[styles.actionText, { color: draft.alertMode === mode ? colors.onPrimary : colors.primary }]}>{alertLabels[mode]}</Text>
         </Pressable>
       ))}</View>
-      {draft.alertMode !== 'none' && <TextInput accessibilityLabel="할 일 알림 시간" editable={!saving} value={draft.remindTime} onChangeText={(remindTime) => setDraft((current) => ({ ...current, remindTime: formatTimeInput(remindTime) }))} placeholder="알림 시간 (예: 1900 → 19:00)" keyboardType="number-pad" maxLength={5} style={styles.input} />}
+      {draft.alertMode !== 'none' && <TextInput accessibilityLabel="할 일 알림 시간" editable={!saving} value={draft.remindTime} onChangeText={(remindTime) => setDraft((current) => ({ ...current, remindTime: formatTimeInput(remindTime) }))} placeholder="알림 시간 (예: 1900 → 19:00)" keyboardType="number-pad" maxLength={5} placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />}
       <View style={styles.inline}>
         {button(draft.id ? '수정 저장' : '추가', () => void save(), colors.primary, colors.onPrimary)}
         {button('취소', () => confirmThen(closeForm), colors.surface, colors.text)}

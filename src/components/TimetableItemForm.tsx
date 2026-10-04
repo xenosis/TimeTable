@@ -41,8 +41,8 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
   );
 
   return <View style={styles.form}>
-    <TextInput accessibilityLabel="과목 이름" editable={!saving} value={draft.title} onChangeText={(title) => onChange({ title })} placeholder="과목 또는 일정" style={styles.input} />
-    <TextInput accessibilityLabel="메모" editable={!saving} value={draft.memo} onChangeText={(memo) => onChange({ memo })} placeholder="메모 (예: 16:45 차 타고 이동)" style={styles.input} />
+    <TextInput accessibilityLabel="과목 이름" editable={!saving} value={draft.title} onChangeText={(title) => onChange({ title })} placeholder="과목 또는 일정" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
+    <TextInput accessibilityLabel="메모" editable={!saving} value={draft.memo} onChangeText={(memo) => onChange({ memo })} placeholder="메모 (예: 16:45 차 타고 이동)" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
     <Text style={[styles.hint, { color: memoLength > MAX_MEMO_LENGTH ? colors.danger : colors.textMuted }]}>{`메모 ${memoLength}/${MAX_MEMO_LENGTH}글자`}</Text>
 
     <Text style={[styles.label, { color: colors.text }]}>{draft.id ? '요일 (한 요일씩 수정)' : '반복 요일'}</Text>
@@ -55,8 +55,8 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
     </View>
     {draft.periodNo != null && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inline}>{periods.map((period) => choice(`${period.periodNo}교시`, draft.periodNo === period.periodNo, () => onChange({ periodNo: period.periodNo })))}</ScrollView>}
     {draft.periodNo == null && <View style={styles.inline}>
-      <TextInput accessibilityLabel="시작 시간" editable={!saving} value={draft.startTime} onChangeText={(value) => onChange({ startTime: formatTimeInput(value) })} placeholder="시작 0930" maxLength={5} keyboardType="number-pad" style={styles.input} />
-      <TextInput accessibilityLabel="종료 시간" editable={!saving} value={draft.endTime} onChangeText={(value) => onChange({ endTime: formatTimeInput(value) })} placeholder="종료 0940" maxLength={5} keyboardType="number-pad" style={styles.input} />
+      <TextInput accessibilityLabel="시작 시간" editable={!saving} value={draft.startTime} onChangeText={(value) => onChange({ startTime: formatTimeInput(value) })} placeholder="시작 0930" maxLength={5} keyboardType="number-pad" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
+      <TextInput accessibilityLabel="종료 시간" editable={!saving} value={draft.endTime} onChangeText={(value) => onChange({ endTime: formatTimeInput(value) })} placeholder="종료 0940" maxLength={5} keyboardType="number-pad" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
     </View>}
 
     <Text style={[styles.label, { color: colors.text }]}>색 · 아이콘</Text>
@@ -78,7 +78,7 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
     <Text style={[styles.label, { color: colors.text }]}>알림</Text>
     <View style={styles.inline}>
       {(['none', 'notify', 'alarm'] as const).map((mode) => choice(alertLabels[mode], draft.alertMode === mode, () => onChange({ alertMode: mode }), `알림 방식 ${alertLabels[mode]}`))}
-      <TextInput accessibilityLabel="미리 알림 분" editable={!saving} value={draft.alertBeforeMin} onChangeText={(alertBeforeMin) => onChange({ alertBeforeMin })} keyboardType="number-pad" placeholder="미리 알림 분" style={styles.input} />
+      <TextInput accessibilityLabel="미리 알림 분" editable={!saving} value={draft.alertBeforeMin} onChangeText={(alertBeforeMin) => onChange({ alertBeforeMin })} keyboardType="number-pad" placeholder="미리 알림 분" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
     </View>
     <AdminCollapsible title="도움말" theme={theme}>
       <Text style={[styles.hint, { color: colors.textMuted }]}>알림: 상단에 알려 줘요. 알람: 소리가 나고 잠금 화면에도 보여요. 바탕화면 위젯에는 학교 일정이 나오지 않아요. 학원·방과후는 학원, 돌봄교실은 돌봄으로 골라 주세요.</Text>
