@@ -4,6 +4,7 @@ import { getDatabase } from '../db/database';
 import { editTaskWithRewards } from '../db/rewardRepository';
 import { createTask, deleteTask, endRecurringTask, getEditableTasks, getEndableTasks, updateTask, type EditableTask, type EndableTask } from '../db/taskRepository';
 import { borderRadius, fontSize, spacing, touchTarget, type ThemeDefinition } from '../theme';
+import { adminSpacing } from '../theme/admin';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
 import { DatePicker } from './DatePicker';
 import { formatTimeInput } from '../utils/timeInput';
@@ -49,4 +50,4 @@ export function TaskEditor({ theme, onChanged }: { readonly theme: ThemeDefiniti
     <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.textMuted }}>{message}</Text>
   </View>;
 }
-const styles = StyleSheet.create({ card: { borderRadius: borderRadius.lg, borderWidth: 2, gap: spacing.sm, padding: spacing.lg, width: '100%' }, heading: { fontSize: fontSize.lg, fontWeight: '700' }, item: { borderWidth: 1, borderRadius: borderRadius.sm, minHeight: touchTarget.minimum, justifyContent: 'center', paddingHorizontal: spacing.sm }, input: { borderColor: '#94A3B8', borderWidth: 1, borderRadius: borderRadius.sm, minHeight: touchTarget.minimum, paddingHorizontal: spacing.sm }, row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }, day: { alignItems: 'center', borderWidth: 1, borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: touchTarget.minimum, minWidth: touchTarget.minimum }, action: { alignItems: 'center', borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: touchTarget.minimum, paddingHorizontal: spacing.md } });
+const styles = StyleSheet.create({ card: { borderRadius: borderRadius.lg, borderWidth: 2, gap: spacing.sm, padding: adminSpacing.md, width: '100%' }, heading: { fontSize: fontSize.lg, fontWeight: '700' }, item: { borderWidth: 1, borderRadius: borderRadius.sm, minHeight: touchTarget.minimum, justifyContent: 'center', paddingHorizontal: spacing.sm }, input: { borderColor: '#94A3B8', borderWidth: 1, borderRadius: borderRadius.sm, minHeight: touchTarget.minimum, paddingHorizontal: spacing.sm }, row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }, day: { alignItems: 'center', borderWidth: 1, borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: touchTarget.minimum, minWidth: touchTarget.minimum }, action: { alignItems: 'center', borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: touchTarget.minimum, paddingHorizontal: spacing.md } });

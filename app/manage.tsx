@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { borderRadius, fontSize, spacing, touchTarget } from '../src/theme';
+import { adminSpacing } from '../src/theme/admin';
 import { PeriodSettings } from '../src/components/PeriodSettings';
 import { TimetableSetPanel } from '../src/components/TimetableSetPanel';
 import { TimetableEditor } from '../src/components/TimetableEditor';
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flexGrow: 1,
-    padding: spacing.lg,
+    padding: adminSpacing.md,
     gap: spacing.md,
   },
   title: {

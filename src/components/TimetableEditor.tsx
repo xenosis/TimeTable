@@ -6,6 +6,7 @@ import { getPeriods, type Period } from '../db/periodRepository';
 import { createTimetableItems, deleteTimetableItem, getEditableTimetableItems, MAX_MEMO_LENGTH, updateTimetableItem, type EditableTimetableItem } from '../db/timetableRepository';
 import { timetableCategories, type TimetableCategory, type TimetableSetId } from '../db/types';
 import { borderRadius, colorKeys, fontSize, iconKeys, resolveThemeColor, resolveThemeIcon, spacing, touchTarget, type ThemeDefinition } from '../theme';
+import { adminSpacing } from '../theme/admin';
 import { formatTimeInput } from '../utils/timeInput';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
 
@@ -75,7 +76,7 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId }: { reado
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: borderRadius.lg, borderWidth: 2, gap: spacing.sm, padding: spacing.lg, width: '100%' }, heading: { fontSize: fontSize.lg, fontWeight: '700' }, label: { fontSize: fontSize.sm, fontWeight: '700' }, list: { gap: spacing.xs }, wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }, actions: { flexDirection: 'row', gap: spacing.sm }, timeInputs: { flexDirection: 'row', gap: spacing.sm },
+  card: { borderRadius: borderRadius.lg, borderWidth: 2, gap: spacing.sm, padding: adminSpacing.md, width: '100%' }, heading: { fontSize: fontSize.lg, fontWeight: '700' }, label: { fontSize: fontSize.sm, fontWeight: '700' }, list: { gap: spacing.xs }, wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }, actions: { flexDirection: 'row', gap: spacing.sm }, timeInputs: { flexDirection: 'row', gap: spacing.sm },
   button: { alignItems: 'center', borderColor: '#4F46E5', borderRadius: borderRadius.sm, borderWidth: 1, justifyContent: 'center', minHeight: touchTarget.minimum, paddingHorizontal: spacing.sm }, buttonText: { color: '#3730A3', fontSize: fontSize.sm, fontWeight: '700' }, selected: { backgroundColor: '#4F46E5' }, selectedText: { color: '#FFFFFF' }, dim: { opacity: 0.6 }, input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, flex: 1, fontSize: fontSize.sm, minHeight: touchTarget.minimum, paddingHorizontal: spacing.sm }, swatch: { alignItems: 'center', borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: touchTarget.minimum, paddingHorizontal: spacing.sm }, outline: { borderColor: '#0F172A', borderWidth: 3 },
 });
 

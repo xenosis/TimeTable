@@ -34,13 +34,13 @@ export function AdminWeekdayPicker({ selected, onChange, mode, theme, disabled =
   </ScrollView>;
 }
 
-// 칸은 겹치지 않는 실제 영역만 조작 영역으로 쓴다(겹치는 hitSlop은 이웃 요일을 잘못 누르게 해서 쓰지 않는다).
-// 높이는 48dp이고, 가로는 카드 안 폭(약 260dp)에 7칸을 한 줄로 넣느라 약 35dp다. 가로 48dp는 카드 여백을 줄이는 P9.2에서 맞춘다.
-const CHIP_MIN_WIDTH = 34;
+// 칸은 겹치지 않는 실제 48×48dp를 조작 영역으로 쓴다(겹치는 hitSlop은 이웃 요일을 잘못 누르게 해서 쓰지 않는다).
+// 7칸 × 48 + 간격 6 × 1 = 342dp라서 411~412dp 폭(바깥·카드 여백 16dp씩, 가용 347~348dp)에서 한 줄에 들어가고, 더 좁은 폭에서는 가로로 스크롤한다.
+const CHIP_MIN_WIDTH = adminTouchTarget;
 
 const styles = StyleSheet.create({
   // flexGrow: 칸이 충분하면 한 줄을 꽉 채우고, 모자라면 minWidth를 지킨 채 스크롤한다
-  row: { flexGrow: 1, gap: 2 },
+  row: { flexGrow: 1, gap: 1 },
   chip: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 2, flexGrow: 1, flexBasis: 0, justifyContent: 'center', minHeight: adminTouchTarget, minWidth: CHIP_MIN_WIDTH },
   text: { fontSize: adminFontSize.body, fontWeight: '700' },
   dim: { opacity: 0.5 },
