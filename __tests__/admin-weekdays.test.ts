@@ -1,4 +1,4 @@
-import { ADMIN_WEEKDAYS, toggleAdminWeekday } from '../src/utils/adminWeekdays';
+import { ADMIN_WEEKDAYS, summarizeWeekdays, toggleAdminWeekday } from '../src/utils/adminWeekdays';
 
 describe('관리자 요일 선택기 로직', () => {
   it('월요일부터 일요일 순서로 7개를 보여주고 저장값은 일=0, 월=1 … 토=6이다', () => {
@@ -22,5 +22,13 @@ describe('관리자 요일 선택기 로직', () => {
     const selected = [2, 1] as const;
     toggleAdminWeekday(selected, 5, 'multi');
     expect(selected).toEqual([2, 1]);
+  });
+});
+
+describe('summarizeWeekdays', () => {
+  it('저장값(일=0)을 월~일 순서의 글자로 요약한다', () => {
+    expect(summarizeWeekdays([5, 1, 3])).toBe('월수금');
+    expect(summarizeWeekdays([0, 6])).toBe('토일');
+    expect(summarizeWeekdays([])).toBe('');
   });
 });

@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getPeriods, savePeriods, type Period } from '../db/periodRepository';
-import { borderRadius, fontSize, spacing, touchTarget } from '../theme';
+import { borderRadius } from '../theme';
+import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { formatTimeInput } from '../utils/timeInput';
 
 const initialPeriods: readonly Period[] = [];
@@ -74,9 +75,9 @@ export function PeriodSettings({ onSaved }: { readonly onSaved?: () => Promise<v
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.sm, width: '100%' }, heading: { fontSize: fontSize.lg, fontWeight: '700' }, description: { fontSize: fontSize.sm, color: '#475569' },
-  row: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs }, label: { fontSize: fontSize.sm, fontWeight: '700', minWidth: 52 },
-  input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: fontSize.sm, minHeight: touchTarget.minimum, paddingHorizontal: spacing.sm, flex: 1 }, wave: { fontSize: fontSize.md },
-  secondary: { alignItems: 'center', borderColor: '#4F46E5', borderRadius: borderRadius.md, borderWidth: 2, justifyContent: 'center', minHeight: touchTarget.minimum }, secondaryText: { color: '#4F46E5', fontSize: fontSize.sm, fontWeight: '700' },
-  save: { alignItems: 'center', backgroundColor: '#4F46E5', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: touchTarget.minimum }, disabled: { opacity: 0.6 }, saveText: { color: '#FFFFFF', fontSize: fontSize.md, fontWeight: '700' }, message: { fontSize: fontSize.sm, textAlign: 'center' },
+  container: { gap: adminSpacing.xs, width: '100%' }, heading: { fontSize: adminFontSize.title, fontWeight: '700' }, description: { fontSize: adminFontSize.label, color: '#475569' },
+  row: { alignItems: 'center', flexDirection: 'row', gap: adminSpacing.xs }, label: { fontSize: adminFontSize.label, fontWeight: '700', minWidth: 52 },
+  input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.label, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.xs, flex: 1 }, wave: { fontSize: adminFontSize.body },
+  secondary: { alignItems: 'center', borderColor: '#4F46E5', borderRadius: borderRadius.md, borderWidth: 2, justifyContent: 'center', minHeight: adminTouchTarget }, secondaryText: { color: '#4F46E5', fontSize: adminFontSize.label, fontWeight: '700' },
+  save: { alignItems: 'center', backgroundColor: '#4F46E5', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: adminTouchTarget }, disabled: { opacity: 0.6 }, saveText: { color: '#FFFFFF', fontSize: adminFontSize.body, fontWeight: '700' }, message: { fontSize: adminFontSize.label, textAlign: 'center' },
 });

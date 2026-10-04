@@ -2,7 +2,8 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 
 import type { TimetableItem } from '../db/timetableRepository';
 import { resolveThemeColor, resolveThemeIcon, spacing, type ThemeDefinition } from '../theme';
-import { buildWeekGrid, cellRect, formatMinutes, needsOwnTimeLabel, rowHeights, rowOffsets, type GridDay } from '../utils/timetableGrid';
+import { lightenColor, scheduleStatus } from '../utils/scheduleClock';
+import { buildWeekGrid, cellRect, formatMinutes, rowHeights, rowOffsets, type GridDay } from '../utils/timetableGrid';
 import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
 
 /**
@@ -30,7 +31,7 @@ export function WeekDayHeader({ theme, today, onSelectDay }: {
 }) {
   const size = useGridSize();
   return <View style={styles.headerRow}>
-    <View style={{ width: size.timeWidth }} />
+    <View style={{ width: size.timeWidth, alignItems: 'center', justifyContent: 'center' }}><Text style={[styles.dayLabel, { color: theme.colors.textMuted }]}>시간</Text></View>
     {SCHOOL_WEEKDAYS.map(({ day, label }) => (
       <Pressable key={day} accessibilityRole="button" accessibilityLabel={`${label}요일 시간표로 이동`} onPress={() => onSelectDay(day)} style={styles.dayHeader}>
         <Text style={[styles.dayLabel, { color: day === today ? theme.colors.primary : theme.colors.text }]}>{label}</Text>
@@ -39,12 +40,14 @@ export function WeekDayHeader({ theme, today, onSelectDay }: {
   </View>;
 }
 
-export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = true }: {
+export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = true, nowMinutes }: {
   readonly theme: ThemeDefinition;
   readonly days: readonly GridDay<TimetableItem>[];
   readonly today: number;
   readonly onSelectDay: (weekday: number) => void;
   readonly showHeader?: boolean;
+  /** 지금 시각(하루 중 분). 주어지면 오늘 요일의 진행 중 일정만 원래 색으로 강조하고 나머지는 연하게 보여준다 */
+  readonly nowMinutes?: number;
 }) {
   const size = useGridSize();
   const { rows, cells, unplaced } = buildWeekGrid(days);
@@ -74,20 +77,21 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
             const rect = cellRect(cell, heights);
             const category = resolveThemeColor(theme, cell.item.colorKey);
             const icon = resolveThemeIcon(theme, cell.item.iconKey);
-            const own = needsOwnTimeLabel(cell, rows);
+            // 시작·종료 시각은 왼쪽 시간 칼럼에서만 읽는다(일정 칸에는 시간 문자열을 남기지 않는다). range는 화면 읽기용 라벨에만 쓴다
+            const current = nowMinutes != null && day === today && scheduleStatus(cell.item.startTime, cell.item.endTime, nowMinutes) === 'current';
+            const highlighted = current || nowMinutes == null; // 현재 시각 정보가 없으면 예전처럼 모두 원래 색
             const range = `${cell.item.startTime}~${cell.item.endTime}`;
             // 칸은 누르는 곳이 아니라 보는 곳이다: 스크롤하다 실수로 화면이 바뀌지 않게 이동은 요일 글자에서만 한다
             return <View
               key={cell.item.id}
               accessible
-              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}`}
+              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}${current ? ', 지금 진행 중' : ''}`}
               style={[styles.cell, {
                 top: rect.top, height: rect.height, left: `${rect.leftRatio * 100}%`, width: `${rect.widthRatio * 100}%`,
-                backgroundColor: category.backgroundColor,
-              }]}
+                backgroundColor: highlighted ? category.backgroundColor : lightenColor(category.backgroundColor, 0.78),
+              }, current && { borderColor: theme.colors.text, borderWidth: 2 }]}
             >
-              <Text style={[styles.cellTitle, { fontSize: size.title, color: category.textColor }]} numberOfLines={3}>{cell.item.memo ? '📝' : ''}{icon.glyph} {cell.item.title}</Text>
-              {own && <Text style={[styles.cellTime, { fontSize: size.time, color: category.textColor }]}>{size === SIZES.landscape ? range : `${cell.item.startTime}~\n${cell.item.endTime}`}</Text>}
+              <Text style={[styles.cellTitle, { fontSize: size.title, color: highlighted ? category.textColor : theme.colors.text }]} numberOfLines={3}>{cell.item.memo ? '📝' : ''}{icon.glyph} {cell.item.title}</Text>
             </View>;
           })}
         </View>

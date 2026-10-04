@@ -15,3 +15,8 @@ export function toggleAdminWeekday(selected: readonly number[], day: number, mod
   const next = selected.includes(day) ? selected.filter((value) => value !== day) : [...selected, day];
   return [...next].sort((left, right) => left - right);
 }
+
+/** 목록 한 줄에 쓰는 반복 요일 요약. 저장값(일=0)을 월~일 순서의 글자로 이어 붙인다(예: "월수금"). 비어 있으면 빈 문자열이다. */
+export function summarizeWeekdays(weekdays: readonly number[]): string {
+  return ADMIN_WEEKDAYS.filter(({ day }) => weekdays.includes(day)).map(({ label }) => label).join('');
+}

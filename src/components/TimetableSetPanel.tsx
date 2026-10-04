@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import {
@@ -7,8 +7,10 @@ import {
 } from '../db/timetableSetRepository';
 import type { TimetableSet } from '../db/types';
 import { requestRollingScheduleRefresh } from '../notifications/rollingRefresh';
-import { fontSize, spacing, type ThemeDefinition } from '../theme';
+import { borderRadius, type ThemeDefinition } from '../theme';
+import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { refreshWidgetQuietly } from '../widgets/widgetRefresh';
+import { AdminCollapsible } from './AdminCollapsible';
 import { TimetableSetCreate } from './TimetableSetCreate';
 import { TimetableSetRow } from './TimetableSetRow';
 
@@ -18,7 +20,7 @@ function reportFailure(report: (message: string) => void, error: unknown, fallba
 }
 
 /** 저장한 시간표 목록. 만들기·복사·이름 바꾸기·지우기·적용을 한곳에서 한다. */
-export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onRenamed }: {
+export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onRenamed, confirmDiscard }: {
   readonly theme: ThemeDefinition;
   readonly activeSet: TimetableSet;
   readonly refreshKey: number;
@@ -26,11 +28,14 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   readonly onApplied: (set: TimetableSet) => void;
   /** 지금 쓰는 시간표의 이름만 바뀌었을 때(알림 재예약은 필요 없고, 위젯 데이터의 이름은 이 패널이 다시 쓴다) */
   readonly onRenamed: (set: TimetableSet) => void;
+  /** 시간표를 바꾸기 전에 저장하지 않은 입력을 버려도 되는지 묻는다(false면 바꾸지 않는다) */
+  readonly confirmDiscard?: () => Promise<boolean>;
 }) {
   const [sets, setSets] = useState<readonly TimetableSetSummary[]>([]);
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
   const [message, setMessage] = useState('');
+  const [listOpen, setListOpen] = useState(false);
   const { colors } = theme;
 
   useEffect(() => {
@@ -57,6 +62,7 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
 
   const apply = async (set: TimetableSet) => {
     if (busy || set.id === activeSet.id) return;
+    if (confirmDiscard && !(await confirmDiscard())) return;
     setBusy(true);
     try {
       await setActiveTimetableSet(await getDatabase(), set.id);
@@ -97,9 +103,11 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   }, '시간표를 지우지 못했어요.');
 
   return <View style={styles.wrap}>
-    <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>시간표 고르기</Text>
-    <Text style={[styles.subtitle, { color: colors.textMuted }]}>{`지금은 '${activeSet.name}' 시간표를 보여 주고 있어요.`}</Text>
-    <View style={styles.list}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`시간표 ${activeSet.name}, 바꾸려면 누르기`} accessibilityState={{ expanded: listOpen }} onPress={() => setListOpen((value) => !value)} style={[styles.field, { borderColor: colors.primary, backgroundColor: colors.surface }]}>
+      <Text numberOfLines={1} style={[styles.fieldText, { color: colors.text }]}>{`시간표: ${activeSet.name}`}</Text>
+      <Text style={[styles.fieldAction, { color: colors.primary }]}>{listOpen ? '닫기 ▲' : '바꾸기 ▼'}</Text>
+    </Pressable>
+    {listOpen && <View style={styles.list}>
       {sets.map((set) => <TimetableSetRow
         key={set.id}
         theme={theme}
@@ -110,16 +118,17 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
         onRename={(name) => rename(set, name)}
         onDelete={() => remove(set)}
       />)}
-    </View>
-    <TimetableSetCreate theme={theme} activeName={activeSet.name} busy={busy} onCreate={create} />
+      <AdminCollapsible title="새 시간표 만들기" theme={theme}><TimetableSetCreate theme={theme} activeName={activeSet.name} busy={busy} onCreate={create} /></AdminCollapsible>
+    </View>}
     {!!message && <Text accessibilityLiveRegion="polite" style={[styles.message, { color: colors.text }]}>{message}</Text>}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: spacing.sm, width: '100%' },
-  title: { fontSize: fontSize.lg, fontWeight: '700' },
-  subtitle: { fontSize: fontSize.md },
-  list: { gap: spacing.sm },
-  message: { fontSize: fontSize.md, fontWeight: '700' },
+  wrap: { gap: adminSpacing.xs, width: '100%' },
+  field: { alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.md },
+  fieldText: { flexShrink: 1, fontSize: adminFontSize.body, fontWeight: '700' },
+  fieldAction: { fontSize: adminFontSize.label, fontWeight: '700' },
+  list: { gap: adminSpacing.xs },
+  message: { fontSize: adminFontSize.label, fontWeight: '700' },
 });
