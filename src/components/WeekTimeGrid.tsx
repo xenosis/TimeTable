@@ -2,63 +2,79 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 
 import type { TimetableItem } from '../db/timetableRepository';
 import { resolveThemeColor, resolveThemeIcon, spacing, type ThemeDefinition } from '../theme';
+import { buildCellLines, categoryText } from '../utils/cellText';
 import { lightenColor, scheduleStatus } from '../utils/scheduleClock';
-import { buildWeekGrid, cellRect, formatMinutes, rowHeights, rowOffsets, type GridDay } from '../utils/timetableGrid';
-import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
+import { buildWeekGrid, cellRect, fitRowHeights, formatMinutes, rowHeights, rowOffsets, type GridDay } from '../utils/timetableGrid';
+
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+/** 요일 헤더 한 줄이 차지하는 높이(dp)와, 한 화면에 맞출 때 허용하는 가장 낮은 행 높이(dp) */
+const HEADER_HEIGHT = 44;
+const FIT_MIN_ROW = 28;
 
 /**
  * 세로는 좁아서 제목 2줄이 들어가는 36dp가 최소 행 높이다(docs/timetable-grid-feasibility.md).
  * 가로는 칸이 넓어 한 줄로 읽히고 헤더·탭을 숨기므로 행을 더 촘촘하게(분당 0.8dp, 최소 28dp) 그려 세로 스크롤을 줄인다.
+ * focus는 한 요일만 크게 보는 모드다: 칼럼이 하나라 넓으므로 글자를 키우고 행을 높인다.
  */
-/** 주간표에서 이동하는 방법을 알려주는 문구. 가로 화면은 헤더를 따로 고정하므로 화면에서 같은 문구를 쓴다. */
-export const WEEK_HINT = '요일(월~금)을 누르면 그 요일 시간표를 볼 수 있어요';
-
 const SIZES = {
-  portrait: { timeWidth: 40, minRow: 32, maxRow: 52, dpPerMinute: 0.9, title: 11, time: 9, timeLabel: 10 },
-  landscape: { timeWidth: 56, minRow: 28, maxRow: 48, dpPerMinute: 0.8, title: 13, time: 11, timeLabel: 10 },
+  portrait: { timeWidth: 40, minRow: 32, maxRow: 52, dpPerMinute: 0.9, title: 11, time: 9, timeLabel: 10, header: 14 },
+  landscape: { timeWidth: 56, minRow: 28, maxRow: 48, dpPerMinute: 0.8, title: 13, time: 11, timeLabel: 10, header: 14 },
+  focus: { timeWidth: 52, minRow: 64, maxRow: 140, dpPerMinute: 1.8, title: 18, time: 13, timeLabel: 13, header: 18 },
 } as const;
 
-function useGridSize() {
+function useGridSize(focus = false) {
   const { width, height } = useWindowDimensions();
+  if (focus) return SIZES.focus;
   return width > height ? SIZES.landscape : SIZES.portrait;
 }
 
-/** 요일 헤더. 가로 주간 보기에서는 스크롤에 밀려 사라지지 않게 표 밖에 따로 고정해 둘 수 있다. */
-export function WeekDayHeader({ theme, today, onSelectDay }: {
+/** 요일 헤더. 가로 주간 보기에서는 스크롤에 밀려 사라지지 않게 표 밖에 따로 고정해 둘 수 있다. days를 주면 그 요일들만 그린다(기본 월~금). */
+export function WeekDayHeader({ theme, today, onSelectDay, days = [1, 2, 3, 4, 5], focus = false }: {
   readonly theme: ThemeDefinition;
   readonly today: number;
   readonly onSelectDay: (weekday: number) => void;
+  readonly days?: readonly number[];
+  readonly focus?: boolean;
 }) {
-  const size = useGridSize();
+  const size = useGridSize(focus);
   return <View style={styles.headerRow}>
-    <View style={{ width: size.timeWidth, alignItems: 'center', justifyContent: 'center' }}><Text style={[styles.dayLabel, { color: theme.colors.textMuted }]}>시간</Text></View>
-    {SCHOOL_WEEKDAYS.map(({ day, label }) => (
-      <Pressable key={day} accessibilityRole="button" accessibilityLabel={`${label}요일 시간표로 이동`} onPress={() => onSelectDay(day)} style={styles.dayHeader}>
-        <Text style={[styles.dayLabel, { color: day === today ? theme.colors.primary : theme.colors.text }]}>{label}</Text>
+    <View style={{ width: size.timeWidth, alignItems: 'center', justifyContent: 'center' }}><Text style={[styles.dayLabel, { fontSize: size.header, color: theme.colors.textMuted }]}>시간</Text></View>
+    {days.map((day) => (
+      <Pressable key={day} accessibilityRole="button" accessibilityLabel={`${WEEKDAY_LABELS[day]}요일 시간표로 이동`} onPress={() => onSelectDay(day)} style={styles.dayHeader}>
+        {/* 테두리 있는 버튼 모양이라 안내 문구 없이도 누를 수 있는 곳으로 보인다 */}
+        <View style={[styles.dayChip, { borderColor: theme.colors.primary, backgroundColor: day === today ? theme.colors.primary : theme.colors.surface }]}>
+          <Text style={[styles.dayLabel, { fontSize: size.header, color: day === today ? theme.colors.onPrimary : theme.colors.primary }]}>{focus ? `${WEEKDAY_LABELS[day]}요일` : WEEKDAY_LABELS[day]}</Text>
+        </View>
       </Pressable>
     ))}
   </View>;
 }
 
-export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = true, nowMinutes }: {
+export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = true, nowMinutes, focus = false, fitHeight }: {
   readonly theme: ThemeDefinition;
   readonly days: readonly GridDay<TimetableItem>[];
   readonly today: number;
   readonly onSelectDay: (weekday: number) => void;
   readonly showHeader?: boolean;
-  /** 지금 시각(하루 중 분). 주어지면 오늘 요일의 진행 중 일정만 원래 색으로 강조하고 나머지는 연하게 보여준다 */
+  /** 지금 시각(하루 중 분). 주어지면 today 요일의 진행 중 일정만 원래 색으로 강조하고 나머지는 연하게 보여준다 */
   readonly nowMinutes?: number;
+  /** 한 요일만 크게 보기. days에는 그 요일 하나만 넣는다 */
+  readonly focus?: boolean;
+  /** 표(헤더 포함)가 쓸 수 있는 세로 높이(dp). 주어지면 행 높이를 비율대로 맞춰 스크롤 없이 한 화면에 담는다(행이 너무 낮아지면 맞추지 않는다) */
+  readonly fitHeight?: number;
 }) {
-  const size = useGridSize();
+  const size = useGridSize(focus);
   const { rows, cells, unplaced } = buildWeekGrid(days);
-  const heights = rowHeights(rows, size.dpPerMinute, size.minRow, size.maxRow);
+  const baseHeights = rowHeights(rows, size.dpPerMinute, size.minRow, size.maxRow);
+  const bodyFit = fitHeight != null ? fitHeight - (showHeader ? HEADER_HEIGHT : 0) : undefined;
+  const heights = bodyFit != null ? fitRowHeights(baseHeights, bodyFit, FIT_MIN_ROW) : baseHeights;
   const { tops, total } = rowOffsets(heights);
   const lineColor = theme.decorations.cardBorder;
-  const dayLabel = (day: number) => SCHOOL_WEEKDAYS.find((weekday) => weekday.day === day)?.label ?? '';
+  const dayLabel = (day: number) => WEEKDAY_LABELS[day] ?? '';
+  const dayNumbers = days.map(({ day }) => day);
 
   return <View style={styles.wrap}>
-    {showHeader && <WeekDayHeader theme={theme} today={today} onSelectDay={onSelectDay} />}
-    {showHeader && <Text style={[styles.hint, { color: theme.colors.textMuted }]}>{WEEK_HINT}</Text>}
+    {showHeader && <WeekDayHeader theme={theme} today={today} onSelectDay={onSelectDay} days={dayNumbers} focus={focus} />}
     {rows.length > 0 && <View style={[styles.body, { height: total }]}>
       {tops.map((top, index) => <View key={`line-${index}`} pointerEvents="none" style={[styles.line, { top, borderTopColor: lineColor }]} />)}
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size.timeWidth, height: total }}>
@@ -71,7 +87,7 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
           </View>;
         })}
       </View>
-      {SCHOOL_WEEKDAYS.map(({ day }) => (
+      {dayNumbers.map((day) => (
         <View key={day} style={[styles.dayColumn, { height: total, borderLeftColor: lineColor }]}>
           {cells.filter((cell) => cell.day === day).map((cell) => {
             const rect = cellRect(cell, heights);
@@ -81,17 +97,22 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
             const current = nowMinutes != null && day === today && scheduleStatus(cell.item.startTime, cell.item.endTime, nowMinutes) === 'current';
             const highlighted = current || nowMinutes == null; // 현재 시각 정보가 없으면 예전처럼 모두 원래 색
             const range = `${cell.item.startTime}~${cell.item.endTime}`;
+            const textColor = highlighted ? category.textColor : theme.colors.text;
+            // 칸 높이에 맞춰 구분 / 이름 / 기타 순서로 줄을 나눈다. 이름은 항상 한 줄이라 길면 글자를 줄여 맞춘다
+            const lines = buildCellLines({ category: cell.item.category, title: cell.item.title, glyph: icon.glyph, hasMemo: !!cell.item.memo, hasAlert: (cell.item as { alertMode?: string }).alertMode != null && (cell.item as { alertMode?: string }).alertMode !== 'none', heightDp: rect.height, fontSize: size.title });
             // 칸은 누르는 곳이 아니라 보는 곳이다: 스크롤하다 실수로 화면이 바뀌지 않게 이동은 요일 글자에서만 한다
             return <View
               key={cell.item.id}
               accessible
-              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}${current ? ', 지금 진행 중' : ''}`}
+              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${categoryText[cell.item.category]} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}${current ? ', 지금 진행 중' : ''}`.replace(/\s+/g, ' ')}
               style={[styles.cell, {
                 top: rect.top, height: rect.height, left: `${rect.leftRatio * 100}%`, width: `${rect.widthRatio * 100}%`,
                 backgroundColor: highlighted ? category.backgroundColor : lightenColor(category.backgroundColor, 0.78),
               }, current && { borderColor: theme.colors.text, borderWidth: 2 }]}
             >
-              <Text style={[styles.cellTitle, { fontSize: size.title, color: highlighted ? category.textColor : theme.colors.text }]} numberOfLines={3}>{cell.item.memo ? '📝' : ''}{icon.glyph} {cell.item.title}</Text>
+              {lines.first !== '' && <Text style={[styles.cellKind, { fontSize: size.title - 1, color: textColor }]} numberOfLines={1}>{lines.first}</Text>}
+              <Text style={[styles.cellTitle, { fontSize: size.title, color: textColor }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{lines.title}</Text>
+              {lines.extras !== '' && <Text style={[styles.cellExtras, { fontSize: size.title - 1, color: textColor }]} numberOfLines={1}>{lines.extras}</Text>}
             </View>;
           })}
         </View>
@@ -108,17 +129,18 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
 
 const styles = StyleSheet.create({
   wrap: { width: '100%' },
-  hint: { fontSize: 12, marginBottom: spacing.xs, textAlign: 'center' },
-  headerRow: { flexDirection: 'row', paddingBottom: spacing.xs },
-  dayHeader: { alignItems: 'center', flex: 1, paddingVertical: spacing.xs },
-  dayLabel: { fontSize: 14, fontWeight: '700' },
+  headerRow: { flexDirection: 'row', height: HEADER_HEIGHT, paddingBottom: spacing.xs },
+  dayHeader: { alignItems: 'center', flex: 1, justifyContent: 'center', paddingHorizontal: 2 },
+  dayChip: { alignItems: 'center', borderRadius: 8, borderWidth: 1.5, justifyContent: 'center', minHeight: 34, minWidth: 34, paddingHorizontal: 8, width: '100%' },
+  dayLabel: { fontWeight: '700' },
   body: { flexDirection: 'row', position: 'relative', width: '100%' },
   line: { borderTopWidth: StyleSheet.hairlineWidth, left: 0, position: 'absolute', right: 0 },
   timeLabel: { fontWeight: '700', textAlign: 'center' },
   dayColumn: { borderLeftWidth: StyleSheet.hairlineWidth, flex: 1, position: 'relative' },
   cell: { alignItems: 'center', borderRadius: 4, justifyContent: 'center', overflow: 'hidden', padding: 2, position: 'absolute' },
+  cellKind: { fontWeight: '600', opacity: 0.85, textAlign: 'center' },
   cellTitle: { fontWeight: '700', textAlign: 'center' },
-  cellTime: { fontWeight: '600', textAlign: 'center' },
+  cellExtras: { textAlign: 'center' },
   unplaced: { gap: spacing.xs, marginTop: spacing.md },
   unplacedTitle: { fontWeight: '700' },
 });

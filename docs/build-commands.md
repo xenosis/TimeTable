@@ -51,7 +51,7 @@ adb -s <시리얼> install -r <APK 파일>         # 덮어 설치(업데이트)
 ```
 
 - 같은 서명의 APK를 `install -r`로 덮어 설치하면 앱 데이터(시간표, 할 일, 보석)가 유지된다.
-- **서명이 다르면** 덮어 설치가 안 된다. OfflineTest와 debug는 같은 debug 키로 서명되므로 서로 덮어 설치할 수 있다. release만 서명이 달라서 release와 다른 종류 사이를 바꿀 때는 기존 앱을 지워야 하고(`adb uninstall com.sewoong.kidtimetable`) 이때 앱 데이터가 사라진다.
+- **서명이 다르면** 덮어 설치가 안 된다. **`android/release.properties`가 있으면 OfflineTest도 release 키로 서명된다**(없을 때만 debug 키로 서명). 그래서 debug 빌드(개발용 앱)와는 서명이 달라 덮어 설치가 안 되고(`INSTALL_FAILED_UPDATE_INCOMPATIBLE`), 기존 앱을 지워야 하며(`adb uninstall com.sewoong.kidtimetable`) 이때 앱 데이터가 사라진다. 테스트 기기에 다른 기기의 데이터를 옮겨 넣어야 할 때는 `release.properties`를 잠깐 옆으로 옮겨 debug 키로 서명한 OfflineTest를 만든 뒤 쓰고, 끝나면 반드시 되돌린다.
 - 앱을 지우고 새로 깔면 알림, 정확한 알람, 배터리 최적화 예외 권한이 초기화된다. 앱의 관리자 화면 "알림 준비" 카드에서 `허용하기`로 다시 켠다.
 - 앱을 강제 종료하면 안드로이드가 앱의 알람 예약을 모두 지운다. 앱을 다시 열면 예약이 다시 만들어진다.
 - 재부팅 뒤 알람 예약은 **처음 잠금을 푼 뒤에** 복구된다(백로그 P3.10 참고).

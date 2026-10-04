@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DailyScheduleList } from '../../src/components/DailyScheduleList';
 import { WeekdayTabs } from '../../src/components/WeekdayTabs';
 import { WeekOverviewGrid } from '../../src/components/WeekOverviewGrid';
-import { WEEK_HINT, WeekDayHeader } from '../../src/components/WeekTimeGrid';
+import { WeekDayHeader } from '../../src/components/WeekTimeGrid';
 import { getDatabase } from '../../src/db/database';
 import { getActiveTimetableSet } from '../../src/db/timetableSetRepository';
 import type { TimetableSet } from '../../src/db/types';
@@ -57,7 +57,6 @@ export default function TimetableScreen() {
   const todayLabel = SCHOOL_WEEKDAYS.find(({ day }) => day === todayDay)?.label;
   // 오늘이 월~금이고, 오늘 요일 화면을 이미 보고 있는 게 아닐 때만 눌 수 있다(주간 보기에서는 오늘 요일로 이동)
   const canGoToday = todayLabel !== undefined && (weekView || selectedDay !== todayDay);
-  const weekHint = <Text style={[styles.hint, { color: colors.textMuted }]}>{WEEK_HINT}</Text>;
   // 어느 시간표를 보고 있는지 이름으로 알려 준다(예: 1학기, 여름방학)
   const setTitle = timetableSet ? `${timetableSet.name} 시간표` : '시간표';
   const toggleColor = weekView ? colors.onPrimary : colors.primary;
@@ -83,32 +82,36 @@ export default function TimetableScreen() {
       </View>
       <View style={styles.fixedHeader}>
         <WeekDayHeader theme={theme} today={todayDay} onSelectDay={goToDay} />
-        {weekHint}
       </View>
       <ScrollView contentContainerStyle={styles.fixedScroll}>{card}</ScrollView>
+    </View>;
+  }
+
+  // 요일 확대 보기는 스크롤 없이 남은 화면에 표를 맞춘다(DailyScheduleList가 높이를 재서 행 높이를 조절한다)
+  if (!weekView) {
+    return <View style={[styles.dayRoot, { backgroundColor: colors.background }]}>
+      {!compact && <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text>}
+      {buttons}
+      <WeekdayTabs selected={selectedDay} today={todayDay} theme={theme} onSelect={setSelectedDay} />
+      {timetableSet && <DailyScheduleList weekday={selectedDay} isToday={selectedDay === todayDay} theme={theme} setId={timetableSet.id} refreshKey={refreshKey} />}
     </View>;
   }
 
   return <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
     {!compact && <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text>}
     {buttons}
-    {weekView
-      ? card
-      : <>
-          <WeekdayTabs selected={selectedDay} today={todayDay} theme={theme} onSelect={setSelectedDay} />
-          {timetableSet && <DailyScheduleList weekday={selectedDay} isToday={selectedDay === todayDay} theme={theme} setId={timetableSet.id} refreshKey={refreshKey} />}
-        </>}
+    {card}
   </ScrollView>;
 }
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', flexGrow: 1, gap: spacing.sm, padding: spacing.md },
+  dayRoot: { alignItems: 'center', flex: 1, gap: spacing.sm, padding: spacing.md },
   heading: { fontSize: fontSize.md, fontWeight: '700', textAlign: 'center' },
   buttonRow: { flexDirection: 'row', gap: spacing.sm, width: '100%' },
   button: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: 40, paddingHorizontal: spacing.sm },
   buttonText: { fontSize: 14, fontWeight: '700' },
   disabled: { opacity: 0.4 },
-  hint: { fontSize: fontSize.sm, textAlign: 'center' },
   fixedRoot: { flex: 1 },
   fixedTop: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
   fixedToggle: { flex: 1 },

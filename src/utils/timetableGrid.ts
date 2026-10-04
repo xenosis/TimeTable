@@ -107,3 +107,15 @@ export function cellRect<T extends GridItem>(cell: GridCell<T>, heights: readonl
   const height = heights.slice(cell.startRow, cell.startRow + cell.rowSpan).reduce((total, value) => total + value, 0);
   return { top: tops[cell.startRow] ?? 0, height, leftRatio: cell.lane / cell.laneCount, widthRatio: 1 / cell.laneCount };
 }
+
+/**
+ * 행 높이들을 합계가 availableDp가 되도록 비율을 유지한 채 늘리거나 줄인다(요일 확대 보기를 스크롤 없이 한 화면에 맞추려고 쓴다).
+ * 가장 낮은 행이 minRowDp 밑으로 내려가야 하면 글자가 겹치므로 맞추지 않고 원래 높이를 돌려준다(그때는 화면이 스크롤된다).
+ */
+export function fitRowHeights(heights: readonly number[], availableDp: number, minRowDp: number): readonly number[] {
+  const total = heights.reduce((sum, value) => sum + value, 0);
+  if (heights.length === 0 || total <= 0 || !Number.isFinite(availableDp) || availableDp <= 0) return heights;
+  const scale = availableDp / total;
+  const scaled = heights.map((value) => value * scale);
+  return Math.min(...scaled) < minRowDp ? heights : scaled;
+}

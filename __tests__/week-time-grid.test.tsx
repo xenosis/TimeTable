@@ -64,3 +64,56 @@ describe('주간표 현재 시각 강조 (P10.2)', () => {
     expect(new Set(plain.map(backgroundOf)).size).toBe(1);
   });
 });
+
+describe('일정 칸 줄 나누기와 요일 확대 보기', () => {
+  const titleNodes = (root: ReactTestInstance) => root.findAll((node) => (node.type as unknown) === 'Text' && node.props.adjustsFontSizeToFit === true);
+
+  it('구분(학교·학원…)을 이름 위 줄에 따로 보여주고, 이름은 한 줄에 글자를 줄여 맞춘다', () => {
+    const grid = render(undefined);
+    const english = cells(grid)[0];
+    const lines = texts(english);
+    expect(lines).toContain('학원');
+    expect(lines).toContain('영어 학원');
+    expect(lines.indexOf('학원')).toBeLessThan(lines.indexOf('영어 학원'));
+    const title = titleNodes(english)[0];
+    expect(title.props.numberOfLines).toBe(1);
+    expect(title.props.minimumFontScale).toBeLessThan(1);
+  });
+
+  it('한 요일 확대 보기: 그 요일 칼럼 하나만 요일 이름과 함께 크게 그리고 시간 칼럼은 그대로 둔다', () => {
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(<WeekTimeGrid theme={defaultTheme} days={[days[0]]} today={1} onSelectDay={() => undefined} nowMinutes={17 * 60 + 30} focus />); });
+    const labels = texts(tree.root);
+    expect(labels).toContain('시간');
+    expect(labels).toContain('월요일');
+    expect(labels).not.toContain('화');
+    expect(cells(tree.root)).toHaveLength(2); // 월요일 일정 2개만
+    for (const clock of ['16:10', '17:10', '18:10']) expect(labels).toContain(clock);
+    for (const cell of cells(tree.root)) expect(texts(cell).join(' ')).not.toMatch(/\d{1,2}:\d{2}/);
+    const [, piano] = cells(tree.root);
+    expect(flat(piano.props.style).borderWidth).toBe(2); // 17:30 진행 중인 피아노만 강조
+  });
+
+  it('안내 문구 없이 요일 헤더가 누를 수 있는 버튼으로 보이고, 눌러서 그 요일로 이동한다', () => {
+    const onSelectDay = jest.fn();
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(<WeekTimeGrid theme={defaultTheme} days={days} today={1} onSelectDay={onSelectDay} />); });
+    expect(texts(tree.root).join(' ')).not.toContain('누르면');
+    const headers = tree.root.findAll((node) => typeof node.props.onPress === 'function' && /요일 시간표로 이동/.test(node.props.accessibilityLabel ?? ''));
+    const unique = headers.filter((node, index) => headers.findIndex((other) => other.props.accessibilityLabel === node.props.accessibilityLabel) === index);
+    expect(unique.map((node) => node.props.accessibilityLabel)).toEqual(['월요일 시간표로 이동', '화요일 시간표로 이동', '수요일 시간표로 이동', '목요일 시간표로 이동', '금요일 시간표로 이동']);
+    act(() => { unique[2].props.onPress(); });
+    expect(onSelectDay).toHaveBeenCalledWith(3);
+  });
+
+  it('높이를 주면 행 높이를 맞춰 표 전체가 그 높이 안에 들어간다', () => {
+    const bodyHeight = (fitHeight?: number) => {
+      let tree!: ReturnType<typeof create>;
+      act(() => { tree = create(<WeekTimeGrid theme={defaultTheme} days={[days[0]]} today={1} onSelectDay={() => undefined} focus fitHeight={fitHeight} />); });
+      const body = tree.root.findAll((node) => typeof node.type === 'string' && flat(node.props.style).flexDirection === 'row' && typeof flat(node.props.style).height === 'number' && flat(node.props.style).position === 'relative');
+      return flat(body[0].props.style).height as number;
+    };
+    expect(bodyHeight(800)).toBeCloseTo(800 - 44, 0); // 헤더 44dp를 뺀 나머지에 딱 맞는다
+    expect(bodyHeight(undefined)).not.toBeCloseTo(756, 0);
+  });
+});
