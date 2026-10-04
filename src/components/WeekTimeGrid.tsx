@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 import type { TimetableItem } from '../db/timetableRepository';
 import { resolveThemeColor, resolveThemeIcon, spacing, type ThemeDefinition } from '../theme';
 import { buildCellLines, categoryText } from '../utils/cellText';
-import { lightenColor, scheduleStatus } from '../utils/scheduleClock';
+import { DIMMED_BACKGROUND_LIGHTEN, DIMMED_TEXT_LIGHTEN, lightenColor, scheduleStatus } from '../utils/scheduleClock';
 import { buildWeekGrid, cellRect, fitRowHeights, formatMinutes, rowHeights, rowOffsets, type GridDay } from '../utils/timetableGrid';
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -99,7 +99,8 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
             const current = nowMinutes != null && day === today && scheduleStatus(cell.item.startTime, cell.item.endTime, nowMinutes) === 'current';
             const highlighted = current || nowMinutes == null; // 현재 시각 정보가 없으면 예전처럼 모두 원래 색
             const range = `${cell.item.startTime}~${cell.item.endTime}`;
-            const textColor = highlighted ? category.textColor : theme.colors.text;
+            // 진행 중이 아닌 칸은 배경과 글자를 모두 연하게 한다(글자는 읽을 수 있는 대비를 유지)
+            const textColor = highlighted ? category.textColor : lightenColor(theme.colors.text, DIMMED_TEXT_LIGHTEN);
             // 칸 높이에 맞춰 구분 / 이름 / 기타 순서로 줄을 나눈다. 이름은 항상 한 줄이라 길면 글자를 줄여 맞춘다
             const lines = buildCellLines({ category: cell.item.category, title: cell.item.title, glyph: icon.glyph, hasMemo: !!cell.item.memo, hasAlert: (cell.item as { alertMode?: string }).alertMode != null && (cell.item as { alertMode?: string }).alertMode !== 'none', heightDp: rect.height, fontSize: size.title });
             // 칸은 누르는 곳이 아니라 보는 곳이다: 스크롤하다 실수로 화면이 바뀌지 않게 이동은 요일 글자에서만 한다
@@ -109,7 +110,7 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
               accessibilityLabel={`${dayLabel(day)}요일 ${range} ${categoryText[cell.item.category]} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}${current ? (preview ? ', 지금 시각과 같은 시간대' : ', 지금 진행 중') : ''}`.replace(/\s+/g, ' ')}
               style={[styles.cell, {
                 top: rect.top, height: rect.height, left: `${rect.leftRatio * 100}%`, width: `${rect.widthRatio * 100}%`,
-                backgroundColor: highlighted ? category.backgroundColor : lightenColor(category.backgroundColor, 0.78),
+                backgroundColor: highlighted ? category.backgroundColor : lightenColor(category.backgroundColor, DIMMED_BACKGROUND_LIGHTEN),
               }, current && { borderColor: theme.colors.text, borderWidth: 2 }]}
             >
               {lines.first !== '' && <Text style={[styles.cellKind, { fontSize: size.title - 1, color: textColor }]} numberOfLines={1}>{lines.first}</Text>}

@@ -44,3 +44,10 @@ export function lightenColor(hex: string, amount: number): string {
   const [red, green, blue] = [(value >> 16) & 255, (value >> 8) & 255, value & 255].map(mix);
   return `#${[red, green, blue].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 }
+
+/**
+ * 지금 진행 중이 아닌 칸을 흐리게 보이게 하는 정도(0=그대로, 1=흰색). 배경은 과목색을 80%, 글자는 진한 글자색을 20% 연하게 한다.
+ * 글자는 연하게 하되 읽을 수 있는 대비(4.5:1 이상)는 지킨다(__tests__/schedule-clock.test.ts에서 모든 테마·과목 색으로 확인).
+ */
+export const DIMMED_BACKGROUND_LIGHTEN = 0.8;
+export const DIMMED_TEXT_LIGHTEN = 0.2;

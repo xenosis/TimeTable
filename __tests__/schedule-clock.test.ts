@@ -1,4 +1,6 @@
-import { clockToMinutes, formatNow, lightenColor, minutesOfDay, msUntilNextMinute, scheduleStatus } from '../src/utils/scheduleClock';
+import { themes } from '../src/theme';
+import { contrastRatio } from '../src/theme/contrast';
+import { clockToMinutes, DIMMED_BACKGROUND_LIGHTEN, DIMMED_TEXT_LIGHTEN, formatNow, lightenColor, minutesOfDay, msUntilNextMinute, scheduleStatus } from '../src/utils/scheduleClock';
 
 const at = (clock: string) => clockToMinutes(clock)!;
 
@@ -52,5 +54,20 @@ describe('시각 도우미', () => {
     expect(lightenColor('#4F46E5', 0)).toBe('#4f46e5');
     expect(lightenColor('#4F46E5', 1)).toBe('#ffffff');
     expect(lightenColor('red', 0.5)).toBe('red');
+  });
+});
+
+describe('진행 중이 아닌 칸의 흐린 색', () => {
+  it('모든 테마·과목 색에서 글자 대비 4.5:1 이상을 지키면서, 배경과 글자색이 진행 중인 칸과 다르게 연하다', () => {
+    for (const theme of themes) {
+      for (const category of theme.categories) {
+        const background = lightenColor(category.backgroundColor, DIMMED_BACKGROUND_LIGHTEN);
+        const dimmedText = lightenColor(theme.colors.text, DIMMED_TEXT_LIGHTEN);
+        expect(contrastRatio(dimmedText, background)).toBeGreaterThanOrEqual(4.5);
+        // 배경만 연하게 하던 때는 글자가 진행 중인 칸과 똑같았다. 이제 글자색도 달라져야 하고, 배경은 원래 과목색보다 밝아야 한다
+        expect(dimmedText.toLowerCase()).not.toBe(theme.colors.text.toLowerCase());
+        expect(background.toLowerCase()).not.toBe(category.backgroundColor.toLowerCase());
+      }
+    }
   });
 });
