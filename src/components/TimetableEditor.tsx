@@ -38,8 +38,9 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
   const dirty = formOpen && JSON.stringify(draft) !== JSON.stringify(loaded ? toDraft(loaded) : emptyTimetableDraft(filterDay));
   useEffect(() => { onFormState?.({ dirty, saving }); }, [dirty, saving, onFormState]);
 
-  const openNew = () => { setDraft(emptyTimetableDraft(filterDay)); setFormOpen(true); };
-  const openItem = (item: EditableTimetableItem) => { setDraft(toDraft(item)); setFormOpen(true); };
+  // 모달을 열 때 목록용 안내·이전 저장 결과 문구를 비워, 모달 안에는 이번 저장의 오류만 보이게 한다
+  const openNew = () => { setMessage(''); setDraft(emptyTimetableDraft(filterDay)); setFormOpen(true); };
+  const openItem = (item: EditableTimetableItem) => { setMessage(''); setDraft(toDraft(item)); setFormOpen(true); };
   const closeNow = () => { setFormOpen(false); setDraft(emptyTimetableDraft(filterDay)); };
   const requestClose = () => {
     if (saving) return;
@@ -94,7 +95,7 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
     <Modal visible={formOpen} animationType="slide" onRequestClose={requestClose}>
       <View style={[styles.modal, { backgroundColor: colors.background }]}>
         <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{draft.id ? '항목 수정' : '항목 추가'}</Text>
-        <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.text, fontWeight: '700' }]}>{message}</Text>
+        {message !== '' && <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.text, fontWeight: '700' }]}>{message}</Text>}
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
           <TimetableItemForm draft={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} periods={periods} theme={theme} saving={saving} onSave={() => void save()} onCancel={requestClose} onRemove={() => void remove()} />
         </ScrollView>

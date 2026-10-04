@@ -50,7 +50,7 @@ export function WeekDayHeader({ theme, today, onSelectDay, days = [1, 2, 3, 4, 5
   </View>;
 }
 
-export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = true, nowMinutes, focus = false, fitHeight }: {
+export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = true, nowMinutes, focus = false, fitHeight, preview = false }: {
   readonly theme: ThemeDefinition;
   readonly days: readonly GridDay<TimetableItem>[];
   readonly today: number;
@@ -62,6 +62,8 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
   readonly focus?: boolean;
   /** 표(헤더 포함)가 쓸 수 있는 세로 높이(dp). 주어지면 행 높이를 비율대로 맞춰 스크롤 없이 한 화면에 담는다(행이 너무 낮아지면 맞추지 않는다) */
   readonly fitHeight?: number;
+  /** 실제 오늘이 아닌 요일을 같은 시각대로 미리 보여주는 중이면 true(화면 읽기 라벨만 달라진다) */
+  readonly preview?: boolean;
 }) {
   const size = useGridSize(focus);
   const { rows, cells, unplaced } = buildWeekGrid(days);
@@ -104,7 +106,7 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
             return <View
               key={cell.item.id}
               accessible
-              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${categoryText[cell.item.category]} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}${current ? ', 지금 진행 중' : ''}`.replace(/\s+/g, ' ')}
+              accessibilityLabel={`${dayLabel(day)}요일 ${range} ${categoryText[cell.item.category]} ${cell.item.title}${cell.item.memo ? `, 메모: ${cell.item.memo}` : ''}${current ? (preview ? ', 지금 시각과 같은 시간대' : ', 지금 진행 중') : ''}`.replace(/\s+/g, ' ')}
               style={[styles.cell, {
                 top: rect.top, height: rect.height, left: `${rect.leftRatio * 100}%`, width: `${rect.widthRatio * 100}%`,
                 backgroundColor: highlighted ? category.backgroundColor : lightenColor(category.backgroundColor, 0.78),

@@ -62,7 +62,7 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
     <Text style={[styles.label, { color: colors.text }]}>색 · 아이콘</Text>
     <View style={styles.inline}>
       <Pressable accessibilityRole="button" accessibilityLabel={`색 ${currentColor.label} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'color' ? null : 'color')} style={[styles.summary, { backgroundColor: currentColor.backgroundColor, borderColor: colors.border }]}><Text style={[styles.text, { color: currentColor.textColor }]}>색: {currentColor.label} ▾</Text></Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={`아이콘 ${currentIcon.glyph} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'icon' ? null : 'icon')} style={[styles.summary, { borderColor: colors.border }]}><Text style={[styles.text, { color: colors.text }]}>아이콘: {currentIcon.glyph} ▾</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`아이콘 ${currentIcon.label} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'icon' ? null : 'icon')} style={[styles.summary, { borderColor: colors.border }]}><Text style={[styles.text, { color: colors.text }]}>아이콘: {currentIcon.glyph} {currentIcon.label} ▾</Text></Pressable>
     </View>
     {picker === 'color' && <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel="색 목록" contentContainerStyle={styles.inline}>{colorKeys.map((key) => {
       const color = resolveThemeColor(theme, key);
@@ -70,7 +70,7 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
     })}</ScrollView>}
     {picker === 'icon' && <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel="아이콘 목록" contentContainerStyle={styles.inline}>{iconKeys.map((key) => {
       const icon = resolveThemeIcon(theme, key);
-      return choice(icon.glyph, draft.iconKey === key, () => { onChange({ iconKey: key }); setPicker(null); }, `아이콘 ${icon.glyph}`);
+      return choice(icon.glyph, draft.iconKey === key, () => { onChange({ iconKey: key }); setPicker(null); }, `아이콘 ${icon.label}`);
     })}</ScrollView>}
 
     <Text style={[styles.label, { color: colors.text }]}>종류</Text>

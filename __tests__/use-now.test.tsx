@@ -3,8 +3,8 @@ import { act, create } from 'react-test-renderer';
 
 import { useNow } from '../src/hooks/useNow';
 
-function Probe({ onRender }: { readonly onRender: (now: Date) => void }) {
-  onRender(useNow());
+function Probe({ onRender, active = true }: { readonly onRender: (now: Date) => void; readonly active?: boolean }) {
+  onRender(useNow(active));
   return null;
 }
 
@@ -30,6 +30,17 @@ describe('useNow', () => {
     jest.setSystemTime(new Date(2026, 9, 4, 16, 40, 0));
     act(() => { listener('active'); });
     expect(seen.at(-1)).toBe(40);
+  });
+
+  it('active가 false인 동안(다른 탭)은 타이머를 만들지 않고, 다시 true가 되면 새로 건다', () => {
+    jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({ remove: jest.fn() }));
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(<Probe onRender={() => undefined} active={false} />); });
+    expect(jest.getTimerCount()).toBe(0);
+    act(() => { tree.update(<Probe onRender={() => undefined} active />); });
+    expect(jest.getTimerCount()).toBe(1);
+    act(() => { tree.update(<Probe onRender={() => undefined} active={false} />); });
+    expect(jest.getTimerCount()).toBe(0);
   });
 
   it('화면이 사라지면 타이머와 앱 상태 리스너를 정리한다', () => {

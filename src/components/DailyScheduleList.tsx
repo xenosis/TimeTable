@@ -13,8 +13,12 @@ import { WeekTimeGrid } from './WeekTimeGrid';
  * 요일별 보기: 주간표와 같은 시간축 표에서 고른 요일 한 칼럼만 크게 보여준다(그 요일에 집중해서 확대한 모습).
  * 지금 진행 중인 일정만 원래 색으로 강조한다(오늘이 아닌 요일도 같은 시각대를 보여준다). 요일은 위의 요일 탭에서 고르므로 표 안에 요일 헤더를 따로 두지 않는다.
  */
-export function DailyScheduleList({ weekday, theme, setId, refreshKey }: {
+export function DailyScheduleList({ weekday, isToday, theme, setId, refreshKey, active = true }: {
   readonly weekday: number;
+  /** 보고 있는 요일이 실제 오늘인지(아니면 같은 시각대 미리보기) */
+  readonly isToday: boolean;
+  /** 화면이 보이는 동안만 1분 타이머를 돌린다 */
+  readonly active?: boolean;
   readonly theme: ThemeDefinition;
   readonly setId: TimetableSetId;
   readonly refreshKey: number;
@@ -22,7 +26,7 @@ export function DailyScheduleList({ weekday, theme, setId, refreshKey }: {
   const [items, setItems] = useState<readonly TimetableItem[]>([]);
   const [failed, setFailed] = useState(false);
   const [areaHeight, setAreaHeight] = useState<number | undefined>(undefined);
-  useNow(); // 매 분·앱 복귀 때 다시 그리게 한다
+  useNow(active); // 매 분·앱 복귀 때 다시 그리게 한다(화면이 보일 때만)
   const now = new Date(); // 다시 그릴 때마다 현재 시각을 새로 읽는다(요일 선택 즉시 반영)
 
   useEffect(() => {
@@ -41,7 +45,7 @@ export function DailyScheduleList({ weekday, theme, setId, refreshKey }: {
     <View style={styles.area} onLayout={onArea}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* 이 요일 하나만 넣어 행 경계도 이 요일의 시작·종료만 반영한다. today에 이 요일을 넣어 같은 시각대 강조(미리보기)를 켠다 */}
-        <WeekTimeGrid theme={theme} days={[{ day: weekday, items }]} today={weekday} onSelectDay={() => undefined} nowMinutes={minutesOfDay(now)} focus showHeader={false} fitHeight={areaHeight} />
+        <WeekTimeGrid theme={theme} days={[{ day: weekday, items }]} today={weekday} onSelectDay={() => undefined} nowMinutes={minutesOfDay(now)} focus showHeader={false} fitHeight={areaHeight} preview={!isToday} />
       </ScrollView>
     </View>
   </View>;

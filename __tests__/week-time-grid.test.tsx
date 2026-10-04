@@ -116,4 +116,15 @@ describe('일정 칸 줄 나누기와 요일 확대 보기', () => {
     expect(bodyHeight(800)).toBeCloseTo(800 - 44, 0); // 헤더 44dp를 뺀 나머지에 딱 맞는다
     expect(bodyHeight(undefined)).not.toBeCloseTo(756, 0);
   });
+
+  it('실제 오늘이 아닌 요일을 미리 보여줄 때는 화면 읽기 라벨이 지금 진행 중이라고 하지 않는다', () => {
+    const labelsOf = (preview: boolean) => {
+      let tree!: ReturnType<typeof create>;
+      act(() => { tree = create(<WeekTimeGrid theme={defaultTheme} days={[days[0]]} today={1} onSelectDay={() => undefined} nowMinutes={17 * 60 + 30} focus showHeader={false} preview={preview} />); });
+      return cells(tree.root).map((cell) => cell.props.accessibilityLabel as string).join('|');
+    };
+    expect(labelsOf(false)).toContain('지금 진행 중');
+    expect(labelsOf(true)).toContain('지금 시각과 같은 시간대');
+    expect(labelsOf(true)).not.toContain('지금 진행 중');
+  });
 });

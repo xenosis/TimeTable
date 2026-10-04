@@ -102,7 +102,7 @@ export function TaskEditor({ theme, onChanged, onFormState }: { readonly theme: 
       {endableTasks.map((task) => (
         <View key={task.id} style={[styles.row, styles.inline, { borderColor: colors.border }]}>
           <Text numberOfLines={1} style={[styles.rowTitle, { color: colors.text, flex: 1 }]}>{task.title}</Text>
-          {button('그만두기', () => void endToday(task), colors.danger, colors.onPrimary)}
+          {button('그만두기', () => confirmThen(() => Alert.alert('오늘까지만 하고 그만둘까요?', `${task.title}은(는) 내일부터 목록에서 빠져요. 지난 기록은 남아요.`, [{ text: '취소', style: 'cancel' }, { text: '그만두기', style: 'destructive', onPress: () => void endToday(task) }])), colors.danger, colors.onPrimary)}
         </View>
       ))}
     </AdminCollapsible>}

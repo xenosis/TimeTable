@@ -11,17 +11,19 @@ import type { GridDay } from '../utils/timetableGrid';
 import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
 import { WeekTimeGrid } from './WeekTimeGrid';
 
-export function WeekOverviewGrid({ theme, setId, today, refreshKey, onSelectDay, showHeader = true }: {
+export function WeekOverviewGrid({ theme, setId, today, refreshKey, onSelectDay, showHeader = true, active = true }: {
   readonly theme: ThemeDefinition;
   readonly setId: TimetableSetId;
   readonly today: number;
   readonly refreshKey: number;
   readonly onSelectDay: (weekday: number) => void;
   readonly showHeader?: boolean;
+  /** 화면이 보이는 동안만 1분 타이머를 돌린다 */
+  readonly active?: boolean;
 }) {
   const [days, setDays] = useState<readonly GridDay<TimetableItem>[]>([]);
   const [failed, setFailed] = useState(false);
-  useNow(); // 매 분·앱 복귀 때 다시 그리게 한다
+  useNow(active); // 매 분·앱 복귀 때 다시 그리게 한다(화면이 보일 때만)
   const now = new Date(); // 다시 그릴 때마다 현재 시각을 새로 읽는다
 
   useEffect(() => {

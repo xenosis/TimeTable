@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DailyScheduleList } from '../../src/components/DailyScheduleList';
@@ -21,6 +21,7 @@ const today = () => new Date().getDay();
 export default function TimetableScreen() {
   const todayDay = today();
   const { theme } = useActiveTheme();
+  const focused = useIsFocused(); // 다른 탭에 가 있는 동안에는 현재 시각 갱신 타이머를 멈춘다
   const [refreshKey, setRefreshKey] = useState(0);
   const [timetableSet, setTimetableSet] = useState<TimetableSet | null>(null);
   const [selectedDay, setSelectedDay] = useState(() => defaultSchoolWeekday(todayDay));
@@ -69,7 +70,7 @@ export default function TimetableScreen() {
     </Pressable>
   </View>;
   const card = <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
-    {timetableSet && <WeekOverviewGrid theme={theme} setId={timetableSet.id} today={todayDay} refreshKey={refreshKey} onSelectDay={goToDay} showHeader={!(compact && weekView)} />}
+    {timetableSet && <WeekOverviewGrid theme={theme} setId={timetableSet.id} today={todayDay} refreshKey={refreshKey} onSelectDay={goToDay} showHeader={!(compact && weekView)} active={focused} />}
   </View>;
 
   // 가로 주간 보기: 어느 시간표인지·해제 버튼·요일 헤더는 스크롤 밖에 고정하고 표만 스크롤한다
@@ -93,7 +94,7 @@ export default function TimetableScreen() {
       {!compact && <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text>}
       {buttons}
       <WeekdayTabs selected={selectedDay} today={todayDay} theme={theme} onSelect={setSelectedDay} />
-      {timetableSet && <DailyScheduleList weekday={selectedDay} theme={theme} setId={timetableSet.id} refreshKey={refreshKey} />}
+      {timetableSet && <DailyScheduleList weekday={selectedDay} isToday={selectedDay === todayDay} active={focused} theme={theme} setId={timetableSet.id} refreshKey={refreshKey} />}
     </View>;
   }
 
