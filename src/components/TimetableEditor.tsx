@@ -9,6 +9,7 @@ import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import type { AdminFormState } from '../utils/adminSections';
 import { itemTimes, itemsForDay } from '../utils/timetableDayList';
+import { userErrorMessage } from '../utils/userErrorMessage';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
 import { emptyTimetableDraft, TimetableItemForm, type TimetableDraft } from './TimetableItemForm';
 
@@ -66,7 +67,7 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
       if (draft.id) await updateTimetableItem(database, draft.id, { ...input(), weekday: draft.weekdays[0] ?? -1 });
       else await createTimetableItems(database, draft.weekdays, input());
       await finish('시간표 항목을 저장했고 알림 예약도 새로 만들었어요.', '시간표 항목은 저장했지만 알림 예약에 실패했어요. 알림 준비 권한을 확인한 뒤 다시 저장해 주세요.');
-    } catch (error) { setMessage(error instanceof Error ? `저장하지 못했어요: ${error.message}` : '저장하지 못했어요.'); }
+    } catch (error) { setMessage(`저장하지 못했어요: ${userErrorMessage(error, '잠시 뒤 다시 시도해 주세요.')}`); }
     finally { setSaving(false); }
   };
   const remove = async () => {

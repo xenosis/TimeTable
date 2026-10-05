@@ -16,7 +16,7 @@ function normalizeName(name: string): string {
 }
 
 function requireSetId(setId: TimetableSetId): void {
-  if (!Number.isInteger(setId) || setId < 1) throw new Error('set id must be positive');
+  if (!Number.isInteger(setId) || setId < 1) throw new Error('시간표를 다시 선택해 주세요.');
 }
 
 export async function listTimetableSets(database: ReadDb, familyId = 'local-family'): Promise<readonly TimetableSetSummary[]> {

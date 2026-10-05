@@ -9,6 +9,7 @@ import type { TimetableSet } from '../db/types';
 import { requestRollingScheduleRefresh } from '../notifications/rollingRefresh';
 import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
+import { userErrorMessage } from '../utils/userErrorMessage';
 import { refreshWidgetQuietly } from '../widgets/widgetRefresh';
 import { AdminCollapsible } from './AdminCollapsible';
 import { TimetableSetCreate } from './TimetableSetCreate';
@@ -16,7 +17,7 @@ import { TimetableSetRow } from './TimetableSetRow';
 
 /** 저장소가 한글로 알려 주는 오류(이름 중복 등)는 그대로, 그 밖의 오류는 일반 문구로 보여준다 */
 function reportFailure(report: (message: string) => void, error: unknown, fallback: string): void {
-  report(error instanceof Error && /[가-힣]/.test(error.message) ? error.message : fallback);
+  report(userErrorMessage(error, fallback));
 }
 
 /** 저장한 시간표 목록. 만들기·복사·이름 바꾸기·지우기·적용을 한곳에서 한다. */
