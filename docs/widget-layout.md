@@ -14,7 +14,7 @@
 | 계기 | 동작 |
 | --- | --- |
 | 앱이 데이터를 씀(앱 실행·복귀·백그라운드 작업·알림 재예약 뒤) | 파일을 쓰고 두 위젯을 다시 그린다 |
-| 오늘 일정의 다음 시작·끝 시각, 자정 직후(00:00:01) | `WidgetRefreshReceiver`가 깨어 두 위젯을 다시 그린다. `setAndAllowWhileIdle`이라 절전(Doze) 중에는 몇 분 늦을 수 있다 |
+| 오늘 일정의 다음 시작·끝 시각, 자정 직후(00:00:01) | `WidgetRefreshReceiver`가 깨어 두 위젯을 다시 그린다. 정확한 알람(`setExactAndAllowWhileIdle`, 권한이 없으면 1분 범위 `setWindow`)으로 예약한다. 예전 `setAndAllowWhileIdle`은 딸 폰에서 1~6분 넘게 늦었다(2026-10-05, P5.4) |
 | 부팅 · 시간 변경 · 시간대 변경 · 앱 업데이트 | `WidgetBootReceiver`가 다음 갱신을 다시 잡고 위젯을 바로 다시 그린다 |
 | 시스템 주기 갱신 | `updatePeriodMillis` 30분(안전망. 기기가 깨어 있을 때만 전달) |
 | 위젯 크기 변경 | 제공자가 새 높이로 보이는 줄 수를 다시 정한다 |

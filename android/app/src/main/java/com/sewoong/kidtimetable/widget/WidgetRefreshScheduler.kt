@@ -3,6 +3,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -22,7 +23,14 @@ object WidgetRefreshScheduler {
     // 위젯을 모두 지웠다면 일정 경계와 자정마다 깨우는 알람을 이어 가지 않는다(배터리). 다시 올리면 제공자가 이 함수를 불러 예약이 되살아난다.
     if (!WidgetUpdater.hasWidgets(context)) { alarms.cancel(operation); return }
     val next = WidgetDayResolver.nextRefreshAtMillis(System.currentTimeMillis(), TimeZone.getDefault(), snapshot)
-    alarms.apply { cancel(operation); setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, operation) }
+    alarms.cancel(operation)
+    // 일정 시작·끝 시각에 맞춰 위젯이 바뀌어야 하므로 정확한 알람을 쓴다. setAndAllowWhileIdle은 딸 폰에서 1~6분 넘게 늦어졌다(2026-10-05).
+    // 앱은 알람 기능 때문에 정확한 알람 권한이 있고, 권한이 없으면 1분 범위 안에서 울리게 한다.
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarms.canScheduleExactAlarms()) {
+      alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, operation)
+    } else {
+      alarms.setWindow(AlarmManager.RTC_WAKEUP, next, 60_000L, operation)
+    }
   }
 
   /** 위젯에서 줄을 누른 뒤, 누른 줄을 남겨 두는 시간이 지나면 위젯을 한 번 다시 그려 남은 할 일이 올라오게 한다. set()은 기기에서 45초 넘게 늦어져(딸 폰 확인) 5초 범위의 setWindow를 쓴다(정확한 알람 권한 불필요). 화면이 꺼져 있어도 늦지 않게 깨운다(누를 때 한 번이라 배터리 영향은 작다). */

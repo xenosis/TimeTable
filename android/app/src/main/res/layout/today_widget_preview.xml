@@ -4,17 +4,17 @@
   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingLeft="4dp" android:paddingBottom="2dp" android:textSize="16sp" android:textStyle="bold" android:textColor="#1E293B" android:text="오늘 수요일" />
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="2dp" android:paddingBottom="2dp" android:paddingLeft="4dp" android:paddingRight="4dp" android:background="#332563EB">
     <TextView android:layout_width="6dp" android:layout_height="18dp" android:layout_marginRight="6dp" android:background="#2563EB" />
-    <TextView android:layout_width="46dp" android:layout_height="wrap_content" android:textSize="14sp" android:textColor="#1E293B" android:text="16:10" />
+    <TextView android:layout_width="wrap_content" android:minWidth="46dp" android:layout_marginRight="6dp" android:layout_height="wrap_content" android:textSize="14sp" android:textColor="#1E293B" android:text="16:10" />
     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:textColor="#1E293B" android:text="영어 학원" />
   </LinearLayout>
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="2dp" android:paddingBottom="2dp" android:paddingLeft="4dp" android:paddingRight="4dp">
     <TextView android:layout_width="6dp" android:layout_height="18dp" android:layout_marginRight="6dp" android:background="#DB2777" />
-    <TextView android:layout_width="46dp" android:layout_height="wrap_content" android:textSize="14sp" android:textColor="#1E293B" android:text="17:30" />
+    <TextView android:layout_width="wrap_content" android:minWidth="46dp" android:layout_marginRight="6dp" android:layout_height="wrap_content" android:textSize="14sp" android:textColor="#1E293B" android:text="17:30" />
     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:textColor="#1E293B" android:text="피아노" />
   </LinearLayout>
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="2dp" android:paddingBottom="2dp" android:paddingLeft="4dp" android:paddingRight="4dp">
     <TextView android:layout_width="6dp" android:layout_height="18dp" android:layout_marginRight="6dp" android:background="#16A34A" />
-    <TextView android:layout_width="46dp" android:layout_height="wrap_content" android:textSize="14sp" android:textColor="#1E293B" android:text="18:30" />
+    <TextView android:layout_width="wrap_content" android:minWidth="46dp" android:layout_marginRight="6dp" android:layout_height="wrap_content" android:textSize="14sp" android:textColor="#1E293B" android:text="18:30" />
     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:textColor="#1E293B" android:text="태권도" />
   </LinearLayout>
 </LinearLayout>
