@@ -13,6 +13,8 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
   const [loadedKey, setLoadedKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // 알림 재예약 실패 안내는 조회 오류와 따로 두어, 체크 뒤 재조회가 성공해도 지워지지 않게 한다(다음 체크 성공 때 지움)
+  const [notice, setNotice] = useState('');
   const [celebration, setCelebration] = useState<{ readonly date: string; readonly message: string } | null>(null);
   const requestId = useRef(0);
   const [rewardScale] = useState(() => new Animated.Value(1));
@@ -67,10 +69,8 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
       const updated = await getTodayTasks(database, date, weekday);
       if (!task.completed && updated.length && updated.every((item) => item.completed)) setCelebration({ date, message: '오늘 할 일을 모두 끝냈어요! ✨' });
       else setCelebration(null);
-      if (date === dateKey(new Date())) {
-        await load();
-        if (scheduleRefreshFailed) setError('할 일은 저장됐지만 알림을 다시 예약하지 못했어요. 앱을 다시 열면 다시 시도해요.');
-      }
+      setNotice(scheduleRefreshFailed ? '할 일은 저장됐지만 알림을 다시 예약하지 못했어요. 앱을 다시 열면 다시 시도해요.' : '');
+      if (date === dateKey(new Date())) await load();
       onChanged?.();
     } catch {
       setError('할 일 상태를 저장하지 못했어요.');
@@ -85,7 +85,7 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
     {!!remainingCopy && <Text style={[styles.remaining, { color: remaining > 0 ? theme.colors.textMuted : theme.colors.text }]}>{remainingCopy}</Text>}
     {!!visibleTasks.length && <View style={[styles.progress, { backgroundColor: theme.colors.border }]}><View style={[styles.bar, { backgroundColor: theme.colors.primary, width: `${(completed / visibleTasks.length) * 100}%` }]} /></View>}
     {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed), disabled: busy || stale }} disabled={busy || stale} onPress={() => void toggle(task)} style={({ pressed }) => [styles.task, { borderColor: theme.colors.border, backgroundColor: task.completed ? theme.colors.background : theme.colors.surface, opacity: pressed ? 0.7 : 1 }]}><View style={[styles.check, { borderColor: task.completed ? theme.colors.primary : theme.colors.border, backgroundColor: task.completed ? theme.colors.primary : theme.colors.surface }]}><Text style={[styles.taskMark, { color: theme.colors.onPrimary }]}>{task.completed ? '✓' : ''}</Text></View><Text style={[styles.taskTitle, { color: task.completed ? theme.colors.textMuted : theme.colors.text, textDecorationLine: task.completed ? 'line-through' : 'none' }]}>{task.title}</Text></Pressable>)}
-    {error ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedToday ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
+    {error || notice ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error || notice}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedToday ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
     {celebration?.date === date && <Animated.Text accessibilityLiveRegion="polite" style={[styles.celebration, { color: theme.colors.text, transform: [{ scale: rewardScale }] }]}>{celebration.message}</Animated.Text>}
   </View>;
 }

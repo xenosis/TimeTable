@@ -37,6 +37,12 @@ describe('오늘 일정 조회 상태', () => {
     await act(async () => { tree.update(<TodayScheduleCard theme={defaultTheme} refreshKey={1} setId={1} />); });
     expect(copy(tree)).toContain('오늘 일정을 불러오지 못했어요.');
     expect(copy(tree)).not.toContain('국어');
+    // 재시도 응답 전에는 실패 전 일정이 다시 나타나지 않는다
+    jest.mocked(getTimetableItemsForWeekday).mockImplementationOnce(() => new Promise(() => undefined));
+    const retry = tree.root.findAll((node) => node.props.accessibilityLabel === '일정 다시 불러오기' && typeof node.props.onPress === 'function')[0];
+    await act(async () => { retry.props.onPress(); });
+    expect(copy(tree)).toContain('오늘 일정을 불러오는 중이에요.');
+    expect(copy(tree)).not.toContain('국어');
   });
   it('복귀 새로고침 직후 종료 경계를 넘긴 현재 시각으로 판정한다', async () => {
     jest.mocked(getTimetableItemsForWeekday).mockResolvedValue([item]);

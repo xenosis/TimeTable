@@ -58,6 +58,8 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
       setMessage(saved.length ? '' : '오늘은 등록된 일정이 없어요.');
     }).catch(() => {
       if (active) {
+        // 실패 뒤 재시도 응답 전에 실패 전 일정이 다시 보이지 않게 이전 결과를 버린다
+        setLoadedRequestKey(null);
         setFailedRequestKey(requestKey);
         setMessage('오늘 일정을 불러오지 못했어요.');
       }

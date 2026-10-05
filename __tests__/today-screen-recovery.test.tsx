@@ -14,7 +14,6 @@ let mockScheduleSetId: number | null = null;
 let mockOnTasksChanged: (() => void) | undefined;
 jest.mock('../src/components/TodayScheduleCard', () => ({ TodayScheduleCard: ({ setId, children }: { setId: number | null; children: React.ReactNode }) => { mockScheduleSetId = setId; return children; } }));
 jest.mock('../src/components/TodayTasksCard', () => ({ TodayTasksCard: ({ onChanged }: { onChanged?: () => void }) => { mockOnTasksChanged = onChanged; return null; } }));
-jest.mock('../src/components/GemSummaryLine', () => ({ GemSummaryLine: () => null }));
 jest.mock('../src/widgets/widgetChecksSignal', () => ({ subscribeWidgetChecksApplied: () => () => undefined }));
 
 it('시간표 세트 최초 조회 실패를 알리고 버튼으로 재조회하여 복구한다', async () => {
