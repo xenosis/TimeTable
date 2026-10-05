@@ -20,7 +20,7 @@ function reportFailure(report: (message: string) => void, error: unknown, fallba
 }
 
 /** 저장한 시간표 목록. 만들기·복사·이름 바꾸기·지우기·적용을 한곳에서 한다. */
-export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onRenamed, confirmDiscard }: {
+export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onRenamed, confirmDiscard, onBusyChange }: {
   readonly theme: ThemeDefinition;
   readonly activeSet: TimetableSet;
   readonly refreshKey: number;
@@ -30,6 +30,7 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   readonly onRenamed: (set: TimetableSet) => void;
   /** 시간표를 바꾸기 전에 저장하지 않은 입력을 버려도 되는지 묻는다(false면 바꾸지 않는다) */
   readonly confirmDiscard?: () => Promise<boolean>;
+  readonly onBusyChange?: (busy: boolean) => void;
 }) {
   const [sets, setSets] = useState<readonly TimetableSetSummary[]>([]);
   const [busy, setBusy] = useState(false);
@@ -37,6 +38,11 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   const [message, setMessage] = useState('');
   const [listOpen, setListOpen] = useState(false);
   const { colors } = theme;
+  const setWorking = useCallback((working: boolean) => {
+    onBusyChange?.(working);
+    setBusy(working);
+  }, [onBusyChange]);
+  useEffect(() => () => { onBusyChange?.(false); }, [onBusyChange]);
 
   useEffect(() => {
     let active = true;
@@ -46,7 +52,7 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   }, [activeSet.id, activeSet.name, refreshKey, reload]);
 
   const run = useCallback(async (action: (database: Awaited<ReturnType<typeof getDatabase>>) => Promise<string>, fallback: string): Promise<boolean> => {
-    setBusy(true);
+    setWorking(true);
     try {
       const message = await action(await getDatabase());
       setReload((value) => value + 1);
@@ -56,19 +62,19 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
       reportFailure(setMessage, error, fallback);
       return false;
     } finally {
-      setBusy(false);
+      setWorking(false);
     }
-  }, []);
+  }, [setWorking]);
 
   const apply = async (set: TimetableSet) => {
     if (busy || set.id === activeSet.id) return;
     if (confirmDiscard && !(await confirmDiscard())) return;
-    setBusy(true);
+    setWorking(true);
     try {
       await setActiveTimetableSet(await getDatabase(), set.id);
     } catch {
       setMessage('시간표를 바꾸지 못했어요.');
-      setBusy(false);
+      setWorking(false);
       return;
     }
     // 적용은 이미 저장됐으므로 화면부터 새 시간표로 맞추고, 알림 재예약 실패는 따로 알린다
@@ -79,7 +85,7 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
     } catch {
       setMessage(`'${set.name}' 시간표로 바꿨지만 알림을 다시 예약하지 못했어요. 잠시 뒤 다시 시도해 주세요.`);
     } finally {
-      setBusy(false);
+      setWorking(false);
     }
   };
 

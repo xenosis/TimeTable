@@ -5,13 +5,12 @@ import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { borderRadius, type ThemeDefinition } from '../theme';
 
 /** 필요할 때만 펼치는 보조 영역. 처음에는 제목 한 줄만 보이고, 펼쳐도 저절로 무언가를 실행하지 않는다. */
-export function AdminCollapsible({ title, theme, children, initiallyOpen = false }: {
+export function AdminCollapsible({ title, theme, children }: {
   readonly title: string;
   readonly theme: ThemeDefinition;
   readonly children: ReactNode;
-  readonly initiallyOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(initiallyOpen);
+  const [open, setOpen] = useState(false);
   return <View style={[styles.box, { borderColor: theme.colors.border }]}>
     <Pressable accessibilityRole="button" accessibilityLabel={title} accessibilityState={{ expanded: open }} onPress={() => setOpen((value) => !value)} style={styles.header}>
       <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>

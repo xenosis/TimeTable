@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useHeaderHeight } from 'expo-router/react-navigation';
 
 import { adminFontSize, adminSpacing } from '../src/theme/admin';
 import { borderRadius, touchTarget } from '../src/theme';
@@ -25,6 +26,7 @@ import { requestTaskRollingScheduleRefresh } from '../src/notifications/taskRoll
 import { CLEAN_FORM_STATE, DEFAULT_ADMIN_SECTION, decideSectionSwitch, type AdminFormState, type AdminSectionKey } from '../src/utils/adminSections';
 
 export default function ManageScreen() {
+  const headerHeight = useHeaderHeight();
   const { theme } = useActiveTheme();
   const { colors, categories: categoryPalette } = theme;
   const [section, setSection] = useState<AdminSectionKey>(DEFAULT_ADMIN_SECTION);
@@ -33,6 +35,8 @@ export default function ManageScreen() {
   const [timetableSet, setTimetableSet] = useState<TimetableSet | null>(null);
   // 현재 열린 편집 폼의 미저장·저장 중 상태. 한 번에 한 영역만 열려 있으므로 하나만 둔다
   const formState = useRef<AdminFormState>(CLEAN_FORM_STATE);
+  const setBusy = useRef(false);
+  const reportSetBusy = useCallback((busy: boolean) => { setBusy.current = busy; }, []);
   const reportFormState = useCallback((state: AdminFormState) => { formState.current = state; }, []);
 
   useEffect(() => {
@@ -42,7 +46,7 @@ export default function ManageScreen() {
 
   const moveTo = (next: AdminSectionKey) => { formState.current = CLEAN_FORM_STATE; setStatus(''); setSection(next); };
   const selectSection = (next: AdminSectionKey) => {
-    const decision = decideSectionSwitch(section, next, formState.current);
+    const decision = decideSectionSwitch(section, next, { ...formState.current, saving: formState.current.saving || setBusy.current });
     if (decision === 'switch') moveTo(next);
     else if (decision === 'blocked') setStatus('저장하는 중이에요. 끝난 뒤에 옮길 수 있어요.');
     else if (decision === 'confirm') {
@@ -76,13 +80,14 @@ export default function ManageScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={headerHeight} style={styles.keyboardContainer}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       <PermissionGuide theme={theme} collapseWhenReady />
       <PinGate theme={theme}>
         <AdminSectionMenu selected={section} onSelect={selectSection} theme={theme} />
         {status !== '' && <Text accessibilityLiveRegion="polite" style={[styles.status, { color: colors.text }]}>{status}</Text>}
         {section === 'timetable' && <>
-          {timetableSet && <TimetableSetPanel theme={theme} activeSet={timetableSet} refreshKey={scheduleRefresh} onApplied={applyTimetableSet} onRenamed={setTimetableSet} confirmDiscard={confirmDiscard} />}
+          {timetableSet && <TimetableSetPanel theme={theme} activeSet={timetableSet} refreshKey={scheduleRefresh} onApplied={applyTimetableSet} onRenamed={setTimetableSet} confirmDiscard={confirmDiscard} onBusyChange={reportSetBusy} />}
           {timetableSet && <TimetableEditor key={timetableSet.id} refreshKey={scheduleRefresh} theme={theme} setId={timetableSet.id} onChanged={refreshAfterScheduleChange} onFormState={reportFormState} />}
           <AdminCollapsible title="교시 시간" theme={theme}><PeriodSettings onSaved={refreshAfterScheduleChange} /></AdminCollapsible>
           {timetableSet && <AdminCollapsible title="요일 시간표 복사" theme={theme}><WeekdayCopy theme={theme} setId={timetableSet.id} onCopied={refreshAfterScheduleChange} /></AdminCollapsible>}
@@ -107,10 +112,12 @@ export default function ManageScreen() {
         </>}
       </PinGate>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardContainer: { flex: 1 },
   container: { alignItems: 'center', flexGrow: 1, padding: adminSpacing.md, gap: adminSpacing.sm },
   status: { fontSize: adminFontSize.label, textAlign: 'center' },
   categoryPreview: { flexDirection: 'row', flexWrap: 'wrap', gap: adminSpacing.xs },

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, type PropsWithChildren } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getTimetableItemsForWeekday, type TimetableItem } from '../db/timetableRepository';
@@ -24,57 +24,84 @@ function ScheduleItemCard({ label, item, theme }: { readonly label: string; read
   </View>;
 }
 
-export function TodayScheduleCard({ refreshKey, theme, setId }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly setId: TimetableSetId }) {
+/** The child slot keeps the task checklist before the expandable additional schedule. */
+export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsWithChildren<{ readonly refreshKey: number; readonly theme: ThemeDefinition; readonly setId: TimetableSetId | null }>) {
   const [items, setItems] = useState<readonly TimetableItem[]>([]);
-  const [loadedWeekday, setLoadedWeekday] = useState<number | null>(null);
-  const [loadedRefreshKey, setLoadedRefreshKey] = useState<number | null>(null);
-  const [failedWeekday, setFailedWeekday] = useState<number | null>(null);
-  const [now, setNow] = useState(() => new Date());
+  const [loadedRequestKey, setLoadedRequestKey] = useState<string | null>(null);
+  const [failedRequestKey, setFailedRequestKey] = useState<string | null>(null);
+  const [, setClockTick] = useState(0);
+  const now = new Date();
   const [message, setMessage] = useState('오늘 일정을 불러오는 중이에요.');
   const weekday = now.getDay();
+  const [retryKey, setRetryKey] = useState(0);
+  const requestKey = `${weekday}:${setId}:${refreshKey}:${retryKey}`;
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const dayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}:${setId}`;
+  const expanded = expandedKey === dayKey;
+
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 30_000);
+    const interval = setInterval(() => setClockTick((value) => value + 1), 30_000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    if (setId === null) return;
     let active = true;
     void getDatabase().then((database) => getTimetableItemsForWeekday(database, weekday, setId)).then((saved) => {
       if (!active) return;
       setItems(saved);
-      setLoadedWeekday(weekday);
-      setLoadedRefreshKey(refreshKey);
-      setFailedWeekday(null);
+      setLoadedRequestKey(requestKey);
+      setFailedRequestKey(null);
       setMessage(saved.length ? '' : '오늘은 등록된 일정이 없어요.');
     }).catch(() => {
       if (active) {
-        setFailedWeekday(weekday);
+        setFailedRequestKey(requestKey);
         setMessage('오늘 일정을 불러오지 못했어요.');
       }
     });
     return () => { active = false; };
-  }, [weekday, refreshKey, setId]);
+  }, [weekday, refreshKey, setId, requestKey]);
 
-  const readyItems = loadedWeekday === weekday && loadedRefreshKey === refreshKey ? items : [];
+  const readyItems = setId !== null && loadedRequestKey === requestKey ? items : [];
+  const failed = failedRequestKey === requestKey;
   const { current, next, minutesUntilNext } = getTodaySchedule(readyItems, now);
-  const emptyMessage = failedWeekday === weekday ? message : loadedWeekday !== weekday ? '오늘 일정을 불러오는 중이에요.' : readyItems.length ? '오늘 일정이 끝났어요.' : message;
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const additional = failed ? [] : readyItems.filter((item) => item.endTime > time && item.id !== current?.id && item.id !== next?.id).sort((left, right) => left.startTime.localeCompare(right.startTime));
+  const emptyMessage = failed ? message : loadedRequestKey !== requestKey ? '오늘 일정을 불러오는 중이에요.' : readyItems.length ? '오늘 일정이 끝났어요.' : message;
 
-  return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
-    <Text accessibilityRole="header" style={[styles.heading, { color: theme.colors.text }]}>오늘의 시간표</Text>
+  return <>{setId !== null && <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
+    <Text accessibilityRole="header" style={[styles.heading, { color: theme.colors.text }]}>지금 · 다음 일정</Text>
     {current && <ScheduleItemCard label="지금" item={current} theme={theme} />}
     {next && <ScheduleItemCard label="다음" item={next} theme={theme} />}
-    {failedWeekday === weekday && <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>⚠️ {message}</Text>}
-    {!current && !next && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{emptyMessage}</Text>}
+    {failed && <><Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>⚠️ {message}</Text><Pressable accessibilityRole="button" accessibilityLabel="일정 다시 불러오기" onPress={() => setRetryKey((value) => value + 1)} style={styles.retry}><Text style={{ color: theme.colors.primary }}>다시 불러오기</Text></Pressable></>}
+    {!failed && !current && !next && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{emptyMessage}</Text>}
     {next && <Text style={[styles.next, { color: theme.colors.textMuted }]}>다음 일정까지 {minutesUntilNext}분 남았어요.</Text>}
-  </View>;
+  </View>}
+    {children}
+    {!!additional.length && <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded }} accessibilityLabel={`다른 남은 일정 ${additional.length}개 ${expanded ? '접기' : '펼치기'}`} onPress={() => setExpandedKey(expanded ? null : dayKey)} style={styles.expand}>
+        <Text style={[styles.moreTitle, { color: theme.colors.text }]}>다른 남은 일정 {additional.length}개</Text>
+        <Text style={{ color: theme.colors.primary }}>{expanded ? '접기 ▲' : '펼치기 ▼'}</Text>
+      </Pressable>
+      {expanded && additional.map((item) => <View key={item.id} style={[styles.moreRow, { borderTopColor: theme.colors.border }]}>
+        <Text style={[styles.moreTime, { color: theme.colors.textMuted }]}>{item.startTime} – {item.endTime}</Text>
+        <Text style={[styles.moreTitle, { color: theme.colors.text }]}>{item.title}</Text>
+        {!!item.memo && <Text style={[styles.itemMemo, { color: theme.colors.textMuted }]}>📝 {item.memo}</Text>}
+      </View>)}
+    </View>}
+  </>;
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: borderRadius.lg, borderWidth: 1, gap: 12, padding: 20, width: '100%' },
-  heading: { fontSize: fontSize.lg, fontWeight: '800' },
-  item: { alignItems: 'center', borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.md, minHeight: 96, padding: spacing.md },
-  iconBadge: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  icon: { fontSize: 28, fontWeight: '700' }, copy: { flex: 1, gap: 3 }, label: { fontSize: 14, fontWeight: '700' }, itemTitle: { fontSize: fontSize.lg, fontWeight: '800' }, itemTime: { fontSize: fontSize.md, fontVariant: ['tabular-nums'] }, itemMemo: { fontSize: fontSize.md },
-  empty: { fontSize: fontSize.md }, next: { fontSize: fontSize.sm },
+  card: { borderRadius: borderRadius.lg, borderWidth: 1, gap: 8, padding: 14, width: '100%' },
+  heading: { fontSize: 18, fontWeight: '800' },
+  item: { alignItems: 'center', borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.sm, minHeight: 72, padding: 10 },
+  iconBadge: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  icon: { fontSize: 22, fontWeight: '700' }, copy: { flex: 1, gap: 2 }, label: { fontSize: 12, fontWeight: '700' }, itemTitle: { fontSize: 20, fontWeight: '800' }, itemTime: { fontSize: 16, fontVariant: ['tabular-nums'] }, itemMemo: { fontSize: 16 },
+  empty: { fontSize: 14 }, next: { fontSize: fontSize.sm },
+  expand: { minHeight: 56, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between' },
+  moreTitle: { fontSize: 16, fontWeight: '600', flexShrink: 1 }, moreTime: { fontSize: 13, fontVariant: ['tabular-nums'] },
+  moreRow: { borderTopWidth: 1, gap: 4, paddingVertical: 10 },
+  retry: { minHeight: 56, justifyContent: 'center' },
 });

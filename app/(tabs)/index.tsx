@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 
-import { GemSummaryLine } from '../../src/components/GemSummaryLine';
 import { CharacterHeader } from '../../src/components/CharacterHeader';
 import { PermissionGuide } from '../../src/components/PermissionGuide';
 import { TodayScheduleCard } from '../../src/components/TodayScheduleCard';
@@ -19,19 +18,22 @@ export default function TodayScreen() {
   const { theme } = useActiveTheme();
   const [refreshKey, setRefreshKey] = useState(0);
   const [timetableSet, setTimetableSet] = useState<TimetableSet | null>(null);
+  const [setStatus, setSetStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [resolvedRefreshKey, setResolvedRefreshKey] = useState(-1);
+  const status = resolvedRefreshKey === refreshKey ? setStatus : 'loading';
   const { colors } = theme;
   const bump = useCallback(() => setRefreshKey((value) => value + 1), []);
 
-  useFocusEffect(useCallback(() => {
+  useFocusEffect(useCallback(() => { bump(); }, [bump]));
+  useEffect(() => {
     let active = true;
-    void getDatabase()
-      .then((database) => getActiveTimetableSet(database))
-      .then((saved) => { if (active) setTimetableSet(saved); })
-      .catch(() => undefined)
-      .finally(() => { if (active) bump(); });
+    void getDatabase().then(getActiveTimetableSet).then((saved) => {
+      if (active) { setTimetableSet(saved); setSetStatus('ready'); setResolvedRefreshKey(refreshKey); }
+    }).catch(() => {
+      if (active) { setTimetableSet(null); setSetStatus('error'); setResolvedRefreshKey(refreshKey); }
+    });
     return () => { active = false; };
-  }, [bump]));
-
+  }, [refreshKey]);
   // 위젯에서 누른 체크가 DB에 반영되면(앱이 실행될 때 뒤늦게 기록된다) 오늘 할 일과 보석을 다시 읽는다.
   useEffect(() => subscribeWidgetChecksApplied(bump), [bump]);
 
@@ -50,20 +52,21 @@ export default function TodayScreen() {
   const encouragement = dailyEncouragement(today);
   const dateLabel = `${today.getMonth() + 1}월 ${today.getDate()}일 · ${['일', '월', '화', '수', '목', '금', '토'][today.getDay()]}요일`;
   return <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
-    <CharacterHeader theme={theme}><View style={styles.header}>
+    <CharacterHeader theme={theme} compact><View style={styles.header}>
       <Text style={[styles.date, { color: colors.primary }]}>{dateLabel}</Text>
-      <Text accessibilityRole="header" textBreakStrategy="balanced" style={[styles.heading, { color: colors.text }]}>{encouragement.title}</Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>{encouragement.subtitle}</Text>
     </View></CharacterHeader>
     <PermissionGuide theme={theme} banner={{ onPress: () => router.push('/manage') }} />
-    {timetableSet && <TodayScheduleCard refreshKey={refreshKey} theme={theme} setId={timetableSet.id} />}
-    <TodayTasksCard theme={theme} refreshKey={refreshKey} onChanged={bump} />
-    <GemSummaryLine theme={theme} refreshKey={refreshKey} onPress={() => router.replace('/stickers')} />
+    {status !== 'ready' && <View style={[styles.scheduleStatus, { backgroundColor: theme.decorations.cardBackground }]}><Text style={{ color: colors.text }}>{status === 'loading' ? '오늘 일정을 불러오는 중이에요.' : '오늘 일정을 불러오지 못했어요.'}</Text>{status === 'error' && <Pressable accessibilityRole="button" onPress={bump} style={styles.retry}><Text style={{ color: colors.primary }}>다시 불러오기</Text></Pressable>}</View>}
+    <TodayScheduleCard refreshKey={refreshKey} theme={theme} setId={status === 'ready' ? timetableSet?.id ?? null : null}>
+      <TodayTasksCard theme={theme} refreshKey={refreshKey} onChanged={bump} />
+    </TodayScheduleCard>
   </ScrollView>;
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, gap: 18, padding: 20, paddingBottom: 28, width: '100%', maxWidth: 640, alignSelf: 'center' },
-  header: { gap: 6, paddingVertical: 4 }, date: { fontSize: 16, fontWeight: '700' },
-  heading: { fontSize: 30, fontWeight: '800' }, subtitle: { fontSize: 16 },
+  scheduleStatus: { padding: 20, borderRadius: 24, gap: 12 }, retry: { minHeight: 56, justifyContent: 'center' },
+  container: { flexGrow: 1, gap: 14, padding: 16, paddingBottom: 24, width: '100%', maxWidth: 640, alignSelf: 'center' },
+  header: { gap: 4, paddingVertical: 10 }, date: { fontSize: 16, fontWeight: '700' },
+  subtitle: { fontSize: 14, lineHeight: 20 },
 });

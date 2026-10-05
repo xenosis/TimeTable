@@ -8,7 +8,7 @@ import { useActiveTheme } from '../../src/theme/provider';
 import { GemCollectionArtwork } from '../../src/components/GemCollectionArtwork';
 
 const tabs = [
-  { path: '/', label: '오늘', icon: '🏠' },
+  { path: '/', label: '오늘', icon: '☀️' },
   { path: '/timetable', label: '시간표', icon: '🗓️' },
   { path: '/stickers', label: '내 보석', icon: '💎' },
 ] as const;
@@ -19,14 +19,8 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const immersive = useImmersive();
 
-  return <View style={styles.container}>
-    <Stack.Screen options={{
-      title: 'TimeTable',
-      headerShown: !immersive,
-      headerRight: () => <Pressable accessibilityRole="button" accessibilityLabel="관리자 설정 열기" onPress={() => router.push('/manage')} style={styles.gearButton}>
-        <Text style={styles.gearGlyph}>⚙️</Text>
-      </Pressable>,
-    }} />
+  return <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
+    <Stack.Screen options={{ headerShown: false }} />
     <View style={styles.content}><Slot /></View>
     {!immersive && <View style={[styles.tabBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border, paddingBottom: Math.max(spacing.sm, insets.bottom) }]}>
       {tabs.map(({ path, label, icon }) => {
@@ -43,6 +37,10 @@ export default function TabsLayout() {
           <Text style={[styles.tabLabel, { color: active ? theme.colors.primary : theme.colors.textMuted, fontWeight: active ? '700' : '600' }]}>{label}</Text>
         </Pressable>;
       })}
+      <Pressable accessibilityRole="button" accessibilityLabel="관리자 설정 열기" onPress={() => router.push('/manage')} style={({ pressed }) => [styles.tabButton, { opacity: pressed ? 0.7 : 1 }]}>
+        <Text accessible={false} style={styles.tabIcon}>⚙️</Text>
+        <Text style={[styles.tabLabel, { color: theme.colors.textMuted }]}>설정</Text>
+      </Pressable>
     </View>}
   </View>;
 }
@@ -50,8 +48,6 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1 },
-  gearButton: { alignItems: 'center', justifyContent: 'center', minHeight: touchTarget.minimum, minWidth: touchTarget.minimum },
-  gearGlyph: { fontSize: fontSize.lg },
   tabBar: { borderTopWidth: 1, flexDirection: 'row', paddingTop: spacing.xs },
   tabButton: { alignItems: 'center', flex: 1, gap: 3, justifyContent: 'center', minHeight: touchTarget.minimum, paddingVertical: spacing.xs, borderRadius: 18, marginHorizontal: 4 },
   tabIcon: { fontSize: 24 },

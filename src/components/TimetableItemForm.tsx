@@ -53,7 +53,7 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
       {choice('교시', draft.periodNo != null, () => onChange({ periodNo: periods[0]?.periodNo ?? null }))}
       {choice('직접 입력', draft.periodNo == null, () => onChange({ periodNo: null }))}
     </View>
-    {draft.periodNo != null && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inline}>{periods.map((period) => choice(`${period.periodNo}교시`, draft.periodNo === period.periodNo, () => onChange({ periodNo: period.periodNo })))}</ScrollView>}
+    {draft.periodNo != null && <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inline}>{periods.map((period) => choice(`${period.periodNo}교시`, draft.periodNo === period.periodNo, () => onChange({ periodNo: period.periodNo })))}</ScrollView>}
     {draft.periodNo == null && <View style={styles.inline}>
       <TextInput accessibilityLabel="시작 시간" editable={!saving} value={draft.startTime} onChangeText={(value) => onChange({ startTime: formatTimeInput(value) })} placeholder="시작 0930" maxLength={5} keyboardType="number-pad" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
       <TextInput accessibilityLabel="종료 시간" editable={!saving} value={draft.endTime} onChangeText={(value) => onChange({ endTime: formatTimeInput(value) })} placeholder="종료 0940" maxLength={5} keyboardType="number-pad" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
@@ -64,11 +64,11 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
       <Pressable accessibilityRole="button" accessibilityLabel={`색 ${currentColor.label} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'color' ? null : 'color')} style={[styles.summary, { backgroundColor: currentColor.backgroundColor, borderColor: colors.border }]}><Text style={[styles.text, { color: currentColor.textColor }]}>색: {currentColor.label} ▾</Text></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={`아이콘 ${currentIcon.label} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'icon' ? null : 'icon')} style={[styles.summary, { borderColor: colors.border }]}><Text style={[styles.text, { color: colors.text }]}>아이콘: {currentIcon.glyph} {currentIcon.label} ▾</Text></Pressable>
     </View>
-    {picker === 'color' && <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel="색 목록" contentContainerStyle={styles.inline}>{colorKeys.map((key) => {
+    {picker === 'color' && <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} accessibilityLabel="색 목록" contentContainerStyle={styles.inline}>{colorKeys.map((key) => {
       const color = resolveThemeColor(theme, key);
       return <Pressable key={key} accessibilityRole="button" accessibilityLabel={`색 ${color.label}`} accessibilityState={{ selected: draft.colorKey === key }} disabled={saving} onPress={() => { onChange({ colorKey: key }); setPicker(null); }} style={[styles.swatch, { backgroundColor: color.backgroundColor }, draft.colorKey === key && styles.outline]}><Text style={[styles.text, { color: color.textColor }]}>{color.label}</Text></Pressable>;
     })}</ScrollView>}
-    {picker === 'icon' && <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel="아이콘 목록" contentContainerStyle={styles.inline}>{iconKeys.map((key) => {
+    {picker === 'icon' && <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} accessibilityLabel="아이콘 목록" contentContainerStyle={styles.inline}>{iconKeys.map((key) => {
       const icon = resolveThemeIcon(theme, key);
       return choice(icon.glyph, draft.iconKey === key, () => { onChange({ iconKey: key }); setPicker(null); }, `아이콘 ${icon.label}`);
     })}</ScrollView>}

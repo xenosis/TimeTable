@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect, useIsFocused } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DailyScheduleList } from '../../src/components/DailyScheduleList';
 import { CharacterHeader } from '../../src/components/CharacterHeader';
@@ -29,7 +28,6 @@ export default function TimetableScreen() {
   const [weekView, setWeekView] = useState(false);
   const { colors } = theme;
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   // 가로에서는 세로 공간이 좁아 큰 제목을 숨기고 표가 화면을 최대한 쓰게 한다
   const compact = width > height;
   // 가로 주간 보기에서는 앱 헤더·하단 탭도 숨겨 표가 화면 높이를 최대한 쓰게 한다(세로로 돌리거나 요일별 보기로 돌아오면 복구)
@@ -76,8 +74,8 @@ export default function TimetableScreen() {
 
   // 가로 주간 보기: 어느 시간표인지·해제 버튼·요일 헤더는 스크롤 밖에 고정하고 표만 스크롤한다
   if (compact && weekView) {
-    // 앱 헤더를 숨기면 상태 표시줄·화면 모서리(컷아웃)와 겹치므로 안전 영역만큼 띄운다
-    return <View style={[styles.fixedRoot, { backgroundColor: colors.background, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
+    // 상단·좌우 안전 영역은 탭 레이아웃이 모든 보기에서 일관되게 적용한다.
+    return <View style={[styles.fixedRoot, { backgroundColor: colors.background }]}>
       <View style={styles.fixedTop}>
         <Text accessibilityRole="header" style={[styles.setTitle, { color: colors.text }]}>{setTitle}</Text>
         <View style={styles.fixedToggle}>{buttons}</View>

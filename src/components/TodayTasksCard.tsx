@@ -10,7 +10,7 @@ const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() 
 
 export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly theme: ThemeDefinition; readonly refreshKey: number; readonly onChanged?: () => void }) {
   const [tasks, setTasks] = useState<readonly TodayTask[]>([]);
-  const [loadedDate, setLoadedDate] = useState('');
+  const [loadedKey, setLoadedKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [celebration, setCelebration] = useState<{ readonly date: string; readonly message: string } | null>(null);
@@ -18,42 +18,43 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
   const [rewardScale] = useState(() => new Animated.Value(1));
   const date = dateKey(new Date());
   const weekday = new Date().getDay();
+  const queryKey = `${date}:${refreshKey}`;
   const load = useCallback(async () => {
     const currentRequestId = ++requestId.current;
     try {
       const saved = await getTodayTasks(await getDatabase(), date, weekday);
       if (currentRequestId !== requestId.current) return;
       setTasks(saved);
-      setLoadedDate(date);
+      setLoadedKey(queryKey);
       if (!saved.length || saved.some((task) => !task.completed)) setCelebration(null);
       setError('');
     } catch {
       if (currentRequestId !== requestId.current) return;
-      setTasks([]); setLoadedDate(date); setError('오늘 할 일을 불러오지 못했어요.');
+      setTasks([]); setLoadedKey(queryKey); setError('오늘 할 일을 불러오지 못했어요.');
     }
-  }, [date, weekday]);
+  }, [date, weekday, queryKey]);
   useEffect(() => {
     let active = true;
     const currentRequestId = ++requestId.current;
     void getDatabase()
       .then((db) => getTodayTasks(db, date, weekday))
       .then((saved) => {
-        if (active && currentRequestId === requestId.current) { setTasks(saved); setLoadedDate(date); if (!saved.length || saved.some((task) => !task.completed)) setCelebration(null); setError(''); }
+        if (active && currentRequestId === requestId.current) { setTasks(saved); setLoadedKey(queryKey); if (!saved.length || saved.some((task) => !task.completed)) setCelebration(null); setError(''); }
       })
       .catch(() => {
-        if (active && currentRequestId === requestId.current) { setTasks([]); setLoadedDate(date); setError('오늘 할 일을 불러오지 못했어요.'); }
+        if (active && currentRequestId === requestId.current) { setTasks([]); setLoadedKey(queryKey); setError('오늘 할 일을 불러오지 못했어요.'); }
       });
     return () => { active = false; };
-  }, [date, refreshKey, weekday]);
+  }, [date, refreshKey, weekday, queryKey]);
   useEffect(() => {
     if (!celebration || celebration.date !== date) return;
     rewardScale.setValue(0.6);
     Animated.spring(rewardScale, { toValue: 1, useNativeDriver: true }).start();
   }, [celebration, date, rewardScale]);
-  const visibleTasks = loadedDate === date ? tasks : [];
+  const visibleTasks = loadedKey === queryKey ? tasks : [];
   const completed = visibleTasks.filter((task) => task.completed).length;
   const toggle = async (task: TodayTask) => {
-    if (busy || loadedDate !== date) return;
+    if (busy || loadedKey !== queryKey) return;
     setBusy(true);
     let scheduleRefreshFailed = false;
     try {
@@ -77,14 +78,11 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
   const remaining = visibleTasks.length - completed;
   const remainingCopy = !visibleTasks.length ? '' : remaining > 0 ? `아직 ${remaining}개 남았어요` : '오늘 할 일을 다 했어요! ✨';
   return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
-    <View style={styles.titleRow}><Text style={[styles.title, { color: theme.colors.text }]}>오늘의 할 일</Text><Text style={[styles.badge, { color: theme.colors.primary, backgroundColor: theme.colors.background }]}>{completed} / {visibleTasks.length}</Text></View>
-    <View style={styles.countRow}>
-      <Text style={[styles.count, { color: theme.colors.textMuted }]}>{completed}/{visibleTasks.length} 완료</Text>
-      {!!remainingCopy && <Text style={[styles.remaining, { color: remaining > 0 ? theme.colors.textMuted : theme.colors.text }]}>{remainingCopy}</Text>}
-    </View>
-    <View style={[styles.progress, { backgroundColor: theme.colors.border }]}><View style={[styles.bar, { backgroundColor: theme.colors.primary, width: `${visibleTasks.length ? (completed / visibleTasks.length) * 100 : 0}%` }]} /></View>
-    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed), disabled: busy || loadedDate !== date }} disabled={busy || loadedDate !== date} onPress={() => void toggle(task)} style={({ pressed }) => [styles.task, { borderColor: theme.colors.border, backgroundColor: task.completed ? theme.colors.background : theme.colors.surface, opacity: pressed ? 0.7 : 1 }]}><View style={[styles.check, { borderColor: task.completed ? theme.colors.primary : theme.colors.border, backgroundColor: task.completed ? theme.colors.primary : theme.colors.surface }]}><Text style={[styles.taskMark, { color: theme.colors.onPrimary }]}>{task.completed ? '✓' : ''}</Text></View><Text style={[styles.taskTitle, { color: task.completed ? theme.colors.textMuted : theme.colors.text, textDecorationLine: task.completed ? 'line-through' : 'none' }]}>{task.title}</Text></Pressable>)}
-    {error ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedDate === date ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
+    <View style={styles.titleRow}><Text style={[styles.title, { color: theme.colors.text }]}>오늘의 할 일</Text>{!!visibleTasks.length && <Text style={[styles.badge, { color: theme.colors.primary, backgroundColor: theme.colors.background }]}>{completed} / {visibleTasks.length}</Text>}</View>
+    {!!remainingCopy && <Text style={[styles.remaining, { color: remaining > 0 ? theme.colors.textMuted : theme.colors.text }]}>{remainingCopy}</Text>}
+    {!!visibleTasks.length && <View style={[styles.progress, { backgroundColor: theme.colors.border }]}><View style={[styles.bar, { backgroundColor: theme.colors.primary, width: `${(completed / visibleTasks.length) * 100}%` }]} /></View>}
+    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed), disabled: busy || loadedKey !== queryKey }} disabled={busy || loadedKey !== queryKey} onPress={() => void toggle(task)} style={({ pressed }) => [styles.task, { borderColor: theme.colors.border, backgroundColor: task.completed ? theme.colors.background : theme.colors.surface, opacity: pressed ? 0.7 : 1 }]}><View style={[styles.check, { borderColor: task.completed ? theme.colors.primary : theme.colors.border, backgroundColor: task.completed ? theme.colors.primary : theme.colors.surface }]}><Text style={[styles.taskMark, { color: theme.colors.onPrimary }]}>{task.completed ? '✓' : ''}</Text></View><Text style={[styles.taskTitle, { color: task.completed ? theme.colors.textMuted : theme.colors.text, textDecorationLine: task.completed ? 'line-through' : 'none' }]}>{task.title}</Text></Pressable>)}
+    {error ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedKey === queryKey ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
     {celebration?.date === date && <Animated.Text accessibilityLiveRegion="polite" style={[styles.celebration, { color: theme.colors.text, transform: [{ scale: rewardScale }] }]}>{celebration.message}</Animated.Text>}
   </View>;
 }
@@ -92,8 +90,7 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: borderRadius.lg, gap: 12, padding: 20, width: '100%' },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontSize: fontSize.lg, fontWeight: '800', flexShrink: 1 }, badge: { fontSize: 16, fontWeight: '700', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
-  countRow: { gap: 4 },
-  count: { fontSize: fontSize.sm }, remaining: { fontSize: fontSize.sm, fontWeight: '700' },
+  remaining: { fontSize: fontSize.sm, fontWeight: '700' },
   progress: { borderRadius: 8, height: 8, overflow: 'hidden', marginBottom: 4 }, bar: { height: '100%' },
   task: { alignItems: 'center', borderWidth: 1, borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'flex-start', minHeight: touchTarget.minimum + 16, paddingHorizontal: spacing.md },
   check: { width: 28, height: 28, borderRadius: 9, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },

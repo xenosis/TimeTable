@@ -16,7 +16,7 @@ export function AdminWeekdayPicker({ selected, onChange, mode, theme, disabled =
   readonly disabled?: boolean;
   readonly label?: string;
 }) {
-  return <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel={label} contentContainerStyle={styles.row}>
+  return <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} accessibilityLabel={label} contentContainerStyle={styles.row}>
     {ADMIN_WEEKDAYS.map(({ day, label: dayLabel }) => {
       const isSelected = selected.includes(day);
       return <Pressable

@@ -27,7 +27,7 @@ export default function StickersScreen() {
     return () => { subscription.remove(); clearTimeout(timer); };
   }, [refresh]);
 
-  return <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
+  return <ScrollView keyboardShouldPersistTaps="handled" style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
     <View style={styles.header}>
       <View style={styles.headerCopy}><Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>내 보석</Text><Text style={[styles.subtitle, { color: colors.textMuted }]}>내가 해낸 하루의 반짝임</Text></View>
       <Pressable accessibilityRole="button" accessibilityLabel="꾸미기, 화면 색 바꾸기" onPress={() => setPickerOpen(true)} style={({ pressed }) => [styles.decorateButton, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}>
