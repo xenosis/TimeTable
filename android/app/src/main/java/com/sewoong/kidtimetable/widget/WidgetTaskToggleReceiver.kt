@@ -12,8 +12,10 @@ class WidgetTaskToggleReceiver : BroadcastReceiver() {
     val date = intent.getStringExtra(EXTRA_DATE).orEmpty()
     if (taskId < 0 || date.isBlank()) return
     // 자정 직후처럼 위젯이 아직 어제 화면인 채로 눌리면 어제 날짜로 기록되지 않게, 오늘이 아닌 날짜의 줄은 무시하고 위젯만 새로 그린다
-    if (date == WidgetClock.today(Date())) runCatching { WidgetCheckStore.toggle(context, taskId, date) }
+    val toggled = date == WidgetClock.today(Date()) && runCatching { WidgetCheckStore.toggle(context, taskId, date) }.isSuccess
     WidgetUpdater.updateAll(context)
+    // 앱을 열지 않아도 끝낸 할 일의 알림이 울리지 않게, 대기 체크를 곧바로 DB에 기록하고 알림을 다시 예약한다
+    if (toggled) WidgetChecksHeadlessService.start(context)
   }
 
   companion object {
