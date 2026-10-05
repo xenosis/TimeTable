@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 오늘 일정 위젯 목록의 한 줄: 색 표식 · 시작 시각 · 제목. RemoteViews는 View를 쓸 수 없어 표식도 TextView로 만든다. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/widget_item_row" android:layout_width="match_parent" android:layout_height="wrap_content"
+  android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp" android:paddingLeft="4dp" android:paddingRight="4dp">
+  <TextView android:id="@+id/widget_item_marker" android:layout_width="6dp" android:layout_height="18dp" android:layout_marginRight="6dp" />
+  <TextView android:id="@+id/widget_item_time" android:layout_width="wrap_content" android:minWidth="46dp" android:layout_marginRight="6dp" android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" />
+  <TextView android:id="@+id/widget_item_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>

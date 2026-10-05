@@ -32,11 +32,4 @@ object WidgetRefreshScheduler {
       alarms.setWindow(AlarmManager.RTC_WAKEUP, next, 60_000L, operation)
     }
   }
-
-  /** 위젯에서 줄을 누른 뒤, 누른 줄을 남겨 두는 시간이 지나면 위젯을 한 번 다시 그려 남은 할 일이 올라오게 한다. set()은 기기에서 45초 넘게 늦어져(딸 폰 확인) 5초 범위의 setWindow를 쓴다(정확한 알람 권한 불필요). 화면이 꺼져 있어도 늦지 않게 깨운다(누를 때 한 번이라 배터리 영향은 작다). */
-  fun scheduleTouchRelease(context: Context) {
-    val operation = PendingIntent.getBroadcast(context, 5507, Intent(context, WidgetRefreshReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    alarms.setWindow(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + WidgetChecks.TOUCH_HOLD_MILLIS + 1_000L, 5_000L, operation)
-  }
 }

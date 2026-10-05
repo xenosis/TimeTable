@@ -15,10 +15,7 @@ class WidgetTaskToggleReceiver : BroadcastReceiver() {
     val toggled = date == WidgetClock.today(Date()) && runCatching { WidgetCheckStore.toggle(context, taskId, date) }.isSuccess
     WidgetUpdater.updateAll(context)
     // 앱을 열지 않아도 끝낸 할 일의 알림이 울리지 않게, 대기 체크를 곧바로 DB에 기록하고 알림을 다시 예약한다
-    if (toggled) {
-      WidgetChecksHeadlessService.start(context)
-      runCatching { WidgetRefreshScheduler.scheduleTouchRelease(context) }
-    }
+    if (toggled) WidgetChecksHeadlessService.start(context)
   }
 
   companion object {

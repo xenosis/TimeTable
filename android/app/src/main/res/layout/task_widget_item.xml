@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 오늘 할 일 위젯 목록의 한 줄: ☐/☑ · 제목. 줄을 누르면 완료와 미완료가 번갈아 바뀐다. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/task_item_row" android:layout_width="match_parent" android:layout_height="wrap_content"
+  android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="5dp" android:paddingBottom="5dp" android:paddingLeft="4dp" android:paddingRight="4dp">
+  <TextView android:id="@+id/task_item_box" android:layout_width="wrap_content" android:minWidth="24dp" android:layout_height="wrap_content" android:textSize="16sp" android:maxLines="1" />
+  <TextView android:id="@+id/task_item_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>
