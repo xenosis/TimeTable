@@ -3,7 +3,7 @@
     "name": "TimeTable",
     "slug": "kidtimetable",
     "scheme": "kidtimetable",
-    "version": "1.45.3",
+    "version": "1.45.4",
     "orientation": "default",
     "icon": "./assets/timetable-icon.png",
     "userInterfaceStyle": "light",

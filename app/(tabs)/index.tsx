@@ -20,7 +20,8 @@ export default function TodayScreen() {
   const [timetableSet, setTimetableSet] = useState<TimetableSet | null>(null);
   const [setStatus, setSetStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [resolvedRefreshKey, setResolvedRefreshKey] = useState(-1);
-  const status = resolvedRefreshKey === refreshKey ? setStatus : 'loading';
+  // 이미 세트를 읽은 뒤의 새로고침(체크·앱 복귀·위젯 반영) 중에는 이전 세트를 유지해 로딩 배너로 화면이 튀지 않게 한다
+  const status = resolvedRefreshKey === refreshKey || setStatus === 'ready' ? setStatus : 'loading';
   const { colors } = theme;
   const bump = useCallback(() => setRefreshKey((value) => value + 1), []);
 

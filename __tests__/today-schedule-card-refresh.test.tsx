@@ -15,18 +15,28 @@ describe('오늘 일정 조회 상태', () => {
   beforeEach(() => { jest.useFakeTimers(); jest.setSystemTime(new Date(2026, 9, 4, 9, 10)); jest.clearAllMocks(); });
   afterEach(() => { act(() => tree.unmount()); jest.useRealTimers(); });
 
-  it.each(['refresh', 'set'] as const)('같은 요일의 %s 변경 조회 중에는 빈 카드 대신 로딩을 표시한다', async (change) => {
+  it.each([
+    ['새로고침', 1, 1, false],
+    ['세트 변경', 0, 2, true],
+  ] as const)('같은 요일의 %s 조회 중 표시(새로고침은 이전 일정 유지, 세트 변경은 로딩)', async (_label, refreshKey, setId, loading) => {
     jest.mocked(getTimetableItemsForWeekday).mockResolvedValueOnce([item]);
     await act(async () => { tree = create(<TodayScheduleCard theme={defaultTheme} refreshKey={0} setId={1} />); });
     expect(copy(tree)).toContain('국어');
     let resolve!: (items: readonly TimetableItem[]) => void;
     jest.mocked(getTimetableItemsForWeekday).mockImplementationOnce(() => new Promise((res) => { resolve = res; }));
-    await act(async () => { tree.update(<TodayScheduleCard theme={defaultTheme} refreshKey={change === 'refresh' ? 1 : 0} setId={change === 'set' ? 2 : 1} />); });
-    expect(copy(tree)).toContain('오늘 일정을 불러오는 중이에요.');
-    expect(copy(tree)).not.toContain('국어');
+    await act(async () => { tree.update(<TodayScheduleCard theme={defaultTheme} refreshKey={refreshKey} setId={setId} />); });
+    expect(copy(tree).includes('오늘 일정을 불러오는 중이에요.')).toBe(loading);
+    expect(copy(tree).includes('국어')).toBe(!loading);
     await act(async () => { resolve([item]); });
     expect(copy(tree)).toContain('국어');
     expect(copy(tree)).not.toContain('불러오는 중');
+  });
+  it('새로고침이 실패하면 이전 일정을 남기지 않고 오류를 알린다', async () => {
+    jest.mocked(getTimetableItemsForWeekday).mockResolvedValueOnce([item]).mockRejectedValueOnce(new Error('temporary'));
+    await act(async () => { tree = create(<TodayScheduleCard theme={defaultTheme} refreshKey={0} setId={1} />); });
+    await act(async () => { tree.update(<TodayScheduleCard theme={defaultTheme} refreshKey={1} setId={1} />); });
+    expect(copy(tree)).toContain('오늘 일정을 불러오지 못했어요.');
+    expect(copy(tree)).not.toContain('국어');
   });
   it('복귀 새로고침 직후 종료 경계를 넘긴 현재 시각으로 판정한다', async () => {
     jest.mocked(getTimetableItemsForWeekday).mockResolvedValue([item]);

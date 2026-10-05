@@ -51,10 +51,13 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
     rewardScale.setValue(0.6);
     Animated.spring(rewardScale, { toValue: 1, useNativeDriver: true }).start();
   }, [celebration, date, rewardScale]);
-  const visibleTasks = loadedKey === queryKey ? tasks : [];
+  // 같은 날짜의 재조회 중에는 이전 목록을 그대로 보여 주되(깜빡임 방지) 최신 결과가 오기 전까지 체크는 막는다
+  const stale = loadedKey !== queryKey;
+  const loadedToday = loadedKey.startsWith(`${date}:`);
+  const visibleTasks = loadedToday ? tasks : [];
   const completed = visibleTasks.filter((task) => task.completed).length;
   const toggle = async (task: TodayTask) => {
-    if (busy || loadedKey !== queryKey) return;
+    if (busy || stale) return;
     setBusy(true);
     let scheduleRefreshFailed = false;
     try {
@@ -81,8 +84,8 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
     <View style={styles.titleRow}><Text style={[styles.title, { color: theme.colors.text }]}>오늘의 할 일</Text>{!!visibleTasks.length && <Text style={[styles.badge, { color: theme.colors.primary, backgroundColor: theme.colors.background }]}>{completed} / {visibleTasks.length}</Text>}</View>
     {!!remainingCopy && <Text style={[styles.remaining, { color: remaining > 0 ? theme.colors.textMuted : theme.colors.text }]}>{remainingCopy}</Text>}
     {!!visibleTasks.length && <View style={[styles.progress, { backgroundColor: theme.colors.border }]}><View style={[styles.bar, { backgroundColor: theme.colors.primary, width: `${(completed / visibleTasks.length) * 100}%` }]} /></View>}
-    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed), disabled: busy || loadedKey !== queryKey }} disabled={busy || loadedKey !== queryKey} onPress={() => void toggle(task)} style={({ pressed }) => [styles.task, { borderColor: theme.colors.border, backgroundColor: task.completed ? theme.colors.background : theme.colors.surface, opacity: pressed ? 0.7 : 1 }]}><View style={[styles.check, { borderColor: task.completed ? theme.colors.primary : theme.colors.border, backgroundColor: task.completed ? theme.colors.primary : theme.colors.surface }]}><Text style={[styles.taskMark, { color: theme.colors.onPrimary }]}>{task.completed ? '✓' : ''}</Text></View><Text style={[styles.taskTitle, { color: task.completed ? theme.colors.textMuted : theme.colors.text, textDecorationLine: task.completed ? 'line-through' : 'none' }]}>{task.title}</Text></Pressable>)}
-    {error ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedKey === queryKey ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
+    {visibleTasks.map((task) => <Pressable key={task.id} accessibilityRole="checkbox" accessibilityState={{ checked: Boolean(task.completed), disabled: busy || stale }} disabled={busy || stale} onPress={() => void toggle(task)} style={({ pressed }) => [styles.task, { borderColor: theme.colors.border, backgroundColor: task.completed ? theme.colors.background : theme.colors.surface, opacity: pressed ? 0.7 : 1 }]}><View style={[styles.check, { borderColor: task.completed ? theme.colors.primary : theme.colors.border, backgroundColor: task.completed ? theme.colors.primary : theme.colors.surface }]}><Text style={[styles.taskMark, { color: theme.colors.onPrimary }]}>{task.completed ? '✓' : ''}</Text></View><Text style={[styles.taskTitle, { color: task.completed ? theme.colors.textMuted : theme.colors.text, textDecorationLine: task.completed ? 'line-through' : 'none' }]}>{task.title}</Text></Pressable>)}
+    {error ? <Text style={[styles.error, { color: theme.colors.text }]}>⚠️ {error}</Text> : !visibleTasks.length && <Text style={[styles.empty, { color: theme.colors.textMuted }]}>{loadedToday ? '오늘 할 일이 없어요.' : '오늘 할 일을 불러오는 중이에요.'}</Text>}
     {celebration?.date === date && <Animated.Text accessibilityLiveRegion="polite" style={[styles.celebration, { color: theme.colors.text, transform: [{ scale: rewardScale }] }]}>{celebration.message}</Animated.Text>}
   </View>;
 }

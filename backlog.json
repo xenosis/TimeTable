@@ -5774,9 +5774,9 @@
       "done_when": "오늘과 내 보석 화면 재구성(오늘 탭 배치는 P15가 대체). 오늘: 할 일 체크·취소, 일정 세트 조회 실패 시 오류·재시도, 앱 복귀·자정 갱신 유지. 내 보석: 목표 있음/없음, 꾸미기 테마 전환 유지. 보석 장부·자격 정책 검증은 P13·P4.13 책임으로 구분. 화면 확인(에뮬레이터), 전체 검사 및 리뷰 통과",
       "est_min": 45,
       "gate": null,
-      "owner": "codex",
+      "owner": "claude",
       "claimed_at": "2026-10-04T07:57:52.191Z",
-      "updated_at": "2026-10-05T02:56:25.146Z",
+      "updated_at": "2026-10-05T03:31:42.245Z",
       "log": [
         {
           "at": "2026-10-04T07:57:52.191Z",
@@ -5801,6 +5801,24 @@
           "owner": "codex",
           "status": "in_review",
           "note": "P11 리뷰 지적 4 반영: 화면 기준을 명시하고 보석 정책 검증은 P13·P4.13 책임으로 분리, P13 완료 의존 연결"
+        },
+        {
+          "at": "2026-10-05T03:07:17.143Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "critical-reviewer(SHA 1533b97d) 결과 done 불가: M-1 재조회·체크마다 일정 카드·할 일 목록이 사라졌다 나타남, M-2 내 보석 목표 있음 렌더 근거 없음, P11.md 14행 낡은 '보석 합계' 문구. 선행 P13은 done 처리."
+        },
+        {
+          "at": "2026-10-05T03:07:18.810Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "리뷰 보완 착수: M-1 재조회 중 이전 내용 유지+조작만 비활성, 로딩 배너는 첫 조회만. M-2 StickerBoard 목표 미달·달성·없음 렌더 테스트 추가."
+        },
+        {
+          "at": "2026-10-05T03:31:42.245Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "리뷰 보완 구현(v1.45.4/110): M-1 같은 요일·세트 새로고침과 같은 날짜 할 일 재조회 중 이전 내용 유지·체크만 비활성, 세트 로딩 배너는 첫 조회·오류 때만. 새로고침 실패 시 이전 일정 숨기고 오류. M-2 sticker-board-goal.test.tsx로 목표 없음/미달/달성 렌더 확인. npm run check 재실행 통과(.tmp/claude-check-1454b.log 57 suites/337 tests, Android build PASS; 첫 실행은 Gradle 테스트 임시 파일 NoSuchFile로 build FAIL→재실행 통과). 에뮬레이터: 앱 복귀 직후 로딩 없이 일정·할 일 유지(.tmp/claude-1454-resume-3.png), 내 보석 목표 없음 화면(.tmp/claude-1454-gems.png). 별도 관찰: 하단 탭 전환은 Slot 재마운트로 첫 조회 로딩이 잠깐 보임(P14 구조, 범위 밖). 재리뷰 진행."
         }
       ]
     },
@@ -5970,7 +5988,7 @@
     },
     {
       "id": "P13",
-      "status": "in_review",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "자동 보석 지급 중단과 아이의 보석 수 수정",
@@ -5984,9 +6002,9 @@
       "done_when": "체크·취소·주간·월간 완료와 목표 달성으로 보유량(작은·큰 보석 장부)이 자동 증감하지 않음. P4.13 V12 이전으로 기존 보유량이 보존되고 체크 취소 뒤에도 유지됨. 실물 보석 자격·요청·지급(P4.13)은 유지하되 장부를 바꾸지 않음. 아이가 수를 수정하고 재시작 뒤 유지됨. 동시 수량 저장은 마지막 저장의 절대값 우선. 수량 입력 취소·잘못된 입력·저장 실패 흐름 테스트, 전체 검사와 리뷰 확인",
       "est_min": 45,
       "gate": null,
-      "owner": "codex",
+      "owner": "claude",
       "claimed_at": "2026-10-04T08:41:33.457Z",
-      "updated_at": "2026-10-05T02:55:42.160Z",
+      "updated_at": "2026-10-05T03:06:49.089Z",
       "log": [
         {
           "at": "2026-10-04T08:41:33.457Z",
@@ -6005,8 +6023,16 @@
           "owner": "codex",
           "status": "in_review",
           "note": "P13 critical-reviewer(1791150403925) 지적 반영: (1) 완료 조건을 docs/tasks.md 사용자 최종 결정대로 '보유량 자동 증감 중단·자격/요청/지급 유지·마지막 절대값 우선'으로 구체화 (2) V12 이전 의존을 위해 deps P4.13, where에 마이그레이션·수량 저장소·입력 컴포넌트 추가. (3) 입력 예외 흐름은 __tests__/gem-count-editor.test.tsx 4건과 에뮬레이터 키보드 첫 탭 저장·취소 확인으로 해소"
+        },
+        {
+          "at": "2026-10-05T03:06:49.089Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA 1533b97d) 재검토: 이전 지적 3건 해소 확인, Critical/High 없음, done 가능 의견. backlog-explainer가 P13.md 새 SHA로 갱신."
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "rewardRepository/gemCountRepository 장부 자동 증감 없음, V12 이전 보존(gem-rights.test.ts 164-180), 수량 입력 예외 흐름 gem-count-editor.test.tsx 4건, 에뮬레이터 키보드 첫 탭 저장·취소와 재시작 유지 기록(device-verification-2026-10-04.md) · 검증: npm run check 전체 통과(.tmp/claude-check-1453.log: 56 suites/332 tests, lint·typecheck·Android build PASS), critical-reviewer·backlog-explainer 병렬 리뷰 완료. 실기기 확인은 없음(에뮬레이터 근거)"
     },
     {
       "id": "P14",

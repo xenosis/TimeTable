@@ -34,7 +34,9 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
   const [message, setMessage] = useState('오늘 일정을 불러오는 중이에요.');
   const weekday = now.getDay();
   const [retryKey, setRetryKey] = useState(0);
-  const requestKey = `${weekday}:${setId}:${refreshKey}:${retryKey}`;
+  // 같은 요일·세트의 새로고침(체크·앱 복귀)에서는 이전 일정을 유지해 카드가 깜빡이지 않게 한다
+  const identity = `${weekday}:${setId}:`;
+  const requestKey = `${identity}${refreshKey}:${retryKey}`;
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const dayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}:${setId}`;
   const expanded = expandedKey === dayKey;
@@ -63,12 +65,13 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
     return () => { active = false; };
   }, [weekday, refreshKey, setId, requestKey]);
 
-  const readyItems = setId !== null && loadedRequestKey === requestKey ? items : [];
   const failed = failedRequestKey === requestKey;
+  const sameIdentityLoaded = loadedRequestKey?.startsWith(identity) ?? false;
+  const readyItems = setId !== null && !failed && sameIdentityLoaded ? items : [];
   const { current, next, minutesUntilNext } = getTodaySchedule(readyItems, now);
   const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   const additional = failed ? [] : readyItems.filter((item) => item.endTime > time && item.id !== current?.id && item.id !== next?.id).sort((left, right) => left.startTime.localeCompare(right.startTime));
-  const emptyMessage = failed ? message : loadedRequestKey !== requestKey ? '오늘 일정을 불러오는 중이에요.' : readyItems.length ? '오늘 일정이 끝났어요.' : message;
+  const emptyMessage = failed ? message : !sameIdentityLoaded ? '오늘 일정을 불러오는 중이에요.' : readyItems.length ? '오늘 일정이 끝났어요.' : message;
 
   return <>{setId !== null && <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
     <Text accessibilityRole="header" style={[styles.heading, { color: theme.colors.text }]}>지금 · 다음 일정</Text>

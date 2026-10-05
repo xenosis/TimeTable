@@ -1,5 +1,6 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { TodayTasksCard } from '../src/components/TodayTasksCard';
+import { setTaskCompletionWithRewards } from '../src/db/rewardRepository';
 import { getTodayTasks, type TodayTask } from '../src/db/taskRepository';
 import { defaultTheme } from '../src/theme';
 
@@ -8,7 +9,7 @@ jest.mock('../src/db/taskRepository', () => ({ getTodayTasks: jest.fn() }));
 jest.mock('../src/db/rewardRepository', () => ({ setTaskCompletionWithRewards: jest.fn() }));
 jest.mock('../src/notifications/taskRollingSchedule', () => ({ requestTaskRollingScheduleRefresh: jest.fn() }));
 
-it('외부 체크 변경 재조회 중에는 이전 체크를 누를 수 없고 최신 결과로 표시한다', async () => {
+it('외부 체크 변경 재조회 중에는 이전 목록을 유지하되 누를 수 없고 최신 결과로 표시한다', async () => {
   const task = { id: 1, title: '책 읽기', completed: false } as unknown as TodayTask;
   jest.mocked(getTodayTasks).mockResolvedValueOnce([task]);
   let tree!: ReactTestRenderer;
@@ -18,8 +19,13 @@ it('외부 체크 변경 재조회 중에는 이전 체크를 누를 수 없고 
   let resolve!: (tasks: readonly TodayTask[]) => void;
   jest.mocked(getTodayTasks).mockImplementationOnce(() => new Promise((res) => { resolve = res; }));
   await act(async () => { tree.update(<TodayTasksCard theme={defaultTheme} refreshKey={1} />); });
-  expect(checks()).toHaveLength(0);
+  // 깜빡임 방지: 목록은 그대로 보이지만 최신 결과 전에는 비활성
+  expect(checks()).toHaveLength(1);
+  expect(checks()[0].props.disabled).toBe(true);
+  expect(checks()[0].props.accessibilityState).toEqual({ checked: false, disabled: true });
+  await act(async () => { checks()[0].props.onPress(); });
+  expect(setTaskCompletionWithRewards).not.toHaveBeenCalled();
   await act(async () => { resolve([{ ...task, completed: true } as unknown as TodayTask]); });
-  expect(checks()[0].props.accessibilityState.checked).toBe(true);
+  expect(checks()[0].props.accessibilityState).toEqual({ checked: true, disabled: false });
   act(() => tree.unmount());
 });
