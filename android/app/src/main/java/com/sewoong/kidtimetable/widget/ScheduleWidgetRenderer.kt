@@ -32,8 +32,6 @@ object ScheduleWidgetRenderer {
       setRemoteAdapter(R.id.widget_list, WidgetRenderSupport.listServiceIntent(context, TodayListService::class.java, widgetId))
       // 목록 줄을 누르면 앱 오늘 화면으로 간다(줄마다 빈 fill-in을 채워 이 템플릿을 쓴다)
       setPendingIntentTemplate(R.id.widget_list, WidgetRenderSupport.openAppTemplate(context, OPEN_APP_TEMPLATE_REQUEST_CODE))
-      // 지난 일정은 위에 흐리게 남겨 두고, 처음에는 지금/다음 일정부터 보이게 한다
-      if (view.rows.isNotEmpty()) setScrollPosition(R.id.widget_list, view.firstVisible)
 
       if (view.moreCount > 0 && view.message == null) {
         setViewVisibility(R.id.widget_more, View.VISIBLE)

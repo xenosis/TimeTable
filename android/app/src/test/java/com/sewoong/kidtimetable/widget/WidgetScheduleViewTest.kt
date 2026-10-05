@@ -39,27 +39,32 @@ class WidgetScheduleViewTest {
     assertEquals(listOf("#D97706", "#059669"), view.rows.map { it.markerColor })
   }
 
-  @Test fun 일정이_많아도_모두_시간순으로_목록에_담고_처음_보일_위치는_지금_일정이다() {
+  @Test fun 끝난_일정은_바로_전_1개만_흐리게_남기고_지금과_다음_일정을_모두_목록에_담는다() {
     val schedule = (1..9).map { entry("일정$it", "%02d:00".format(8 + it), "%02d:30".format(8 + it)) }.toTypedArray()
-    val view = build(day(*schedule), "14:10") // 일정6(14:00~14:30)이 진행 중
-    assertEquals((1..9).map { "일정$it" }, view.rows.map { it.title })
-    assertEquals(0, view.moreCount) // 줄을 빼지 않으므로 '+ N개'가 없다
-    assertEquals(5, view.firstVisible)
-    assertEquals(RowState.CURRENT, view.rows[view.firstVisible].state)
-    assertEquals(true, view.rows.take(5).all { it.state == RowState.PAST }) // 지난 일정은 위에 흐리게 남는다
+    val view = build(day(*schedule), "14:10") // 일정6(14:00~14:30)이 진행 중, 일정1~5는 끝남
+    assertEquals(listOf("일정5", "일정6", "일정7", "일정8", "일정9"), view.rows.map { it.title })
+    assertEquals(listOf(RowState.PAST, RowState.CURRENT, RowState.UPCOMING, RowState.UPCOMING, RowState.UPCOMING), view.rows.map { it.state })
+    assertEquals(0, view.moreCount) // 줄을 빼서 숨기지 않으므로 '+ N개'가 없다
   }
 
-  @Test fun 진행_중인_일정이_없으면_처음_보일_위치는_다음_일정이다() {
+  @Test fun 진행_중인_일정이_없으면_바로_전_일정과_다음_일정이_보인다() {
     val view = build(day(entry("앞", "09:00", "10:00"), entry("뒤", "15:00", "16:00")), "12:00")
-    assertEquals(1, view.firstVisible)
-    assertEquals(RowState.UPCOMING, view.rows[1].state)
+    assertEquals(listOf("앞", "뒤"), view.rows.map { it.title })
+    assertEquals(listOf(RowState.PAST, RowState.UPCOMING), view.rows.map { it.state })
   }
 
-  @Test fun 모두_끝난_날에는_마지막_일정이_보이게_하고_모두_흐리게_한다() {
+  @Test fun 아직_시작_전이면_끝난_일정_없이_모두_보인다() {
+    val schedule = (1..7).map { entry("일정$it", "%02d:00".format(8 + it), "%02d:30".format(8 + it)) }.toTypedArray()
+    val view = build(day(*schedule), "07:00")
+    assertEquals(7, view.rows.size)
+    assertEquals(true, view.rows.none { it.state == RowState.PAST })
+  }
+
+  @Test fun 모두_끝난_날에는_마지막_일정_1개만_흐리게_남는다() {
     val schedule = (1..7).map { entry("일정$it", "%02d:00".format(8 + it), "%02d:30".format(8 + it)) }.toTypedArray()
     val view = build(day(*schedule), "23:00")
-    assertEquals(6, view.firstVisible)
-    assertEquals(true, view.rows.all { it.state == RowState.PAST })
+    assertEquals(listOf("일정7"), view.rows.map { it.title })
+    assertEquals(RowState.PAST, view.rows.single().state)
   }
 
   @Test fun 앱이_상한_때문에_못_담은_개수는_더보기로_센다() {

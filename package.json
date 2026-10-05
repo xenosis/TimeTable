@@ -1,6 +1,6 @@
 {
   "name": "kidtimetable",
-  "version": "1.47.0",
+  "version": "1.47.1",
   "main": "index.ts",
   "dependencies": {
     "expo": "~57.0.23",
