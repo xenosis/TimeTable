@@ -4658,12 +4658,12 @@
     },
     {
       "id": "P6.2",
-      "status": "in_progress",
+      "status": "done",
       "priority": null,
       "category": "infra",
       "title": "Supabase 스키마",
       "summary": "families, family_members, periods, timetable_items, day_exceptions, tasks, task_completions, sticker_ledger, rewards, devices 테이블을 supabase/migrations로 관리한다.",
-      "where": "supabase/migrations/",
+      "where": "supabase/migrations/ supabase/README.md",
       "parent": "P6",
       "deps": [
         "P6.1"
@@ -4674,7 +4674,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-01T04:09:13.665Z",
-      "updated_at": "2026-10-05T11:06:41.418Z",
+      "updated_at": "2026-10-05T11:46:17.566Z",
       "log": [
         {
           "at": "2026-10-01T04:09:13.665Z",
@@ -4699,17 +4699,37 @@
           "owner": "claude",
           "status": "in_progress",
           "note": "사용자 결정 2026-10-05: Doro Supabase 프로젝트에 tt_ 테이블 추가, 적용은 npx Supabase CLI(로그인은 사용자 직접), 계정은 이메일+비밀번호 2개. Supabase changelog 45329(2026-10-30부터 새 테이블 Data API 자동 노출 중단) 대응으로 RLS 파일에 tt_ 테이블·시퀀스 권한 직접 부여(authenticated·service_role)와 anon 회수 추가, 정적 테스트 9건 통과. 적용·실행 검증 착수."
+        },
+        {
+          "at": "2026-10-05T11:26:46.642Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "Doro 프로젝트(PG17)에 스키마·RLS 두 파일을 한 트랜잭션으로 적용(npx supabase db query --linked -f, 이력 테이블 없어 이력 미기록). 적용 전 충돌 없음, 적용 후 tt_ 13개 RLS on·anon 권한 없음·authenticated CRUD·Doro 테이블 불변 확인(커밋 5caf233·479f326·README). 리뷰 진행."
+        },
+        {
+          "at": "2026-10-05T11:42:02.116Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "critical-reviewer(SHA 1ffa1fa0) M1 보완: README 적용 순서를 실제 방식(db query -f, 한 트랜잭션)으로 고치고 db push 금지·이력 미기록 이유·적용 커밋(5caf233) 명시. summary의 10개 테이블은 로컬 스키마를 따른 13개로 구현(sets·settings·completion_history 추가). 재리뷰 진행."
+        },
+        {
+          "at": "2026-10-05T11:46:17.566Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA 9d6fbdcd) done 가능. Q1 확인: git diff 5caf233..HEAD -- supabase/migrations 변경 없음(적용 파일과 저장소 일치). summary의 10개 테이블은 로컬 스키마를 따른 13개로 대체."
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "supabase/migrations 두 파일(커밋 5caf233)을 Doro 프로젝트(PG17)에 한 트랜잭션으로 적용(npx supabase db query --linked -f). 적용 전 tt_ 충돌 없음, 적용 후 tt_ 13개 RLS on·정책 1~4개·anon 권한 없음·authenticated CRUD·보안 함수 anon 실행 불가·Doro 테이블 3개 불변 확인. supabase/README.md에 적용 방식·db push 금지 기록 · 검증: 실DB 메타데이터 조회, RLS 실행 검증 43건 통과(.tmp/tt-rls-check-result-2026-10-05.json), supabase db advisors(tt_ WARN 1 의도·INFO 13), npm run check 통과 .tmp/claude-check-p6.log(348 tests). critical-reviewer 3회·backlog-explainer 병렬 리뷰"
     },
     {
       "id": "P6.3",
-      "status": "in_progress",
+      "status": "needs_info",
       "priority": null,
       "category": "security",
       "title": "RLS 정책",
       "summary": "아빠 = 전체 쓰기 / 딸 = 읽기 + 오늘 완료 체크 정책을 적용한다.",
-      "where": "supabase/migrations/",
+      "where": "supabase/migrations/20261001000100_tt_rls.sql supabase/tests/tt_rls_check.sql supabase/README.md",
       "parent": "P6",
       "deps": [
         "P6.2"
@@ -4720,7 +4740,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-01T04:09:15.544Z",
-      "updated_at": "2026-10-05T11:06:43.449Z",
+      "updated_at": "2026-10-05T11:46:19.518Z",
       "log": [
         {
           "at": "2026-10-01T04:09:15.544Z",
@@ -4745,6 +4765,24 @@
           "owner": "claude",
           "status": "in_progress",
           "note": "사용자 결정 2026-10-05: 딸 계정에 보상 목표·보석 장부·교시·휴일 쓰기와 지난 날짜 체크까지 모두 허용(현재 SQL 초안 그대로, D7·P13과 일치). P6.2 적용 뒤 실제 Postgres에서 anon/다른 가족/child/parent 허용·거부 시나리오 검증 예정."
+        },
+        {
+          "at": "2026-10-05T11:26:48.693Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "실제 Postgres 실행 검증 supabase/tests/tt_rls_check.sql 28건 통과(아빠A·딸A·아빠B·가족 없음·anon 허용/거부, 한 트랜잭션 후 되돌림, 잔존 데이터 0 확인). advisors: tt_create_family SECURITY DEFINER 경고는 의도한 설계로 README 기록, 나머지 미사용 인덱스 INFO. 리뷰 진행."
+        },
+        {
+          "at": "2026-10-05T11:42:00.054Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "critical-reviewer(SHA 1ffa1fa0) H1·H2 보완(커밋 f66b7fb): 검사 함수가 42501·정책 0행만 거부로 인정(그 외 error:<코드>), 중복 제약으로 통과하던 B 구성원 넣기 검사를 가족 없는 사용자로 교체·대상 id 명시, WITH CHECK 이동·남의 기기·딸의 아빠 강등/삭제·가족 직접 추가/삭제·완료 이력·시간표 설정·삭제 정책 추가. 실DB 43건 통과(허용17·거부26), 결과 .tmp/tt-rls-check-result-2026-10-05.json, 잔존 0. auth.users 트리거 없음 확인. summary의 '딸=읽기+오늘 체크'는 2026-10-05 사용자 결정(D4·D7, 딸 권한 전부 허용)으로 대체. M3 위험(Doro schedules using true, 가입 비공개) 사용자 판단으로 수용·README 기록. 재리뷰 진행."
+        },
+        {
+          "at": "2026-10-05T11:46:19.518Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "critical-reviewer(SHA 9d6fbdcd) done 불가: 아빠 허용 경로(딸 기기 읽기·구성원 수정/삭제·가족 삭제)와 딸 자기 기기 등록·완료 취소·시간표 세트/항목 허용 미검증, 0행 거부의 데이터 무변화 확인, tt_create_family 소속 확인을 sqlerrm까지 구분, README·research 기기 권한 문구 3곳. 사용자 지시(2026-10-05)로 P5 실기기 확인을 먼저 하고 이어서 보강."
         }
       ]
     },
