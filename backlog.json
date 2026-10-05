@@ -5760,7 +5760,7 @@
     },
     {
       "id": "P11",
-      "status": "in_review",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "오늘·내 보석 화면 디자인 개선",
@@ -5776,7 +5776,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-04T07:57:52.191Z",
-      "updated_at": "2026-10-05T03:31:42.245Z",
+      "updated_at": "2026-10-05T03:45:36.243Z",
       "log": [
         {
           "at": "2026-10-04T07:57:52.191Z",
@@ -5819,8 +5819,16 @@
           "owner": "claude",
           "status": "in_review",
           "note": "리뷰 보완 구현(v1.45.4/110): M-1 같은 요일·세트 새로고침과 같은 날짜 할 일 재조회 중 이전 내용 유지·체크만 비활성, 세트 로딩 배너는 첫 조회·오류 때만. 새로고침 실패 시 이전 일정 숨기고 오류. M-2 sticker-board-goal.test.tsx로 목표 없음/미달/달성 렌더 확인. npm run check 재실행 통과(.tmp/claude-check-1454b.log 57 suites/337 tests, Android build PASS; 첫 실행은 Gradle 테스트 임시 파일 NoSuchFile로 build FAIL→재실행 통과). 에뮬레이터: 앱 복귀 직후 로딩 없이 일정·할 일 유지(.tmp/claude-1454-resume-3.png), 내 보석 목표 없음 화면(.tmp/claude-1454-gems.png). 별도 관찰: 하단 탭 전환은 Slot 재마운트로 첫 조회 로딩이 잠깐 보임(P14 구조, 범위 밖). 재리뷰 진행."
+        },
+        {
+          "at": "2026-10-05T03:45:36.243Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "재리뷰(SHA 7b9b5de9) done 가능(조건부) 의견. 조건이던 알림 재예약 실패 안내 소거(기존 결함)와 실패 뒤 이전 일정 재노출(Low)을 v1.45.5에서 수정·테스트. 할 일 체크·취소 화면 근거는 Jest(today-tasks-refresh 등)와 이전 회차 에뮬레이터 기록(device-verification-2026-10-04.md 위젯 해제/재체크→앱 0/1·1/1)으로 판단. 관찰(범위 밖): 하단 탭 전환은 Slot 재마운트로 첫 조회 로딩이 잠깐 보임."
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "커밋 e80f4f4·5b4b7d8: 새로고침 중 이전 일정·할 일 유지와 체크 비활성, 세트 로딩 배너는 첫 조회·오류만, 실패 시 이전 일정 숨김, 알림 경고 유지. 테스트 today-tasks-refresh·today-schedule-card-refresh·today-screen-recovery·sticker-board-goal(목표 없음/미달/달성). 에뮬레이터 .tmp/claude-1454-resume-3.png(앱 복귀 직후 로딩 없음), .tmp/claude-1454-gems.png · 검증: npm run check 통과 .tmp/claude-check-1455b.log(57 suites/338 tests, lint·typecheck·Android build PASS; 직전 실행은 Gradle 임시 파일 NoSuchFile로 build FAIL→결과 폴더 정리 후 재실행 통과). critical-reviewer 2회·backlog-explainer 병렬 리뷰. 실기기 확인 없음"
     },
     {
       "id": "P12",
