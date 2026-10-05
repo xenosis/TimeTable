@@ -1,3 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 테마 아이콘(앱 아이콘에 팔레트 적용)용 흑백 달력. 런처가 한 가지 색으로 칠하므로 칸·띠는 evenOdd로 구멍을 뚫는다. 안전 영역(가운데 66dp) 안에 그린다. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-  <path android:fillColor="#FFFFFFFF" android:pathData="M28,25 L80,25 Q86,25 86,31 L86,81 Q86,87 80,87 L28,87 Q22,87 22,81 L22,31 Q22,25 28,25 M22,42 L86,42 L86,50 L22,50 Z M35,17 L43,17 L43,33 L35,33 Z M65,17 L73,17 L73,33 L65,33 Z M33,60 L45,60 L45,72 L33,72 Z M51,60 L63,60 L63,72 L51,72 Z M69,60 L77,60 L77,72 L69,72 Z" />
+  <!-- 달력 몸통: 머리 띠 아래 선과 2x2 칸을 구멍으로 뺀다 -->
+  <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd" android:pathData="M37,33 L71,33 Q78,33 78,40 L78,74 Q78,81 71,81 L37,81 Q30,81 30,74 L30,40 Q30,33 37,33 Z M33,45 L75,45 L75,48 L33,48 Z M38,53 L52,53 L52,63 L38,63 Z M56,53 L70,53 L70,63 L56,63 Z M38,67 L52,67 L52,77 L38,77 Z M56,67 L70,67 L70,77 L56,77 Z" />
+  <!-- 달력 고리 두 개 -->
+  <path android:fillColor="#FFFFFFFF" android:pathData="M41,27 L46,27 L46,39 L41,39 Z M62,27 L67,27 L67,39 L62,39 Z" />
 </vector>
