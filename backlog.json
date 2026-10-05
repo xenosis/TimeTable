@@ -3963,7 +3963,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T06:36:37.059Z",
-      "updated_at": "2026-10-05T12:32:34.733Z",
+      "updated_at": "2026-10-05T15:44:52.717Z",
       "log": [
         {
           "at": "2026-09-18T06:36:37.059Z",
@@ -4024,6 +4024,24 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "딸 폰 2026-10-05 저녁: 경계 갱신 알람이 setAndAllowWhileIdle 때문에 21:00→21:01:18(78초), 다음은 허용 범위 +6분30초로 지연됨을 발견. 정확한 알람(setExactAndAllowWhileIdle, 권한 없으면 1분 setWindow)으로 수정(커밋 5729706, v1.46.1). 화면 꺼짐(Dozing) 상태에서 21:30:00.013 실행 확인(.tmp/alarm-1461.txt). 남은 것: 재부팅 뒤 복구·자정 갱신 실기기(P5.6 실사용 또는 다음 연결 때), 잠금 해제 후 위젯 화면 캡처."
+        },
+        {
+          "at": "2026-10-05T15:06:01.033Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "딸 폰 연결 상태에서 1.47.1~1.47.2 경계·자정 갱신 확인 착수(2026-10-05 23:20)."
+        },
+        {
+          "at": "2026-10-05T15:06:04.302Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "딸 폰 1.47.1~1.47.2: 23:36 경계 정확한 알람(origWhen 23:36:00, 허용 범위 0) 뒤 위젯 전환 확인, 21:30:00.013 화면 꺼짐(Dozing) 실행, 자정 00:00 '화요일' 전환과 다음 00:00:01 예약 확인. 재부팅 뒤 복구는 done_when대로 P5.6 실사용에서 확인. 리뷰 예정."
+        },
+        {
+          "at": "2026-10-05T15:44:52.717Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "critical-reviewer(SHA c7c52a03): done 불가. 사용자 결정 '재부팅 등 확인 후 done'과 P5.6의 'P5.4 blocked' 경로 때문. 2026-10-06 00:26 재부팅 확인 시도: 화 00:40 테스트 일정 QD1(학원, 알림 없음) 추가, 재부팅 전 예약 origWhen 00:40:00 확인 후 adb reboot. 재부팅 뒤 adb 연결이 돌아오지 않아(00:44까지) 복구·깊은 절전 확인 못 함. 다음: 폰 잠금 해제·USB 디버깅 재연결 뒤 dumpsys alarm으로 복구 확인, 잠금 해제 전 복구 여부(LOCKED_BOOT_COMPLETED 미수신) 기록, QD1 삭제. Dozing 기록은 화면 꺼짐 상태일 뿐 deep idle 근거 아님. 자정 00:00:01 실행 이력은 정황 근거."
         }
       ]
     },
@@ -4549,7 +4567,7 @@
     },
     {
       "id": "P5.13",
-      "status": "in_review",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "위젯을 크기만큼 보이는 스크롤 목록으로 바꾸기",
@@ -4562,12 +4580,12 @@
         "P5.12"
       ],
       "doc": null,
-      "done_when": "두 위젯의 항목 영역이 스크롤 목록(ListView+RemoteViewsService)이라 위젯 크기만큼 항목이 보이고 나머지는 위젯 안에서 스크롤됨('+ N개' 줄은 앱이 하루 상한으로 못 담은 개수가 있을 때만). 일정: 정규 수업 제외·시간순·진행 중 강조·지난 일정 흐림·처음 보이는 위치는 지금/다음 일정. 할 일: 원래 순서, 줄을 누르면 토글(P5.3 경로 그대로, 즉시 DB 반영), 제목·빈 곳을 누르면 앱 열림, 모두 끝냄 칭찬·할 일 없음 문구 유지. 줄이 사라지지 않으므로 누른 줄 1분 유지 규칙과 그 재그리기 예약은 제거. 데이터 갱신 시 목록도 다시 그려짐. 글자 크기 1.3에서 잘림 없음. JUnit(목록 항목 계산), docs/widget-layout.md 갱신, npm run check 통과, 딸 폰에서 4x2·4x4 캡처와 스크롤·체크 확인",
+      "done_when": "두 위젯의 항목 영역이 스크롤 목록(ListView+RemoteViewsService)이라 위젯 크기만큼 항목이 보이고 나머지는 위젯 안에서 스크롤됨('+ N개' 줄은 앱이 하루 상한으로 못 담은 개수가 있을 때만), 세로 크기 상한 없음. 일정: 정규 수업 제외·시간순·바로 전 끝난 일정 1개만 흐리게 남기고 그 뒤로 진행 중 강조·다음 일정. 할 일: 원래 순서, 줄을 누르면 토글(P5.3 경로 그대로, 즉시 DB 반영), 위젯 제목과 일정 줄을 누르면 앱 열림(목록 아래 빈 곳은 무반응, 사용자 수용), 모두 끝냄 칭찬·할 일 없음 문구 유지. 누른 줄 1분 유지 규칙과 그 재그리기 예약은 제거. 데이터 갱신·일정 경계 시 목록도 다시 그려짐. 글자 크기 1.3에서 잘림 없음. JUnit(목록 항목 계산), docs/widget-layout.md 갱신, npm run check 통과, 딸 폰에서 4x2·4x4 캡처와 스크롤·체크·경계 갱신 확인",
       "est_min": 40,
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-05T10:29:10.738Z",
-      "updated_at": "2026-10-05T13:11:18.986Z",
+      "updated_at": "2026-10-05T15:23:12.455Z",
       "log": [
         {
           "at": "2026-10-05T07:21:42.258Z",
@@ -4616,8 +4634,40 @@
           "owner": "claude",
           "status": "in_review",
           "note": "스크롤 목록 위젯 구현(커밋 ea20c8a, v1.47.0/118): ListView+RemoteViewsService(TodayListService·TaskListService), 일정 지금/다음부터 스크롤 위치, 할 일 원래 순서·줄 고정, mutable 템플릿+fill-in 토글, 1분 유지 규칙·재그리기 예약 제거. 위젯 JUnit 53 통과, npm run check 통과 .tmp/claude-check-1470b.log(348 tests; 첫 실행은 worklets .cxx 캐시 누락으로 build FAIL→캐시 삭제 후 통과). 딸 폰: 4x4 일정 8개 전부 표시·진행 중 강조·지난 흐림, 4x2 할 일 스크롤·QT6 토글(같은 자리), 글자 1.3 잘림 없음. 테스트 데이터 정리. 리뷰 진행."
+        },
+        {
+          "at": "2026-10-05T14:07:07.795Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "critical-reviewer(SHA 74c1b4ff) done 불가: 처음 보이는 위치(setScrollPosition은 목표 줄이 보일 때까지만 스크롤해 지금 일정이 맨 아래 걸릴 수 있음) 미확인, 갱신마다 스크롤 되돌림, 목록 아래 빈 곳 앱 열기 미확인, maxResizeHeight 300dp와 실기기 459dp 불일치. 사용자 결정 2026-10-05: 끝난 일정은 바로 전 1개만 흐리게(스크롤 위치 지정 제거), 세로 크기 상한 없앰."
+        },
+        {
+          "at": "2026-10-05T14:07:09.605Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "보완 착수: 일정 목록=바로 전 끝난 일정 1개+지금·다음, setScrollPosition·firstVisible 제거, maxResizeHeight 제거, 문서 정정, 실기기에서 빈 곳 탭·경계 갱신 확인."
+        },
+        {
+          "at": "2026-10-05T15:04:53.325Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 결정(2026-10-05) 반영: 끝난 일정은 바로 전 1개만 흐리게, 세로 크기 상한 없음, 목록 아래 빈 곳은 무반응(제목·줄로 앱 열기)."
+        },
+        {
+          "at": "2026-10-05T15:05:30.359Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "보완 완료(1.47.1 커밋 877067b, 1.47.2 c27c896): 바로 전 끝난 일정 1개만 흐리게, 세로 상한 제거, 제목 요일만. 딸 폰: 4x4 전체 표시, 스크롤·체크 같은 자리, 글자 1.3 잘림 없음, 제목·줄 탭 앱 열림, 23:36 경계 갱신 후 QC3 흐림·QC4 강조. npm run check·JUnit 통과. 근거 docs/device-verification-2026-10-05.md. 재리뷰 예정."
+        },
+        {
+          "at": "2026-10-05T15:23:12.455Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA c7c52a03) 조건부 done: done_when 원문이 사용자 결정(바로 전 1개, 빈 곳 무반응)과 일치함을 CLI로 확인, 선행 P5.3·P5.10·P5.12 done. 비차단 지적(갱신 뒤 스크롤 위치 유지 미확인)은 widget-layout.md에서 미확인으로 낮추고 P5.6 실사용 확인으로 넘김. 겹치는 일정 테스트·할 일 줄 터치 높이는 비차단 의견."
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "커밋 ea20c8a·877067b·c27c896·ef77fce, WidgetScheduleView.kt rows.drop(firstActive-1), maxResizeHeight 제거, docs/widget-layout.md, docs/device-verification-2026-10-05.md(스크롤 목록·경계·자정 절) · 검증: npm run check 통과(1.47.2·1.47.3), 위젯 JUnit 통과, 딸 폰 SM-A245N 4x4 전체 표시·스크롤·같은 자리 토글·글자 1.3·제목/줄 탭·23:36 경계 갱신·자정 화요일 전환 확인, critical-reviewer·backlog-explainer 병렬 리뷰(SHA c7c52a03)"
     },
     {
       "id": "P6",
@@ -4748,7 +4798,7 @@
     },
     {
       "id": "P6.3",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "security",
       "title": "RLS 정책",
@@ -4764,7 +4814,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-01T04:09:15.544Z",
-      "updated_at": "2026-10-05T11:46:19.518Z",
+      "updated_at": "2026-10-05T15:23:15.445Z",
       "log": [
         {
           "at": "2026-10-01T04:09:15.544Z",
@@ -4807,8 +4857,28 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "critical-reviewer(SHA 9d6fbdcd) done 불가: 아빠 허용 경로(딸 기기 읽기·구성원 수정/삭제·가족 삭제)와 딸 자기 기기 등록·완료 취소·시간표 세트/항목 허용 미검증, 0행 거부의 데이터 무변화 확인, tt_create_family 소속 확인을 sqlerrm까지 구분, README·research 기기 권한 문구 3곳. 사용자 지시(2026-10-05)로 P5 실기기 확인을 먼저 하고 이어서 보강."
+        },
+        {
+          "at": "2026-10-05T13:15:20.276Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "리뷰(SHA 9d6fbdcd) 보강 착수: 아빠 허용 경로(딸 기기 읽기·구성원 수정/삭제·가족 삭제), 딸 자기 기기·완료 취소·시간표 세트/항목, 0행 거부의 데이터 무변화 확인, tt_create_family 소속 확인 sqlerrm 구분, README·research 기기 권한 문구."
+        },
+        {
+          "at": "2026-10-05T14:06:38.980Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "리뷰(SHA 9d6fbdcd) 보강(커밋 dbc9ce1): 실DB 59건 통과(허용33·거부26), 아빠 허용 경로·딸 자기 기기/완료 취소/시간표 세트·항목, 마지막 소유자 권한 데이터 무변화 확인 6건, tt_create_family 소속 확인 sqlerrm 일치 조건, README·research 기기 권한(가족 기기 읽기·삭제). 결과 .tmp/tt-rls-check-result-2026-10-05.json, 잔존 0. 재리뷰 예정."
+        },
+        {
+          "at": "2026-10-05T15:23:15.445Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA c7c52a03) 조건부 done: P6.2 done 확인, 운영 적용 파일=커밋 5caf233 이후 tt_rls.sql 변경 없음(git log). 59건 수 직접 대조 일치. 비차단: 일부 UPDATE 경로 미검사(같은 for all 정책), parent 자기 강등·삭제 시 parent 없는 가족 가능(사용자 결정 질문으로 남김), P6.3.md 사실 오류(함수 서명·43건·child 읽기만·정책 수) 수정."
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "supabase/migrations/20261001000100_tt_rls.sql(5caf233, 2026-10-05 적용), supabase/tests/tt_rls_check.sql 59건(허용33·거부26), supabase/README.md, 커밋 479f326·f66b7fb·dbc9ce1·ef77fce · 검증: Doro 운영 DB(PG17)에서 2026-10-05 트랜잭션 롤백 방식 실행 59/59 통과(.tmp/tt-rls-check-result-2026-10-05.json, git 제외), 검증 뒤 잔존 데이터 0, critical-reviewer·backlog-explainer 병렬 리뷰(SHA c7c52a03)"
     },
     {
       "id": "P6.4",
@@ -5046,7 +5116,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T10:11:28.628Z",
-      "updated_at": "2026-09-28T14:31:26.115Z",
+      "updated_at": "2026-10-05T15:45:26.779Z",
       "log": [
         {
           "at": "2026-09-16T04:50:33.860Z",
@@ -5089,6 +5159,18 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "critical-reviewer 반영: brand_icon_monochrome.xml도 foreground와 동일한 원인(모든 하위 path가 같은 방향+nonZero fillType이라 구멍이 안 뚫리고 속이 꽉 찬 덩어리)으로 깨져 있어, Material You '테마 아이콘' 켰을 때도 깨질 수 있었음 — brand_launcher(.xml, _round.xml)의 monochrome을 @mipmap/ic_launcher_monochrome(Expo 자동 생성)으로 동일하게 수정. 버전 1.30.33, npm run check 통과. 실기기로 기본 아이콘·스플래시는 재확인했으나, '테마 아이콘' 토글을 켠 상태의 monochrome 렌더링은 설정 앱 검색 입력이 막혀 실기기 확인 못함(같은 패턴 수정이라 근거는 있으나 미확인). 남은 Medium: brand_launcher_round·brand_icon_foreground.xml이 실질적으로 안 쓰이거나 문서와 어긋남(정리 여부는 사람 판단 필요), foreground 아트워크가 66dp 안전영역 대비 약간 크게 걸쳐있을 수 있음(잘림 여부 육안 확인은 정상이었음)."
+        },
+        {
+          "at": "2026-10-05T15:45:24.860Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "딸 폰 연결 상태에서 테마 아이콘(monochrome) 실기기 확인 착수(2026-10-06 00:08)."
+        },
+        {
+          "at": "2026-10-05T15:45:26.779Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "2026-10-06 딸 폰(One UI 8.5) 테마 아이콘 확인: 1.47.2는 Expo 기본 '^' 그림이 나와 1.47.3(ef75b8d)에서 brand_icon_monochrome.xml(evenOdd 달력)로 교체, 켬/끔 모두 정상 확인(docs/device-verification-2026-10-05.md). 남은 것: 아이콘·스플래시·알림아이콘·앱이름 최종 확정은 사용자 결정, 안 쓰는 brand_icon_foreground.xml·app.json monochromeImage(Expo 기본 그림) 정리 여부 판단 필요. 리뷰 미실행."
         }
       ]
     },
