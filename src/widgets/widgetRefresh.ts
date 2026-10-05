@@ -6,14 +6,22 @@ import { notifyWidgetChecksApplied } from './widgetChecksSignal';
 import { applyPendingWidgetChecks } from './widgetPendingChecks';
 import { buildWidgetData } from './widgetDataV2';
 
+/** 위젯 대기 체크 반영을 차례로 실행하기 위한 줄(앞선 실패는 다음 실행을 막지 않는다). */
+let pendingApplyQueue: Promise<number> = Promise.resolve(0);
+
 /**
  * 위젯에서 누른 체크를 앱 안 체크와 같은 규칙으로 DB에 기록하고, 기록한 것이 있으면 열려 있는 오늘 화면에 알린다.
  * 할 일 알림을 예약하기 전에도 부른다: 예약이 대기 체크 반영 전의 완료 상태를 읽으면 끝낸 할 일의 알림이 남을 수 있다.
  */
-export async function applyPendingWidgetChecksNow(database: Awaited<ReturnType<typeof getDatabase>>): Promise<number> {
-  const applied = await applyPendingWidgetChecks(database, peekPendingWidgetChecks, ackPendingWidgetChecks);
-  if (applied > 0) notifyWidgetChecksApplied(); // 열려 있는 오늘 화면이 완료 상태와 연속 기록을 다시 읽게 한다
-  return applied;
+export function applyPendingWidgetChecksNow(database: Awaited<ReturnType<typeof getDatabase>>): Promise<number> {
+  // 읽기→기록→지우기가 겹치면 연타한 체크가 순서가 뒤바뀐 채 기록될 수 있어, 한 번에 하나씩 차례로 실행한다
+  const run = pendingApplyQueue.then(async () => {
+    const applied = await applyPendingWidgetChecks(database, peekPendingWidgetChecks, ackPendingWidgetChecks);
+    if (applied > 0) notifyWidgetChecksApplied(); // 열려 있는 오늘 화면이 완료 상태와 연속 기록을 다시 읽게 한다
+    return applied;
+  });
+  pendingApplyQueue = run.catch(() => 0);
+  return run;
 }
 
 async function refreshWidgetFromDatabase(): Promise<void> {

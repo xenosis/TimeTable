@@ -7,7 +7,7 @@ import java.io.File
 object WidgetCheckStore {
   private const val PENDING_FILE = "widget-pending.json"
   private const val DATA_FILE = "widget-data.json"
-  /** 오늘 위젯에서 누른 할 일 id. 줄이 모자라도 방금 누른 줄을 빼지 않아 위젯에서 바로 되돌릴 수 있게 한다 */
+  /** 위젯에서 누른 할 일 id와 시각. 줄이 모자라도 1분 동안은 방금 누른 줄을 빼지 않아 위젯에서 바로 되돌릴 수 있게 한다 */
   private const val TOUCHED_FILE = "widget-touched.json"
   private val lock = Any()
 
@@ -21,13 +21,13 @@ object WidgetCheckStore {
     writeAtomically(pending, result.pendingJson)
     writeAtomically(data, result.snapshotJson)
     val touched = File(context.filesDir, TOUCHED_FILE)
-    runCatching { writeAtomically(touched, WidgetChecks.withTouched(readOrNull(touched), date, taskId)) }
+    runCatching { writeAtomically(touched, WidgetChecks.withTouched(readOrNull(touched), date, taskId, System.currentTimeMillis())) }
     true
   }
 
-  /** 오늘([date]) 위젯에서 누른 할 일 id. 읽지 못하면 빈 집합(줄 선택이 예전 규칙대로 동작할 뿐이다). */
+  /** 오늘([date]) 위젯에서 누른 지 1분이 안 된 할 일 id. 읽지 못하면 빈 집합(줄 선택이 예전 규칙대로 동작할 뿐이다). */
   fun touched(context: Context, date: String): Set<Int> = synchronized(lock) {
-    WidgetChecks.touchedIds(runCatching { readOrNull(File(context.filesDir, TOUCHED_FILE)) }.getOrNull(), date)
+    WidgetChecks.touchedIds(runCatching { readOrNull(File(context.filesDir, TOUCHED_FILE)) }.getOrNull(), date, System.currentTimeMillis())
   }
 
   /**

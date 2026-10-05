@@ -41,6 +41,15 @@ class WidgetTaskViewTest {
     assertEquals(2, view.moreCount)
   }
 
+  @Test fun 위젯에서_여러_개를_누른_뒤_1분이_지나면_남은_할_일이_다시_올라온다() {
+    val tasks = arrayOf(task(1, "QT1", true), task(2, "QT2", true), task(3, "QT3", true), task(4, "QT4"), task(5, "QT5"))
+    // 누른 지 1분 안: 방금 누른 세 줄을 그대로 둔다
+    assertEquals(listOf("QT1", "QT2", "QT3"), build(day(*tasks), capacity = 4, touched = setOf(1, 2, 3)).rows.map { it.title })
+    // 1분이 지나 누른 기록이 비면 남은 할 일이 보인다
+    val later = build(day(*tasks), capacity = 4, touched = emptySet())
+    assertEquals(listOf("QT1", "QT4", "QT5"), later.rows.map { it.title })
+  }
+
   @Test fun 모두_끝낸_뒤_줄이_모자라도_마지막으로_누른_줄은_보인다() {
     val tasks = arrayOf(task(1, "가", true), task(2, "나", true), task(3, "다", true), task(4, "라", true))
     assertEquals(listOf("라"), build(day(*tasks), capacity = 3, touched = setOf(4)).rows.map { it.title })

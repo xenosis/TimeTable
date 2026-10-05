@@ -33,7 +33,7 @@ object WidgetTaskView {
     return ((heightDp - TITLE_AREA_DP * scale) / (ROW_DP * scale)).toInt().coerceIn(MIN_ROWS, MAX_ROWS)
   }
 
-  /** [touched]: 오늘 위젯에서 누른 할 일 id. 줄이 모자라도 이 줄은 빼지 않아, 방금 누른 줄을 그 자리에서 다시 눌러 되돌릴 수 있다. */
+  /** [touched]: 위젯에서 누른 지 1분이 안 된 할 일 id. 줄이 모자라도 이 줄은 빼지 않아, 방금 누른 줄을 그 자리에서 다시 눌러 되돌릴 수 있다. */
   fun build(snapshot: WidgetSnapshot?, today: String, capacity: Int, touched: Set<Int> = emptySet()): TaskView {
     val day = WidgetDayResolver.dayFor(snapshot, today)
       ?: return TaskView(today, "오늘 할 일", emptyList(), 0, WidgetDayResolver.STALE_MESSAGE)
@@ -54,7 +54,7 @@ object WidgetTaskView {
     }
     val needMore = tasks.size > lines || day.hiddenTaskCount > 0
     val maxRows = if (tasks.size + (if (needMore) 1 else 0) <= lines) tasks.size else lines - 1
-    // 줄이 모자라면 못 한 일과 오늘 위젯에서 누른 일을 먼저 남기고 나머지 끝낸 일부터 뺀다(방금 누른 줄이 사라져 되돌릴 수 없게 되는 일을 막는다).
+    // 줄이 모자라면 못 한 일과 방금(1분 안에) 위젯에서 누른 일을 먼저 남기고 나머지 끝낸 일부터 뺀다(방금 누른 줄이 사라져 되돌릴 수 없게 되는 일을 막는다).
     // 보이는 줄은 원래 순서를 지켜, 누르면 그 자리에서 체크 표시만 바뀌고 줄이 이동하지 않는다(연타하면 다른 할 일이 눌리는 일을 막는다).
     val kept = keepInOrder(tasks) { !it.completed || it.id in touched }.take(maxRows).sorted()
     val shown = kept.map { tasks[it] }

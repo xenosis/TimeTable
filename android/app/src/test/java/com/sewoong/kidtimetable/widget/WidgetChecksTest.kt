@@ -112,12 +112,19 @@ class WidgetChecksTest {
     assertEquals(checks, WidgetChecks.parse(WidgetChecks.encode(checks)))
   }
 
-  @Test fun 오늘_누른_할_일_기록은_날짜가_같을_때만_쓰고_날짜가_바뀌면_새로_시작한다() {
-    val first = WidgetChecks.withTouched(null, "2026-10-05", 5)
-    val second = WidgetChecks.withTouched(first, "2026-10-05", 2)
-    assertEquals(setOf(2, 5), WidgetChecks.touchedIds(second, "2026-10-05"))
-    assertEquals(emptySet<Int>(), WidgetChecks.touchedIds(second, "2026-10-06"))
-    assertEquals(setOf(3), WidgetChecks.touchedIds(WidgetChecks.withTouched(second, "2026-10-06", 3), "2026-10-06"))
-    assertEquals(emptySet<Int>(), WidgetChecks.touchedIds("{깨진", "2026-10-05"))
+  @Test fun 누른_기록은_1분_동안만_쓰고_날짜가_바뀌거나_깨지면_비운다() {
+    val t0 = 1_000_000L
+    val first = WidgetChecks.withTouched(null, "2026-10-05", 5, t0)
+    val second = WidgetChecks.withTouched(first, "2026-10-05", 2, t0 + 30_000)
+    assertEquals(setOf(2, 5), WidgetChecks.touchedIds(second, "2026-10-05", t0 + 40_000))
+    // 5는 누른 지 1분이 지나 빠지고 2만 남는다
+    assertEquals(setOf(2), WidgetChecks.touchedIds(second, "2026-10-05", t0 + 61_000))
+    assertEquals(emptySet<Int>(), WidgetChecks.touchedIds(second, "2026-10-05", t0 + 120_000))
+    assertEquals(emptySet<Int>(), WidgetChecks.touchedIds(second, "2026-10-06", t0 + 40_000))
+    assertEquals(emptySet<Int>(), WidgetChecks.touchedIds("{깨진", "2026-10-05", t0))
+    // 같은 할 일을 다시 누르면 시각이 새로 바뀌고, 오래된 기록은 저장할 때 버린다
+    val again = WidgetChecks.withTouched(second, "2026-10-05", 5, t0 + 70_000)
+    assertEquals(setOf(2, 5), WidgetChecks.touchedIds(again, "2026-10-05", t0 + 80_000))
+    assertEquals(setOf(5), WidgetChecks.touchedIds(WidgetChecks.withTouched(again, "2026-10-05", 5, t0 + 200_000), "2026-10-05", t0 + 200_000))
   }
 }

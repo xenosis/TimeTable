@@ -91,16 +91,27 @@ object WidgetChecks {
     checks.forEach { put(JSONObject().put("taskId", it.taskId).put("date", it.date).put("completed", it.completed)) }
   }.toString()
 
-  /** 오늘([date]) 위젯에서 누른 할 일 id. 날짜가 다르거나 깨졌으면 빈 집합(어제 누른 기록은 오늘 줄 선택에 쓰지 않는다). */
-  fun touchedIds(touchedJson: String?, date: String): Set<Int> = try {
-    val item = if (touchedJson.isNullOrBlank()) null else JSONObject(touchedJson)
-    if (item == null || item.optString("date") != date) emptySet() else {
-      val ids = item.optJSONArray("ids") ?: JSONArray()
-      (0 until ids.length()).map { ids.optInt(it, -1) }.filter { it >= 0 }.toSet()
-    }
-  } catch (_: Exception) { emptySet() }
+  /** 위젯에서 누른 줄을 남겨 두는 시간. 그 안에는 잘못 누른 줄을 그 자리에서 되돌릴 수 있고, 지나면 남은 할 일이 다시 올라온다(2026-10-05 사용자 결정). */
+  const val TOUCH_HOLD_MILLIS = 60_000L
 
-  /** [date]에 [taskId]를 누른 기록을 더한다. 날짜가 바뀌었으면 이전 날짜 기록은 버리고 새로 시작한다. */
-  fun withTouched(touchedJson: String?, date: String, taskId: Int): String =
-    JSONObject().put("date", date).put("ids", JSONArray((touchedIds(touchedJson, date) + taskId).sorted())).toString()
+  /** [date]에 위젯에서 누른 지 [TOUCH_HOLD_MILLIS] 안 된 할 일 id. 날짜가 다르거나 깨졌으면 빈 집합. */
+  fun touchedIds(touchedJson: String?, date: String, nowMillis: Long): Set<Int> = touches(touchedJson, date)
+    .filter { (_, at) -> nowMillis - at in 0 until TOUCH_HOLD_MILLIS }.keys
+
+  /** [date]에 [taskId]를 [nowMillis]에 누른 기록을 더한다. 시간이 지난 기록과 다른 날짜의 기록은 버린다. */
+  fun withTouched(touchedJson: String?, date: String, taskId: Int, nowMillis: Long): String {
+    val kept = touches(touchedJson, date).filter { (id, at) -> id != taskId && nowMillis - at in 0 until TOUCH_HOLD_MILLIS }
+    val array = JSONArray()
+    (kept + (taskId to nowMillis)).forEach { (id, at) -> array.put(JSONObject().put("id", id).put("at", at)) }
+    return JSONObject().put("date", date).put("touches", array).toString()
+  }
+
+  private fun touches(touchedJson: String?, date: String): Map<Int, Long> = try {
+    val item = if (touchedJson.isNullOrBlank()) null else JSONObject(touchedJson)
+    if (item == null || item.optString("date") != date) emptyMap() else {
+      val array = item.optJSONArray("touches") ?: JSONArray()
+      (0 until array.length()).mapNotNull { array.optJSONObject(it) }
+        .map { it.optInt("id", -1) to it.optLong("at", -1) }.filter { (id, at) -> id >= 0 && at >= 0 }.toMap()
+    }
+  } catch (_: Exception) { emptyMap() }
 }
