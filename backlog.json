@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.1",
   "meta": {
-    "updated": "2026-10-04",
+    "updated": "2026-10-05",
     "context_doc": "docs/tasks.md",
     "max_est_min": 45,
     "note": "TimeTable(kidtimetable) 작업 항목 SSOT. 이 프로젝트엔 전용 CLI가 없으므로 이 파일은 직접 편집한다(voice-claude-car의 pnpm backlog와 달리 수동 관리). 단계 구조·근거는 docs/tasks.md·docs/research.md 참고. 상태 갱신 시 status/log/updated_at을 함께 갱신하고, 완료 시 evidence에 확인 근거(파일 경로·명령 결과 등)를 남긴다. needs_info/blocked는 log에 사유를 남길 것."
@@ -2776,7 +2776,7 @@
     },
     {
       "id": "P4",
-      "status": "todo",
+      "status": "done",
       "priority": "P1",
       "category": "feature",
       "title": "4단계: 할 일 + 칭찬 스티커",
@@ -2790,10 +2790,31 @@
       "done_when": "할 일 체크와 스티커가 동작함",
       "est_min": null,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-05T01:51:07.407Z",
+      "updated_at": "2026-10-05T01:51:26.703Z",
+      "log": [
+        {
+          "at": "2026-10-05T01:51:07.407Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "하위 작업 전부 done/cancelled, 부모 닫기 진행"
+        },
+        {
+          "at": "2026-10-05T01:51:16.445Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "하위 검토 완료"
+        },
+        {
+          "at": "2026-10-05T01:51:26.703Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "P4.1~P4.13 모두 done/cancelled(P4.6·P4.9·P4.10은 정책 변경으로 대체 취소)"
+        }
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "P4 하위 전부 done 또는 cancelled; P4.5/P4.8은 사용자 승인 대체 · 검증: npm run check 통과, 하위 작업별 critical-reviewer 반영. 딸 폰 실기기 확인은 일부 미실시(P4.8 잠금화면 알람, P4.7 요청→지급)"
     },
     {
       "id": "P4.1",
@@ -3121,7 +3142,7 @@
     },
     {
       "id": "P4.5",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "날짜 전환",
@@ -3137,7 +3158,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T15:44:05.952Z",
-      "updated_at": "2026-09-27T18:44:51.689Z",
+      "updated_at": "2026-10-05T01:50:29.585Z",
       "log": [
         {
           "at": "2026-09-18T15:44:05.952Z",
@@ -3162,8 +3183,28 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "반영한 수정: src/utils/date.ts에 msUntilNextLocalMidnight 순수 함수(월·연 경계 테스트 포함) 추가, app/index.tsx에 AppState 'active' 구독과 자정마다 재예약되는 타이머를 연결해 refreshKey를 갱신하도록 구현. npm run check 전체 통과. 딸 폰 실기기 확인 대기: 앱을 켜 둔 채 자정을 넘기거나 백그라운드에서 복귀했을 때 오늘 목록이 실제로 바뀌는지."
+        },
+        {
+          "at": "2026-10-05T01:37:41.641Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자가 가짜 시계 테스트 대체를 승인(2026-10-05). today-screen-midnight 테스트 추가"
+        },
+        {
+          "at": "2026-10-05T01:38:10.134Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·테스트 완료, npm run check·리뷰 대기"
+        },
+        {
+          "at": "2026-10-05T01:50:29.585Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer 지적(목록 갱신 검증 부족) 반영: today-tasks-midnight 테스트 추가"
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "app/(tabs)/index.tsx AppState 구독+자정 타이머; __tests__/today-screen-midnight.test.tsx, today-tasks-midnight.test.tsx(가짜 시계, 새 날짜·요일 재조회, 어제 할 일 제거). 실제 자정 확인은 사용자가 가짜 시계 대체를 2026-10-05 승인 · 검증: npm run check 통과(agent-instructions, code-length, lint, typecheck, test, build), 신규 테스트 3건 통과, critical-reviewer 반영"
     },
     {
       "id": "P4.6",
@@ -3225,24 +3266,24 @@
     },
     {
       "id": "P4.7",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "feature",
-      "title": "스티커판 · 보상 화면",
-      "summary": "모은 스티커와 보상 목표까지 남은 개수를 보여준다. 활성 테마의 독자 스티커 스타일을 사용한다.",
+      "title": "보석판 · 보상 화면",
+      "summary": "모은 작은 보석·큰 보석을 각각 보여주고(합산 금지), 보상 목표까지 남은 개수와 연속 달성(5일) 진행을 보여준다. 개수는 딸이 직접 고치며 목표를 달성해도 앱이 차감하지 않는다. 활성 테마의 독자 스타일을 사용한다.",
       "where": "app/",
       "parent": "P4",
       "deps": [
-        "P4.6",
-        "P1.9"
+        "P1.9",
+        "P4.13"
       ],
       "doc": null,
-      "done_when": "스티커 합계·보상까지 남은 개수가 정확히 표시되고 활성 테마의 독자 스티커 스타일이 적용됨",
+      "done_when": "작은 보석·큰 보석 개수가 따로 표시되고, 보상 목표까지 남은 개수와 5일 연속 진행이 보이며, 목표 달성 시 개수가 줄지 않고, 활성 테마 스타일이 적용됨(실기기 S23에서 내 보석 탭 확인)",
       "est_min": 30,
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-19T00:49:56.717Z",
-      "updated_at": "2026-09-27T18:43:24.719Z",
+      "updated_at": "2026-10-05T01:50:43.198Z",
       "log": [
         {
           "at": "2026-09-16T04:50:18.723Z",
@@ -3267,12 +3308,44 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "critical-reviewer 검토(코드 근거)에서 확인: 로딩 상태가 없어 첫 렌더마다 '불러오지 못했어요' 오류 문구가 잠깐 깜박임(언마운트 가드도 없음). 큰 보석 줄이 테마 스티커 스타일을 안 쓰고 하드코딩된 글자·색을 씀. 할 일 체크 직후 보석판이 안 갱신됨(H1, 아래 참고). 반영한 수정: loading 상태 분리(첫 로드 전에만 표시, 이후 refreshKey 갱신은 조용히 교체), 언마운트 가드 추가, 큰 보석도 테마 stickerAccent·모양(2개 표시로 구분) 사용. app/index.tsx에서 TodayTasksCard의 onChanged가 refreshKey를 올리도록 연결해 체크 직후 보석판·연속일수가 바로 갱신됨. npm run check 전체 통과. P4.6·P1.9 실기기 확인 선행 필요해 needs_info 유지."
+        },
+        {
+          "at": "2026-10-05T01:37:21.567Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "정책 변경(실물 보석·수동 장부)으로 P4.6(취소됨) 의존 제거, 제목·완료 조건을 보석 기준으로 정정 — P4.13과 사용자 확정 정책(2026-10-05)에 따름"
+        },
+        {
+          "at": "2026-10-05T01:37:31.498Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "정책 반영 구현·S23 화면 확인 완료분으로 리뷰 진행"
+        },
+        {
+          "at": "2026-10-05T01:38:21.376Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·테스트 완료, npm run check·리뷰 대기"
+        },
+        {
+          "at": "2026-10-05T01:43:08.258Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "검토 반영: 보석 정책 구현 작업 P4.13을 deps에 추가"
+        },
+        {
+          "at": "2026-10-05T01:50:43.198Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "정책 변경에 맞춰 deps/done_when 정정, 리뷰 반영(P4.13 deps 추가)"
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "StickerBoard/GemRightsCard/GemSummaryLine; gem-rights.test(실제 SQLite), gem-rights-ui, gem-summary-line, sticker-repository(달성 시 개수 불변) 테스트; S23 폰에서 내 보석 탭·오늘 탭 문구·5일 진행 카드 확인(딸 폰 SM-A245N 아님) · 검증: npm run check 통과, critical-reviewer 반영. 요청→지급 흐름은 테스트로만 검증(실제 5일 경과 전), 딸 폰 확인은 미실시"
     },
     {
       "id": "P4.8",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "할 일 알림",
@@ -3290,7 +3363,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-24T09:00:58.729Z",
-      "updated_at": "2026-09-27T18:46:11.215Z",
+      "updated_at": "2026-10-05T01:50:57.424Z",
       "log": [
         {
           "at": "2026-09-24T09:00:58.729Z",
@@ -3333,8 +3406,28 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "반영한 수정: app/manage.tsx의 refreshAfterTaskChange가 requestTaskRollingScheduleRefresh(tasks owner)를 호출하도록 수정. npm run check 전체 통과. 딸 폰 실기기 확인 대기(P3.4 공통 교체 경계 실기기 확인이 선행되어야 함, 이전 기록과 동일)."
+        },
+        {
+          "at": "2026-10-05T01:37:51.595Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자가 알람 실기기 확인을 완료로 간주하기로 승인(2026-10-05)"
+        },
+        {
+          "at": "2026-10-05T01:38:31.391Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·테스트 완료, npm run check·리뷰 대기"
+        },
+        {
+          "at": "2026-10-05T01:50:57.424Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "사용자가 2026-10-05 '알람은 그냥 일단 완료로 간주해'라고 승인"
         }
-      ]
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "taskRollingSchedule 30분 재알림·tasks owner 교체 자동 테스트(20건), npm run check 통과 · 검증: 딸 폰 실기기 예약 건수·잠금화면 알람은 미검증이며 사용자 승인으로 완료 간주(검증 통과 아님). 잠금화면 알람 B안은 별도 후속"
     },
     {
       "id": "P4.9",
@@ -3815,12 +3908,12 @@
         "P5.9"
       ],
       "doc": null,
-      "done_when": "교시 전환 시 위젯이 자동으로 갱신됨",
+      "done_when": "위젯에 보이는 일정의 시작·종료 시각 전환 시 앱을 열지 않아도 위젯이 자동으로 갱신됨(사용자 해석 2026-10-05: '교시 전환'=위젯 표시 일정 전환). 화면 잠금·절전·재부팅 뒤 복구·자정 갱신은 딸 폰 실사용(P5.6) 기간에 확인",
       "est_min": 30,
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T06:36:37.059Z",
-      "updated_at": "2026-10-04T01:51:20.601Z",
+      "updated_at": "2026-10-05T02:54:14.749Z",
       "log": [
         {
           "at": "2026-09-18T06:36:37.059Z",
@@ -3863,6 +3956,12 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "에뮬레이터: 앱을 열지 않은 채 종료 시각 뒤 줄이 흐려짐 확인. 미확인: 시작 시각 강조 전환, 화면 잠금·절전, 재부팅 뒤 복구, 자정 갱신, 실기기 지연. 사용자 결정 필요: 위 항목을 딸 폰 확인 때까지 미룰지(P4.11처럼 대체 승인) / 위젯에 보이는 일정 전환을 '교시 전환'으로 읽어도 되는지"
+        },
+        {
+          "at": "2026-10-05T02:54:14.749Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "사용자 결정 2026-10-05: (1) '교시 전환'은 위젯에 보이는 일정(정규 수업 제외)의 시작·종료 시각 전환으로 해석. (2) 잠금·절전·재부팅·자정·실기기 지연은 딸 폰 실사용(P5.6) 기간에 확인 후 done 기록. 현재 근거: 에뮬레이터 앱 미실행 상태 종료 시각 뒤 줄 흐려짐. 남은 것: 딸 폰에서 시작 시각 강조 전환과 위 조건."
         }
       ]
     },
@@ -4265,7 +4364,7 @@
     },
     {
       "id": "P5.12",
-      "status": "needs_info",
+      "status": "in_progress",
       "priority": "P1",
       "category": "feature",
       "title": "오늘 할 일 위젯 (표시): 별도 위젯 종류로 추가",
@@ -4280,9 +4379,9 @@
       "done_when": "위젯 선택 화면에 '오늘 일정'과 '오늘 할 일'이 별도로 보이고, 할 일 위젯이 오늘 날짜의 할 일과 완료 상태를 표시하며 넘치면 '+ N개', 할 일이 없거나 모두 끝냈을 때 문구가 다름. 데이터 파일 갱신 시 두 위젯이 함께 다시 그려짐. 미리보기가 보임. 탭하면 앱으로 이동. 날짜 선택·상태 계산 로직은 JUnit으로 검증. npm run check 통과, 에뮬레이터 캡처 확인",
       "est_min": 45,
       "gate": null,
-      "owner": "claude",
+      "owner": "codex",
       "claimed_at": "2026-09-30T22:24:56.569Z",
-      "updated_at": "2026-09-30T23:03:34.684Z",
+      "updated_at": "2026-10-04T11:29:39.602Z",
       "log": [
         {
           "at": "2026-09-30T22:24:56.569Z",
@@ -4301,6 +4400,12 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "에뮬레이터 캡처와 JUnit 통과. 기본 2x2 실제 배치·글자 크기 큰 설정·실기기 확인 미확인 → 딸 폰 연결 시 확인 필요"
+        },
+        {
+          "at": "2026-10-04T11:29:39.602Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "실기기 확인 재개: 연결된 S23 Ultra(SM-S918N)에서 ARM64 OfflineTest 1.45.0으로 데이터 보존 업데이트 후 위젯 종류·기본크기·큰글씨·상태문구·체크동작을 확인한다. 딸폰 SM-A245N 지정 확인과 결과는 구분하며 미확인 항목을 완료로 기록하지 않는다."
         }
       ]
     },
@@ -5478,7 +5583,7 @@
     },
     {
       "id": "P9.7",
-      "status": "needs_info",
+      "status": "in_progress",
       "priority": "P1",
       "category": "feature",
       "title": "관리자 화면 밀도와 입력·기능 회귀 검증",
@@ -5494,9 +5599,9 @@
       "done_when": "docs/admin-compact-plan.md 확인 기준 전부 대조. 기본 폭/글자에서 요일 한 줄·하루 목록4개·3개 세트행180dp 기준 충족, 확대 글자/키보드 조작 가능. PIN·세트분리·CRUD·반복종료·요일매핑·알림/위젯·아이화면 회귀와 npm run check 및 병렬 리뷰 근거 기록. 사용자 실기기 확인 전에는 해당 확인을 완료로 기록하지 않고 needs_info로 관리. 비교 스크린샷/수동 절차와 버전 동시 수정 확인.",
       "est_min": 45,
       "gate": null,
-      "owner": "claude",
+      "owner": "codex",
       "claimed_at": "2026-10-04T08:35:37.966Z",
-      "updated_at": "2026-10-04T08:35:42.034Z",
+      "updated_at": "2026-10-04T11:41:32.159Z",
       "log": [
         {
           "at": "2026-10-04T08:35:37.966Z",
@@ -5509,6 +5614,12 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "확인한 것: 폰(411dp)에서 시간표 영역(세트 목록 3행·요일 7칸 한 줄)·주간표·요일 확대, 에뮬레이터에서 영역 메뉴·편집 모달·할 일 폼, npm run check 268개 통과. 아직 안 한 것: 360/393dp·가로 직접 확인, 보상·교시·요일 복사·진단 영역 밀도, 키보드 상태 저장/취소, 딸 폰 실기기. 사용자 실기기 확인 뒤 완료 기록"
+        },
+        {
+          "at": "2026-10-04T11:41:32.159Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자가 S23 Ultra 관리자 PIN 직접 해제 및 검증용 PIN 제공. 현재 1.45.0/106 관리자 실제 화면에서 시간표·할일·보상·기타, 밀도/입력/저장/취소/PIN재잠금 회귀 검증 착수. 기기 원래 font0.8/density560/회전설정 보존, 테스트 데이터만 생성·정리. 지정 딸폰 확인과 S23 근거는 구분."
         }
       ]
     },
@@ -5654,16 +5765,18 @@
       "category": "feature",
       "title": "오늘·내 보석 화면 디자인 개선",
       "summary": "변경된 시간표·관리자 디자인을 참고해 오늘의 일정과 할 일, 보석 컬렉션과 목표를 명료하고 매력적으로 구성한다.",
-      "where": null,
+      "where": "app/(tabs)/index.tsx,app/(tabs)/stickers.tsx,src/components/TodayScheduleCard.tsx,src/components/TodayTasksCard.tsx,src/components/StickerBoard.tsx",
       "parent": null,
-      "deps": [],
-      "doc": null,
-      "done_when": "오늘과 내 보석 화면 재구성, 기존 체크·보상·테마 기능 유지, 화면 확인과 전체 검사 및 리뷰 통과",
+      "deps": [
+        "P13"
+      ],
+      "doc": "docs/backlog/P11.md",
+      "done_when": "오늘과 내 보석 화면 재구성(오늘 탭 배치는 P15가 대체). 오늘: 할 일 체크·취소, 일정 세트 조회 실패 시 오류·재시도, 앱 복귀·자정 갱신 유지. 내 보석: 목표 있음/없음, 꾸미기 테마 전환 유지. 보석 장부·자격 정책 검증은 P13·P4.13 책임으로 구분. 화면 확인(에뮬레이터), 전체 검사 및 리뷰 통과",
       "est_min": 45,
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-04T07:57:52.191Z",
-      "updated_at": "2026-10-04T09:14:22.541Z",
+      "updated_at": "2026-10-05T02:56:25.146Z",
       "log": [
         {
           "at": "2026-10-04T07:57:52.191Z",
@@ -5676,6 +5789,18 @@
           "owner": "codex",
           "status": "in_review",
           "note": "오늘·내 보석 UI 구현, 세로·가로·테마 화면 확인과 전체 검사 통과. 등록 리뷰 수행했으나 외부 APK 빌드로 dispatcher freeze 실패. 사용자 요청대로 추가 보석 체계 개발은 중단하고 Claude 인계를 위해 in_review로 남김."
+        },
+        {
+          "at": "2026-10-05T02:56:00.511Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "Claude 인계 정리: doc·where 연결. P11 리뷰(1791120146337) 지적 4건 중 세트 조회 오류·재시도, 복귀 시 현재 시각, 재조회 중 이전 체크 조작 차단은 docs/device-verification-2026-10-04.md '리뷰 보완' 절의 5개 테스트로 보완됨. 오늘 탭 배치는 이후 P15(사용자 승인)가 대체하며 P11 완료 판정은 현재 코드 기준 재리뷰로 한다."
+        },
+        {
+          "at": "2026-10-05T02:56:25.146Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "P11 리뷰 지적 4 반영: 화면 기준을 명시하고 보석 정책 검증은 P13·P4.13 책임으로 분리, P13 완료 의존 연결"
         }
       ]
     },
@@ -5850,16 +5975,18 @@
       "category": "feature",
       "title": "자동 보석 지급 중단과 아이의 보석 수 수정",
       "summary": "할 일·주간·월간 완료에 따른 모든 자동 보석 지급을 중단하고 아이가 외부 운영에 맞춰 일반·큰 보석 수를 직접 수정한다. 기존 보유량은 보존한다.",
-      "where": "src/db/rewardRepository.ts,src/components/StickerBoard.tsx",
+      "where": "src/db/rewardRepository.ts,src/db/gemCountRepository.ts,src/db/migrations.ts,src/components/GemCountEditor.tsx,src/components/StickerBoard.tsx",
       "parent": null,
-      "deps": [],
+      "deps": [
+        "P4.13"
+      ],
       "doc": "docs/backlog/P13.md",
-      "done_when": "체크·취소·주간·월간 완료로 보유량이 변하지 않음·기존 보유량 보존·모든 자동 지급 중단·아이가 수를 수정하고 재시작 뒤 유지·동시 지급 보존·검사와 리뷰 확인",
+      "done_when": "체크·취소·주간·월간 완료와 목표 달성으로 보유량(작은·큰 보석 장부)이 자동 증감하지 않음. P4.13 V12 이전으로 기존 보유량이 보존되고 체크 취소 뒤에도 유지됨. 실물 보석 자격·요청·지급(P4.13)은 유지하되 장부를 바꾸지 않음. 아이가 수를 수정하고 재시작 뒤 유지됨. 동시 수량 저장은 마지막 저장의 절대값 우선. 수량 입력 취소·잘못된 입력·저장 실패 흐름 테스트, 전체 검사와 리뷰 확인",
       "est_min": 45,
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-04T08:41:33.457Z",
-      "updated_at": "2026-10-04T09:13:58.850Z",
+      "updated_at": "2026-10-05T02:55:42.160Z",
       "log": [
         {
           "at": "2026-10-04T08:41:33.457Z",
@@ -5872,8 +5999,94 @@
           "owner": "codex",
           "status": "in_review",
           "note": "자동 지급 중단과 아이의 개수 편집 구현 및 에뮬레이터 저장·재시작·완료 후 불변 확인. 사용자 최종 요청으로 선물 교환 추가 변경을 되돌리고 나머지 보석 체계는 Claude 인계. dispatcher freeze 실패와 기존 교환/수량 편집 경합 지적은 기록하며 완료 처리하지 않음."
+        },
+        {
+          "at": "2026-10-05T02:55:42.160Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "P13 critical-reviewer(1791150403925) 지적 반영: (1) 완료 조건을 docs/tasks.md 사용자 최종 결정대로 '보유량 자동 증감 중단·자격/요청/지급 유지·마지막 절대값 우선'으로 구체화 (2) V12 이전 의존을 위해 deps P4.13, where에 마이그레이션·수량 저장소·입력 컴포넌트 추가. (3) 입력 예외 흐름은 __tests__/gem-count-editor.test.tsx 4건과 에뮬레이터 키보드 첫 탭 저장·취소 확인으로 해소"
         }
       ]
+    },
+    {
+      "id": "P14",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "상단 앱 제목 제거와 하단 설정 접근",
+      "summary": "사용자 요청: 아이 화면 상단 TimeTable 제목줄을 제거하고 설정을 하단에 배치하며 오늘 탭의 집 아이콘을 해로 변경한다. 기존 PIN 보호와 가로 주간 몰입 화면을 유지한다.",
+      "where": "app/(tabs)/_layout.tsx,app/_layout.tsx",
+      "parent": null,
+      "deps": [],
+      "doc": "docs/backlog/P14.md",
+      "done_when": "아이 화면 제목줄 없음, 상태 표시줄 안전 영역 확보, 하단 오늘·시간표·내 보석·설정 접근, 오늘 해 아이콘, 관리자 PIN 및 뒤로 복귀 유지, 가로 주간 몰입 화면 이중 여백 없음, 버전 동시 갱신, 전체 검사와 병렬 리뷰 및 화면 확인",
+      "est_min": null,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-05T01:13:51.668Z",
+      "updated_at": "2026-10-05T01:32:58.206Z",
+      "log": [
+        {
+          "at": "2026-10-05T01:13:51.668Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "상단 제목 제거·하단 설정 버튼·오늘 해 아이콘 구현 착수. 아이 화면 안전 영역과 몰입 주간 화면을 구분해 처리한다."
+        },
+        {
+          "at": "2026-10-05T01:20:57.630Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "상단 앱 제목 제거·하단 설정·오늘 해 아이콘·안전 영역 구현. 에뮬레이터에서 PIN 진입/뒤로 복귀와 한 줄 메뉴 확인. 전체 검사 53 suites/324 tests 및 Android build 통과. 병렬 리뷰와 가로 몰입 확인 진행."
+        },
+        {
+          "at": "2026-10-05T01:32:58.206Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "상단 TimeTable 제거, 하단 설정, 오늘 해 아이콘 완료. 리뷰 지적에 따라 안전 여백을 부모에서 단독 처리. 사용자 요청한 이번 디자인 범위를 에뮬레이터와 전체 검사로 검증; 실기기 설치는 미실시."
+        }
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "docs/backlog/P14.md; .tmp/p14-today-final-stable.png; .tmp/p14-settings-unlocked.png 및 XML; .tmp/p14-week-landscape-final.png 및 XML; 초기 dispatcher both exit0 및 등록 critical-reviewer/backlog-explainer 보완 리뷰 완료, 확정 결함 없음 · 검증: .tmp/p14-quality-final.log: agent-instructions/code-length/lint/typecheck/Jest54 suites326tests/Android build 모두 PASS, QUALITY_CHECKS_OK. app.json/package.json/android app 버전1.45.2/108 동기화. PIN진입/복귀, 각탭설정, 가로주간메뉴숨김·세로복구 확인."
+    },
+    {
+      "id": "P15",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "오늘 탭을 지금 일정과 할 일 중심으로 정리",
+      "summary": "사용자와 critical-reviewer 논의 반영: 작은 날짜·응원·캐릭터, 간결한 지금/다음 일정, 오늘 할 일, 나머지 오늘 일정 개수와 펼치기. 오늘 보석 장부 요약 제거. 체크·시간 갱신·테마 유지.",
+      "where": "app/(tabs)/index.tsx,src/components/TodayScheduleCard.tsx",
+      "parent": null,
+      "deps": [],
+      "doc": "docs/backlog/P15.md",
+      "done_when": "날짜와 날짜별 응원·작은 캐릭터 유지, 지금/다음과 할 일 우선 배치, 다른 남은 일정 개수 및 펼치기/접기에서 중복 없는 정렬 목록과 시간·메모 확인, 빈 일정 간단 안내, 오늘 보석 개수 제거, 테마·체크·조회 복구 유지, 버전 동시 수정·검사·화면·병렬 리뷰 확인",
+      "est_min": null,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-05T01:57:25.638Z",
+      "updated_at": "2026-10-05T02:40:35.876Z",
+      "log": [
+        {
+          "at": "2026-10-05T01:57:25.638Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자가 구성안 승인. 기존 오늘 조회·체크 로직을 보존하면서 작은 인사와 일정 요약, 할 일 뒤 추가 일정 펼치기, 장부 요약 제거를 구현한다."
+        },
+        {
+          "at": "2026-10-05T02:12:20.032Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.45.3/109로 오늘 탭 정리 구현. 작은 날짜·응원·캐릭터, 지금·다음 요약, 할 일, 중복 없는 추가 일정 펼치기와 오늘 장부 제거. 에뮬레이터 펼치기/접기 및 추가4개 스크롤 확인. 전체검사55 suites329tests+Android build PASS. 병렬리뷰 착수."
+        },
+        {
+          "at": "2026-10-05T02:40:35.876Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "오늘 탭 구성 구현 및 리뷰 보완 완료. 마지막 세트 조회 재시도 버튼56dp까지 재검사 통과. 요청된 폰 설치는 별도 후속 실행 중."
+        }
+      ],
+      "done_at": "2026-10-05",
+      "evidence": "1.45.3/109. 날짜·응원·작은 캐릭터→지금/다음→할 일→추가 일정 펼치기. 오늘 보석 요약 제거. 에뮬레이터 두 테마·추가4개 펼치기/접기 캡처 .tmp/p15-reviewed-today.png .tmp/p15-more-expanded-bottom.png .tmp/p15-kuromi-today.png. 초기 dispatcher 병렬 리뷰 및 등록 critical-reviewer 보완 검토 잔여지적0, backlog-explainer P15문서 업데이트 완료. · 검증: .tmp/p15-quality-install-final.log QUALITY_CHECKS_OK: instructions/code-length/lint/typecheck/56suites332tests/Android build PASS. 실제 카드 체크·취소·칭찬 유지 및 시간 경계 자동 갱신·항목 조회 재시도 테스트. 물리폰 UI 검증은 완료 근거에 포함하지 않음."
     }
   ]
 }
