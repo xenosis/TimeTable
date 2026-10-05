@@ -46,10 +46,10 @@ export function ThemePicker({ theme: activeTheme, selectedThemeId, onSelect }: T
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 14, width: '100%' }, heading: { fontSize: 26, fontWeight: '800' }, description: { fontSize: 16, lineHeight: 23 },
+  container: { gap: 14, width: '100%' }, heading: { fontSize: 21, fontWeight: '800' }, description: { fontSize: 15, lineHeight: 23 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 }, option: { flexBasis: '45%', flexGrow: 1, borderWidth: 3, borderRadius: 24, padding: 12, gap: 10 }, fullWidth: { flexBasis: '100%' },
   preview: { borderRadius: 18, alignItems: 'center', paddingVertical: 8, gap: 4 }, classicIcon: { height: 132, fontSize: 80, textAlignVertical: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 4 }, chip: { paddingHorizontal: 7, paddingVertical: 4, borderRadius: 9 }, chipText: { fontSize: 12, fontWeight: '700' },
-  optionName: { fontSize: 19, fontWeight: '800' }, optionDescription: { fontSize: 14, lineHeight: 20 },
-  selection: { alignSelf: 'stretch', minHeight: 40, padding: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 12 }, selectionText: { fontSize: 14, fontWeight: '700' },
+  optionName: { fontSize: 17, fontWeight: '800' }, optionDescription: { fontSize: 13, lineHeight: 20 },
+  selection: { alignSelf: 'stretch', minHeight: 40, padding: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 12 }, selectionText: { fontSize: 13, fontWeight: '700' },
 });

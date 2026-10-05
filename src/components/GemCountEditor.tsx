@@ -40,8 +40,8 @@ export function GemCountEditor({ counts, theme, onSaved, onClose }: { readonly c
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: '#00000066' }, center: { flex: 1, justifyContent: 'center', padding: 20 },
   sheet: { borderRadius: 28, flexGrow: 0, width: '100%', maxWidth: 480, maxHeight: '100%', alignSelf: 'center' }, sheetContent: { padding: 24, gap: 16 },
-  title: { fontSize: 26, fontWeight: '800' }, description: { fontSize: 16, lineHeight: 24 },
-  field: { flexDirection: 'row', alignItems: 'center', gap: 16 }, label: { flex: 1, fontSize: 20, fontWeight: '700' },
-  input: { width: 128, minHeight: 56, borderWidth: 1, borderRadius: 16, paddingHorizontal: 16, textAlign: 'center', fontSize: 24, fontWeight: '700' },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 8 }, button: { flex: 1, minHeight: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }, buttonLabel: { fontSize: 20, fontWeight: '700' },
+  title: { fontSize: 21, fontWeight: '800' }, description: { fontSize: 15, lineHeight: 24 },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 16 }, label: { flex: 1, fontSize: 17, fontWeight: '700' },
+  input: { width: 128, minHeight: 56, borderWidth: 1, borderRadius: 16, paddingHorizontal: 16, textAlign: 'center', fontSize: 20, fontWeight: '700' },
+  actions: { flexDirection: 'row', gap: 12, marginTop: 8 }, button: { flex: 1, minHeight: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }, buttonLabel: { fontSize: 17, fontWeight: '700' },
 });

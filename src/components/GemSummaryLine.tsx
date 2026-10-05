@@ -24,7 +24,7 @@ export function GemSummaryLine({ theme, refreshKey, onPress }: { readonly theme:
 
 const styles = StyleSheet.create({
   card: { alignItems: 'center', borderRadius: borderRadius.lg, borderWidth: 1, flexDirection: 'row', gap: 12, minHeight: touchTarget.minimum, paddingHorizontal: 20, paddingVertical: spacing.md, width: '100%' },
-  icon: { fontSize: 28 }, copy: { flex: 1, gap: 3 }, label: { fontSize: 14 },
+  icon: { fontSize: 22 }, copy: { flex: 1, gap: 3 }, label: { fontSize: 13 },
   text: { fontSize: fontSize.md, fontWeight: '700' },
   link: { fontSize: fontSize.sm, fontWeight: '700' },
 });

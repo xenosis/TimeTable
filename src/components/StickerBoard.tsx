@@ -69,14 +69,14 @@ export function StickerBoard({ theme, refreshKey }: { readonly theme: ThemeDefin
 }
 const styles = StyleSheet.create({
   container: { gap: 16, width: '100%' }, hero: { borderRadius: 28, padding: 22, overflow: 'hidden' },
-  heroRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, heroCopy: { flex: 1 }, eyebrow: { fontSize: 16, fontWeight: '600' },
-  balanceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 }, balance: { fontSize: 56, fontWeight: '800', fontVariant: ['tabular-nums'], flexShrink: 1 }, unit: { fontSize: 20, fontWeight: '700' },
-  heroFooter: { marginTop: 16, paddingTop: 16, borderTopWidth: 1 }, heroNote: { fontSize: 16, fontWeight: '600' },
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, heroCopy: { flex: 1 }, eyebrow: { fontSize: 15, fontWeight: '600' },
+  balanceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 }, balance: { fontSize: 44, fontWeight: '800', fontVariant: ['tabular-nums'], flexShrink: 1 }, unit: { fontSize: 17, fontWeight: '700' },
+  heroFooter: { marginTop: 16, paddingTop: 16, borderTopWidth: 1 }, heroNote: { fontSize: 15, fontWeight: '600' },
   card: { borderRadius: 24, borderWidth: 1, gap: 12, padding: 20 }, sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  sectionTitle: { fontSize: 20, fontWeight: '700' }, gift: { fontSize: 24 }, goalTitle: { fontSize: 24, fontWeight: '800' }, body: { fontSize: 16, lineHeight: 24 },
+  sectionTitle: { fontSize: 17, fontWeight: '700' }, gift: { fontSize: 20 }, goalTitle: { fontSize: 20, fontWeight: '800' }, body: { fontSize: 15, lineHeight: 24 },
   editButton: { minHeight: 56, minWidth: 88, alignItems: 'center', justifyContent: 'center' },
-  track: { height: 10, borderRadius: 5, overflow: 'hidden', marginTop: 4 }, fill: { height: '100%', borderRadius: 5 }, progressCopy: { fontSize: 14, fontWeight: '700', flexShrink: 1 },
+  track: { height: 10, borderRadius: 5, overflow: 'hidden', marginTop: 4 }, fill: { height: '100%', borderRadius: 5 }, progressCopy: { fontSize: 13, fontWeight: '700', flexShrink: 1 },
   collection: { flexDirection: 'row', gap: 12 }, collectionCard: { flex: 1, borderWidth: 1, borderRadius: 24, padding: 18, gap: 6 },
-  collectionIcon: { fontSize: 28 }, collectionCount: { fontSize: 30, fontWeight: '800' }, collectionUnit: { fontSize: 16, fontWeight: '600' }, collectionLabel: { fontSize: 16, fontWeight: '600' },
-  tip: { flexDirection: 'row', gap: 12, borderRadius: 18, padding: 16 }, tipIcon: { fontSize: 22 }, tipText: { flex: 1, fontSize: 15, lineHeight: 23 },
+  collectionIcon: { fontSize: 22 }, collectionCount: { fontSize: 24, fontWeight: '800' }, collectionUnit: { fontSize: 15, fontWeight: '600' }, collectionLabel: { fontSize: 15, fontWeight: '600' },
+  tip: { flexDirection: 'row', gap: 12, borderRadius: 18, padding: 16 }, tipIcon: { fontSize: 19 }, tipText: { flex: 1, fontSize: 14, lineHeight: 23 },
 });

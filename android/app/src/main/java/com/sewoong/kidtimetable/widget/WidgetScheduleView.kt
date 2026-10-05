@@ -14,7 +14,7 @@ data class ScheduleRow(
 
 /** '오늘 일정' 위젯이 그릴 내용. 안드로이드 API를 쓰지 않아 JUnit으로 검증한다. */
 data class ScheduleView(
-  /** 예: "오늘 수요일" */
+  /** 예: "수요일" (위젯이 늘 오늘 일정을 보이므로 '오늘'은 붙이지 않는다) */
   val heading: String,
   /** 바로 전에 끝난 일정 1개(흐리게)와 지금·다음 일정들(시간순). 위젯은 스크롤 목록이라 크기만큼 보이고 나머지는 위젯 안에서 올려 본다 */
   val rows: List<ScheduleRow>,
@@ -33,7 +33,7 @@ object WidgetScheduleView {
     val parts = date.split('-').mapNotNull { it.toIntOrNull() }
     if (parts.size != 3) return "오늘"
     val weekday = Calendar.getInstance().apply { set(parts[0], parts[1] - 1, parts[2]) }.get(Calendar.DAY_OF_WEEK) - 1
-    return "오늘 ${WEEKDAY_NAMES[weekday]}"
+    return WEEKDAY_NAMES[weekday]
   }
 
   fun build(snapshot: WidgetSnapshot?, today: String, nowTime: String): ScheduleView {

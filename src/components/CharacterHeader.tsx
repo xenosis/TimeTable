@@ -23,5 +23,5 @@ const styles = StyleSheet.create({
   compact: { borderRadius: 18, paddingVertical: 2, paddingHorizontal: 14 }, stacked: { flexDirection: 'column-reverse', alignItems: 'flex-start' },
   copy: { flex: 1, flexShrink: 1 }, art: { alignItems: 'center', justifyContent: 'center' },
   stackedCopy: { flex: 0, width: '100%' },
-  motif: { position: 'absolute', right: 1, top: 3, fontSize: 16, opacity: 0.35 },
+  motif: { position: 'absolute', right: 1, top: 3, fontSize: 15, opacity: 0.35 },
 });

@@ -16,10 +16,11 @@ export const borderRadius = {
 
 export const touchTarget = { minimum: 56 } as const;
 
+// 아이 화면 글자 단계. 기기 기본 글꼴보다 조금 큰 정도로 두고, 더 크게는 기기 글꼴 설정으로 키운다
 export const fontSize = {
-  sm: 16,
-  md: 20,
-  lg: 28,
-  xl: 36,
-  xxl: 48,
+  sm: 14,
+  md: 17,
+  lg: 22,
+  xl: 28,
+  xxl: 36,
 } as const;

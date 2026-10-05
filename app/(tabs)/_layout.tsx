@@ -50,6 +50,6 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   tabBar: { borderTopWidth: 1, flexDirection: 'row', paddingTop: spacing.xs },
   tabButton: { alignItems: 'center', flex: 1, gap: 3, justifyContent: 'center', minHeight: touchTarget.minimum, paddingVertical: spacing.xs, borderRadius: 18, marginHorizontal: 4 },
-  tabIcon: { fontSize: 24 },
+  tabIcon: { fontSize: 20 },
   tabLabel: { fontSize: fontSize.sm },
 });

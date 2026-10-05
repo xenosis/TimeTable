@@ -61,9 +61,9 @@ export function GemRightsCard({ theme, refreshKey }: { readonly theme: ThemeDefi
 const styles = StyleSheet.create({
   card: { borderRadius: 24, borderWidth: 1, gap: 12, padding: 20 },
   row: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  title: { fontSize: 20, fontWeight: '700' }, icon: { fontSize: 24 },
+  title: { fontSize: 17, fontWeight: '700' }, icon: { fontSize: 20 },
   dots: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  body: { fontSize: 16, lineHeight: 24 }, count: { fontSize: 22, fontWeight: '800' },
+  body: { fontSize: 15, lineHeight: 24 }, count: { fontSize: 19, fontWeight: '800' },
   button: { alignItems: 'center', borderRadius: 16, justifyContent: 'center', minHeight: 56, paddingHorizontal: 16 },
-  buttonText: { fontSize: 18, fontWeight: '700' },
+  buttonText: { fontSize: 16, fontWeight: '700' },
 });

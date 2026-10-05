@@ -68,6 +68,6 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   scheduleStatus: { padding: 20, borderRadius: 24, gap: 12 }, retry: { minHeight: 56, justifyContent: 'center' },
   container: { flexGrow: 1, gap: 14, padding: 16, paddingBottom: 24, width: '100%', maxWidth: 640, alignSelf: 'center' },
-  header: { gap: 4, paddingVertical: 10 }, date: { fontSize: 16, fontWeight: '700' },
-  subtitle: { fontSize: 14, lineHeight: 20 },
+  header: { gap: 4, paddingVertical: 10 }, date: { fontSize: 15, fontWeight: '700' },
+  subtitle: { fontSize: 13, lineHeight: 20 },
 });

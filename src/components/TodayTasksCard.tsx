@@ -4,7 +4,7 @@ import { getDatabase } from '../db/database';
 import { setTaskCompletionWithRewards } from '../db/rewardRepository';
 import { getTodayTasks, type TodayTask } from '../db/taskRepository';
 import { requestTaskRollingScheduleRefresh } from '../notifications/taskRollingSchedule';
-import { borderRadius, fontSize, spacing, touchTarget, type ThemeDefinition } from '../theme';
+import { borderRadius, spacing, touchTarget, type ThemeDefinition } from '../theme';
 
 const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
@@ -90,15 +90,15 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
   </View>;
 }
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: borderRadius.lg, gap: 12, padding: 20, width: '100%' },
+  // 글자 크기는 위의 '지금 · 다음 일정' 카드와 같은 단계로 맞춘다(제목 16, 항목 16)
+  card: { borderWidth: 1, borderRadius: borderRadius.lg, gap: 10, padding: 14, width: '100%' },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: fontSize.lg, fontWeight: '800', flexShrink: 1 }, badge: { fontSize: 16, fontWeight: '700', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
-  remaining: { fontSize: fontSize.sm, fontWeight: '700' },
+  title: { fontSize: 16, fontWeight: '800', flexShrink: 1 }, badge: { fontSize: 13, fontWeight: '700', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+  remaining: { fontSize: 13, fontWeight: '700' },
   progress: { borderRadius: 8, height: 8, overflow: 'hidden', marginBottom: 4 }, bar: { height: '100%' },
-  task: { alignItems: 'center', borderWidth: 1, borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'flex-start', minHeight: touchTarget.minimum + 16, paddingHorizontal: spacing.md },
-  check: { width: 28, height: 28, borderRadius: 9, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
-  taskMark: { fontSize: 18, fontWeight: '800' }, taskTitle: { flex: 1, fontSize: fontSize.md, fontWeight: '600', paddingVertical: 12 },
-  empty: { fontSize: fontSize.sm }, error: { fontSize: fontSize.sm, fontWeight: '700' },
-  celebration: { fontSize: fontSize.lg, fontWeight: '700' },
+  task: { alignItems: 'center', borderWidth: 1, borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'flex-start', minHeight: touchTarget.minimum, paddingHorizontal: 12 },
+  check: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
+  taskMark: { fontSize: 14, fontWeight: '800' }, taskTitle: { flex: 1, fontSize: 16, fontWeight: '600', paddingVertical: 10 },
+  empty: { fontSize: 13 }, error: { fontSize: 13, fontWeight: '700' },
+  celebration: { fontSize: 16, fontWeight: '700' },
 });
-

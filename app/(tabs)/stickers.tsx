@@ -51,9 +51,9 @@ export default function StickersScreen() {
 const styles = StyleSheet.create({
   container: { flexGrow: 1, gap: 20, padding: 20, paddingBottom: 28, width: '100%', maxWidth: 640, alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 }, headerCopy: { flex: 1, gap: 6 },
-  heading: { fontSize: 30, fontWeight: '800' }, subtitle: { fontSize: 16 },
+  heading: { fontSize: 24, fontWeight: '800' }, subtitle: { fontSize: 15 },
   decorateButton: { alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 1, justifyContent: 'center', minHeight: touchTarget.minimum, paddingHorizontal: 12 },
-  decorateText: { fontSize: 16, fontWeight: '700' }, safeArea: { flex: 1 },
+  decorateText: { fontSize: 15, fontWeight: '700' }, safeArea: { flex: 1 },
   modalContainer: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
   closeButton: { alignItems: 'center', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: touchTarget.minimum },
 });

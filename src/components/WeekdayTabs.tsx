@@ -31,6 +31,6 @@ export function WeekdayTabs({ selected, today, theme, onSelect }: {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.xs, width: '100%' },
   chip: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 2, flex: 1, justifyContent: 'center', minHeight: 44 },
-  label: { fontSize: 18, fontWeight: '700' },
+  label: { fontSize: 16, fontWeight: '700' },
   dot: { borderRadius: 3, height: 5, marginTop: 2, width: 5 },
 });

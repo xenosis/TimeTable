@@ -14,10 +14,10 @@ class WidgetScheduleViewTest {
 
   private fun build(day: WidgetDay, now: String) = WidgetScheduleView.build(snapshot(day), day.date, now)
 
-  @Test fun 제목에_오늘_요일이_나온다() {
-    assertEquals("오늘 수요일", WidgetScheduleView.heading("2026-09-30"))
-    assertEquals("오늘 일요일", WidgetScheduleView.heading("2026-10-04"))
-    assertEquals("오늘 토요일", WidgetScheduleView.heading("2026-10-03"))
+  @Test fun 제목에_요일만_나온다() {
+    assertEquals("수요일", WidgetScheduleView.heading("2026-09-30"))
+    assertEquals("일요일", WidgetScheduleView.heading("2026-10-04"))
+    assertEquals("토요일", WidgetScheduleView.heading("2026-10-03"))
     assertEquals("오늘", WidgetScheduleView.heading("잘못된 날짜"))
   }
 

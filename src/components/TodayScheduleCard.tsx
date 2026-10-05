@@ -100,13 +100,13 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
 
 const styles = StyleSheet.create({
   card: { borderRadius: borderRadius.lg, borderWidth: 1, gap: 8, padding: 14, width: '100%' },
-  heading: { fontSize: 18, fontWeight: '800' },
+  heading: { fontSize: 16, fontWeight: '800' },
   item: { alignItems: 'center', borderRadius: borderRadius.md, flexDirection: 'row', gap: spacing.sm, minHeight: 72, padding: 10 },
   iconBadge: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  icon: { fontSize: 22, fontWeight: '700' }, copy: { flex: 1, gap: 2 }, label: { fontSize: 12, fontWeight: '700' }, itemTitle: { fontSize: 20, fontWeight: '800' }, itemTime: { fontSize: 16, fontVariant: ['tabular-nums'] }, itemMemo: { fontSize: 16 },
-  empty: { fontSize: 14 }, next: { fontSize: fontSize.sm },
+  icon: { fontSize: 19, fontWeight: '700' }, copy: { flex: 1, gap: 2 }, label: { fontSize: 12, fontWeight: '700' }, itemTitle: { fontSize: 17, fontWeight: '800' }, itemTime: { fontSize: 15, fontVariant: ['tabular-nums'] }, itemMemo: { fontSize: 15 },
+  empty: { fontSize: 13 }, next: { fontSize: fontSize.sm },
   expand: { minHeight: 56, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between' },
-  moreTitle: { fontSize: 16, fontWeight: '600', flexShrink: 1 }, moreTime: { fontSize: 13, fontVariant: ['tabular-nums'] },
+  moreTitle: { fontSize: 15, fontWeight: '600', flexShrink: 1 }, moreTime: { fontSize: 12, fontVariant: ['tabular-nums'] },
   moreRow: { borderTopWidth: 1, gap: 4, paddingVertical: 10 },
   retry: { minHeight: 56, justifyContent: 'center' },
 });
