@@ -13,7 +13,11 @@
 - Postgres 15 이상이 필요합니다(`on delete set null (열)` 문법). Supabase 신규 프로젝트는 기본으로 만족합니다.
 - **적용 대상(2026-10-05 결정): Doro와 같은 Supabase 프로젝트.** 계정은 아빠·딸 기기용 이메일+비밀번호 2개를 대시보드 Authentication에서 만들고, 적용은 `npx supabase` CLI로 합니다.
 - **테이블 권한**: Supabase는 2026-10-30부터 기존 프로젝트에서도 public의 새 테이블을 Data API에 자동 노출하지 않습니다(changelog 45329). 그래서 RLS 파일에서 tt_ 테이블과 id 시퀀스에만 authenticated·service_role 권한을 직접 주고 anon 권한은 회수합니다. Doro 테이블에 영향을 주는 스키마 전체 grant는 쓰지 않습니다.
-- **아직 어떤 Supabase 프로젝트에도 적용하지 않았습니다.** `__tests__/supabase-migrations.test.ts`는 파일 내용만 정적으로 검사하며, 실제 Postgres에서 실행해 본 결과가 아닙니다.
+- **적용 완료(2026-10-05)**: Doro 프로젝트(PostgreSQL 17)에 두 파일을 한 트랜잭션(BEGIN…COMMIT)으로 `npx supabase db query --linked -f`로 실행했습니다. Doro 프로젝트에 마이그레이션 이력 테이블이 없어(대시보드로 관리) 이력은 남기지 않았습니다. 적용 전 tt_ 테이블·tt_private 스키마가 없음을, 적용 뒤 Doro 테이블 3개가 그대로임을 확인했습니다.
+- **적용 결과 확인**: tt_ 테이블 13개 모두 RLS 켜짐, 정책은 테이블당 1~4개, anon은 모든 테이블 읽기·쓰기 권한 없음, authenticated는 읽기·쓰기 권한(행 범위는 RLS). 보안 함수 3개는 anon이 실행할 수 없습니다.
+- **보안 규칙 실행 검증**: `tests/tt_rls_check.sql`(가짜 사용자로 한 트랜잭션 안에서 검사하고 모두 되돌림) 28건 통과 — 아빠 A·딸 A·다른 가족 아빠 B·가족 없는 사용자·anon의 허용/거부. 실행 뒤 tt_ 데이터와 검증용 사용자가 남지 않았음을 확인했습니다. 실행: `npx supabase db query --linked --project-ref <ref> -f supabase/tests/tt_rls_check.sql` (결과는 오류 메시지의 TT_RLS_RESULT JSON).
+- **보안 점검(`supabase db advisors`)**: tt_ 관련 경고 1건 — `tt_create_family`가 SECURITY DEFINER인데 authenticated가 RPC로 호출할 수 있음. 가족과 첫 parent 구성원을 함께 만들려면 RLS를 우회해야 하므로 의도한 설계로 유지합니다(함수 안에서 로그인 여부와 기존 소속을 확인, anon 실행 권한 회수, 검증에서 딸·anon의 호출 거부 확인). 나머지는 데이터가 없어 생긴 '사용되지 않은 인덱스' 안내(INFO)입니다.
+- `__tests__/supabase-migrations.test.ts`는 파일 내용을 정적으로 검사합니다(실행 검증은 위 tests 파일).
 
 ## 적용 순서
 
