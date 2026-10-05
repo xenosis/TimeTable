@@ -104,3 +104,11 @@ adb 입력은 한글을 넣을 수 없어 영문 제목을 썼다. 알림은 모
 - **자정 갱신**: 화면을 끈 상태로 자정을 넘겼다. 00:00:53 위젯이 '화요일 / 오늘 일정이 없어요', '오늘 할 일 / 오늘 할 일이 없어요'로 바뀌어 있었고, 다음 갱신 알람은 `2026-10-07 00:00:01`로 잡혔다(`.tmp/d1472-midnight.png`).
 - 정리: QC1~QC7 삭제(월요일 항목 없음), 반복 할 일 없음 확인, 화면 켜짐 유지 0, 글자 크기 1.0.
 - 남은 확인: 재부팅 뒤 갱신 복구는 딸 폰 실사용(P5.6) 기간에 확인한다.
+
+## 테마 아이콘(앱 아이콘에 팔레트 적용) 확인 (P7.1, 2026-10-06 00:08~00:22)
+
+- 딸 폰은 One UI 8.5 / 안드로이드 16이다. 설정 '컬러 팔레트 → 앱 아이콘에 팔레트 적용'(`colortheme_app_icon`)을 잠깐 켜서 확인했다.
+- 1.47.2: TimeTable 아이콘이 달력이 아니라 파란 바탕에 흰 '^' 모양으로 나왔다(`.tmp/p71-themed-icon-1472.png`). 런처 아이콘의 흑백 층이 Expo 템플릿 기본 그림(`assets/adaptive-icon-monochrome.png` → `@mipmap/ic_launcher_monochrome`)을 쓰고 있었다.
+- 1.47.3 / 121: 흑백 층을 직접 그린 벡터 `drawable/brand_icon_monochrome.xml`(달력 몸통에 머리 띠와 2x2 칸을 evenOdd로 뚫고, 고리 두 개는 별도 path)로 바꾸고 `brand_launcher`·`brand_launcher_round`가 이를 쓰게 했다. `npm run check` 통과, 같은 키(`295d86…`)로 서명한 `TimeTable-v1.47.3-release-Device-arm64-v8a.apk`(arm64-v8a, versionCode 121)를 데이터 보존 설치했다.
+- 테마 아이콘 켬: 파란 바탕에 흰 달력(고리 2개, 2x2 칸)으로 나왔다(`.tmp/p71-themed-1473.png`). 끔: 원래 컬러 달력 아이콘 그대로(`.tmp/p71-normal-1473.png`).
+- 정리: `colortheme_app_icon` 0으로 되돌렸다.
