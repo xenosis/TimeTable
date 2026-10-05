@@ -20,9 +20,10 @@ insert into auth.users (id, aud, role, email) values
 
 -- 검사 한 건을 실행하고 기록한다. 실행할 문장은 현재 역할로 돈다(security invoker).
 -- 실제 결과: 'allowed' = 오류 없이 1행 이상 바뀌거나 보임
---           'denied'  = 권한·RLS 거부(SQLSTATE 42501), 정책 조건 때문에 0행, 또는 p_deny_states로 명시한 의도된 오류
+--           'denied'  = 권한·RLS 거부(SQLSTATE 42501), 정책 조건 때문에 0행, 또는 p_deny_states·p_deny_message로 명시한 의도된 오류
 --           'error:<SQLSTATE>' = 그 밖의 오류(중복·외래키 등). RLS가 막은 것이 아니므로 통과로 치지 않는다.
-create function pg_temp.tt_check(p_name text, p_expected text, p_sql text, p_deny_states text[] default '{}') returns void
+-- 0행 거부는 마지막 '데이터 확인' 절에서 대상 행이 그대로인지 소유자 권한으로 다시 확인한다(대상이 없어서 생긴 0행을 거부로 착각하지 않게).
+create function pg_temp.tt_check(p_name text, p_expected text, p_sql text, p_deny_states text[] default '{}', p_deny_message text default null) returns void
 language plpgsql security invoker as $$
 declare
   v_rows bigint;
@@ -33,12 +34,15 @@ begin
     get diagnostics v_rows = row_count;
     v_actual := case when v_rows > 0 then 'allowed' else 'denied' end;
   exception when others then
-    v_actual := case when sqlstate = '42501' or sqlstate = any (p_deny_states) then 'denied' else 'error:' || sqlstate end;
+    v_actual := case
+      when sqlstate = '42501' then 'denied'
+      when sqlstate = any (p_deny_states) and (p_deny_message is null or sqlerrm = p_deny_message) then 'denied'
+      else 'error:' || sqlstate end;
   end;
   perform set_config('tt.r', (current_setting('tt.r')::jsonb || jsonb_build_array(jsonb_build_array(p_name, p_expected, v_actual)))::text, true);
 end;
 $$;
-grant execute on function pg_temp.tt_check(text, text, text, text[]) to authenticated, anon;
+grant execute on function pg_temp.tt_check(text, text, text, text[], text) to authenticated, anon;
 -- 역할을 바꿔도 이 세션의 임시 스키마에 있는 검사 함수를 부를 수 있게 한다(pg_temp라는 이름으로는 권한을 줄 수 없다)
 do $$ begin execute format('grant usage on schema %I to authenticated, anon', pg_my_temp_schema()::regnamespace::text); end $$;
 
@@ -101,7 +105,31 @@ select pg_temp.tt_check('딸A: 아빠 기기 정보 수정', 'denied',
 select pg_temp.tt_check('딸A: 아빠 이름으로 기기 등록', 'denied',
   format($q$insert into public.tt_devices (family_id, user_id) values (%L, '00000000-0000-4000-8000-00000000a001')$q$, current_setting('tt.fam_a')));
 select pg_temp.tt_check('딸A: 다른 가족 만들기(이미 소속)', 'denied',
-  $q$select public.tt_create_family('딸 가족', '딸')$q$, '{23505}');
+  $q$select public.tt_create_family('딸 가족', '딸')$q$, '{23505}', 'already in a family');
+select pg_temp.tt_check('딸A: 자기 기기 등록', 'allowed',
+  format($q$insert into public.tt_devices (family_id, user_id) values (%L, '00000000-0000-4000-8000-00000000a002')$q$, current_setting('tt.fam_a')));
+select pg_temp.tt_check('딸A: 완료 체크 취소', 'allowed',
+  format($q$delete from public.tt_task_completions where task_id = %s and completion_date = '2026-09-01'$q$, current_setting('tt.task_a')));
+select pg_temp.tt_check('딸A: 시간표 세트 추가', 'allowed',
+  format($q$insert into public.tt_timetable_sets (family_id, name) values (%L, '딸 세트')$q$, current_setting('tt.fam_a')));
+select pg_temp.tt_check('딸A: 그 세트에 시간표 항목 추가', 'allowed',
+  format($q$insert into public.tt_timetable_items (family_id, set_id, weekday, start_time, end_time, title, category, color_key, icon_key)
+    select %L, id, 1, '16:00', '17:00', '피아노', 'academy', 'academy', 'academy' from public.tt_timetable_sets where name = '딸 세트'$q$, current_setting('tt.fam_a')));
+
+-- ---------------------------------------------------------------------------
+-- 아빠 A의 관리 권한(허용 경로): 딸 기기 읽기·삭제, 구성원 이름 수정, 구성원 추가 후 삭제
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000a001","role":"authenticated"}', true);
+select pg_temp.tt_check('아빠A: 딸 기기 정보 읽기', 'allowed',
+  $q$select 1 from public.tt_devices where user_id = '00000000-0000-4000-8000-00000000a002'$q$);
+select pg_temp.tt_check('아빠A: 딸 표시 이름 수정', 'allowed',
+  $q$update public.tt_family_members set display_name = '딸2' where user_id = '00000000-0000-4000-8000-00000000a002'$q$);
+select pg_temp.tt_check('아빠A: 딸 기기 정보 삭제', 'allowed',
+  $q$delete from public.tt_devices where user_id = '00000000-0000-4000-8000-00000000a002'$q$);
+select pg_temp.tt_check('아빠A: 구성원 추가(검증용)', 'allowed',
+  format($q$insert into public.tt_family_members (family_id, user_id, role) values (%L, '00000000-0000-4000-8000-00000000c001', 'child')$q$, current_setting('tt.fam_a')));
+select pg_temp.tt_check('아빠A: 구성원 삭제', 'allowed',
+  $q$delete from public.tt_family_members where user_id = '00000000-0000-4000-8000-00000000c001'$q$);
 
 -- ---------------------------------------------------------------------------
 -- 다른 가족 아빠 B: 가족 A의 데이터는 보이지도 바뀌지도 않고, 자기 행을 가족 A로 옮길 수도 없다
@@ -132,6 +160,8 @@ select pg_temp.tt_check('아빠B: 가족A로 자기 기기 등록', 'denied',
   format($q$insert into public.tt_devices (family_id, user_id) values (%L, '00000000-0000-4000-8000-00000000b001')$q$, current_setting('tt.fam_a')));
 select pg_temp.tt_check('아빠B: 자기 가족 할 일 추가', 'allowed',
   format($q$insert into public.tt_tasks (family_id, title, task_date) values (%L, 'B 할 일', '2026-10-05')$q$, current_setting('tt.fam_b')));
+select pg_temp.tt_check('아빠B: 자기 가족 삭제(딸린 데이터 함께 삭제)', 'allowed',
+  format($q$delete from public.tt_families where id = %L$q$, current_setting('tt.fam_b')));
 
 -- ---------------------------------------------------------------------------
 -- 가족 없는 로그인 사용자와 로그인 안 한 사용자
@@ -148,6 +178,23 @@ select pg_temp.tt_check('anon: 할 일 읽기', 'denied', 'select 1 from public.
 select pg_temp.tt_check('anon: 가족 만들기', 'denied', $q$select public.tt_create_family('anon 가족', '')$q$);
 select pg_temp.tt_check('anon: 가족 추가', 'denied', $q$insert into public.tt_families (name) values ('anon')$q$);
 
--- 결과를 내보내며 모두 되돌린다
+-- ---------------------------------------------------------------------------
+-- 데이터 확인(소유자 권한): 0행으로 '거부'된 수정·삭제가 실제로 아무것도 바꾸지 않았는지 본다
+-- ---------------------------------------------------------------------------
 reset role;
+select pg_temp.tt_check('확인: 가족A 그대로(딸 이름 변경·삭제 거부)', 'allowed',
+  format($q$select 1 from public.tt_families where id = %L and name = '검증 가족 A2'$q$, current_setting('tt.fam_a')));
+select pg_temp.tt_check('확인: 할 일 A 그대로(B 수정·삭제 거부)', 'allowed',
+  format($q$select 1 from public.tt_tasks where id = %s and title = '검증 할 일'$q$, current_setting('tt.task_a')));
+select pg_temp.tt_check('확인: 아빠A 구성원·역할 그대로(딸 강등·삭제 거부)', 'allowed',
+  $q$select 1 from public.tt_family_members where user_id = '00000000-0000-4000-8000-00000000a001' and role = 'parent'$q$);
+select pg_temp.tt_check('확인: 딸A 역할 그대로(자기 승격 거부)', 'allowed',
+  $q$select 1 from public.tt_family_members where user_id = '00000000-0000-4000-8000-00000000a002' and role = 'child'$q$);
+select pg_temp.tt_check('확인: 아빠A 기기 그대로(딸 수정 거부)', 'allowed',
+  $q$select 1 from public.tt_devices where user_id = '00000000-0000-4000-8000-00000000a001' and platform = 'android'$q$);
+select pg_temp.tt_check('확인: 가족A로 옮겨진 B 데이터 없음', 'allowed',
+  format($q$select 1 where not exists (select 1 from public.tt_rewards where family_id = %1$L and title = 'B 목표')
+    and not exists (select 1 from public.tt_tasks where family_id = %1$L and title = '침입')$q$, current_setting('tt.fam_a')));
+
+-- 결과를 내보내며 모두 되돌린다
 do $$ begin raise exception 'TT_RLS_RESULT %', current_setting('tt.r'); end $$;
