@@ -33,11 +33,22 @@ describe('supabase 마이그레이션', () => {
     const enabledDirectly = [...rls.matchAll(/alter table public\.(tt_\w+) enable row level security/g)].map((match) => match[1]);
     const loopLists = [...rls.matchAll(/foreach t in array array\[([^\]]*)\]/g)].map((match) => [...match[1].matchAll(/'(tt_\w+)'/g)].map((item) => item[1]));
     const enabledInLoop = loopLists[0] ?? [];
-    const revokedInLoop = loopLists[1] ?? [];
+    const grantedInLoop = loopLists[1] ?? [];
+    const revokedInLoop = loopLists[2] ?? [];
     for (const table of createdTables) {
       expect([...enabledDirectly, ...enabledInLoop]).toContain(table);
+      expect(grantedInLoop).toContain(table);
       expect(revokedInLoop).toContain(table);
     }
+  });
+
+  it('새 테이블 자동 노출 중단(2026-10-30)에 대비해 로그인 사용자에게만 테이블·시퀀스 권한을 직접 준다', () => {
+    expect(rls).toContain("grant select, insert, update, delete on public.%I to authenticated, service_role");
+    expect(rls).toContain("grant usage, select on sequence %s to authenticated, service_role");
+    expect(rls).toContain("revoke all on public.%I from anon");
+    expect(rls).toContain("revoke all on sequence %s from anon");
+    // Doro와 같은 프로젝트라 스키마 전체에 주는 grant는 쓰지 않는다
+    expect(rls).not.toMatch(/grant [^;]* on all (tables|sequences) in schema public/i);
   });
 
   it('보안 규칙에 쓰는 소속 확인 함수는 로그인한 사용자에게만 실행 권한을 준다', () => {

@@ -11,6 +11,8 @@
 
 - 모든 테이블 이름에 `tt_` 접두사를 붙였습니다. Doro와 같은 프로젝트에 넣어도 이름이 겹치지 않고, 새 프로젝트에 넣어도 그대로 쓸 수 있습니다.
 - Postgres 15 이상이 필요합니다(`on delete set null (열)` 문법). Supabase 신규 프로젝트는 기본으로 만족합니다.
+- **적용 대상(2026-10-05 결정): Doro와 같은 Supabase 프로젝트.** 계정은 아빠·딸 기기용 이메일+비밀번호 2개를 대시보드 Authentication에서 만들고, 적용은 `npx supabase` CLI로 합니다.
+- **테이블 권한**: Supabase는 2026-10-30부터 기존 프로젝트에서도 public의 새 테이블을 Data API에 자동 노출하지 않습니다(changelog 45329). 그래서 RLS 파일에서 tt_ 테이블과 id 시퀀스에만 authenticated·service_role 권한을 직접 주고 anon 권한은 회수합니다. Doro 테이블에 영향을 주는 스키마 전체 grant는 쓰지 않습니다.
 - **아직 어떤 Supabase 프로젝트에도 적용하지 않았습니다.** `__tests__/supabase-migrations.test.ts`는 파일 내용만 정적으로 검사하며, 실제 Postgres에서 실행해 본 결과가 아닙니다.
 
 ## 적용 순서

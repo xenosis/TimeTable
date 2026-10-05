@@ -144,8 +144,33 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 로그인하지 않은 사용자(anon)는 테이블 권한 자체를 회수하고, authenticated에서는 TRUNCATE 등 불필요한 권한을 회수한다(최소 권한)
+-- 테이블 권한(Data API 노출). Supabase는 2026-10-30부터 기존 프로젝트에서도 public의 새 테이블을 API에 자동 노출하지 않으므로
+-- (changelog 45329) 로그인한 사용자와 service_role에 직접 권한을 준다. 행 범위는 위 RLS 정책이 정한다.
+-- 로그인하지 않은 사용자(anon)는 테이블 권한 자체를 회수하고, authenticated에서는 TRUNCATE 등 불필요한 권한을 회수한다(최소 권한).
+-- Doro와 같은 프로젝트를 쓰므로 tt_ 테이블과 그 id 시퀀스에만 적용한다(스키마 전체 grant를 쓰지 않는다).
 -- ---------------------------------------------------------------------------
+
+do $$
+declare
+  t text;
+  s text;
+begin
+  foreach t in array array[
+    'tt_families', 'tt_family_members', 'tt_devices',
+    'tt_periods', 'tt_timetable_sets', 'tt_timetable_settings', 'tt_timetable_items',
+    'tt_day_exceptions', 'tt_tasks', 'tt_task_completions', 'tt_task_completion_history',
+    'tt_sticker_ledger', 'tt_rewards'
+  ] loop
+    execute format('grant select, insert, update, delete on public.%I to authenticated, service_role', t);
+    if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = t and column_name = 'id') then
+      s := pg_get_serial_sequence(format('public.%I', t), 'id');
+      if s is not null then
+        execute format('grant usage, select on sequence %s to authenticated, service_role', s);
+      end if;
+    end if;
+  end loop;
+end;
+$$;
 
 do $$
 declare
@@ -158,6 +183,10 @@ begin
     'tt_sticker_ledger', 'tt_rewards'
   ] loop
     execute format('revoke all on public.%I from anon', t);
+    if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = t and column_name = 'id')
+       and pg_get_serial_sequence(format('public.%I', t), 'id') is not null then
+      execute format('revoke all on sequence %s from anon', pg_get_serial_sequence(format('public.%I', t), 'id'));
+    end if;
     -- 로그인한 사용자도 행 단위 규칙을 거치지 않는 TRUNCATE와 외래키·트리거 생성 권한은 필요 없다
     execute format('revoke truncate, references, trigger on public.%I from authenticated', t);
   end loop;
