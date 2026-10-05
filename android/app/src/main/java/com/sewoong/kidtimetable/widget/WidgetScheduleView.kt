@@ -26,7 +26,7 @@ data class ScheduleView(
 object WidgetScheduleView {
   const val NO_AFTER_SCHOOL_MESSAGE = "오늘은 수업 뒤 일정이 없어요"
   const val MIN_ROWS = 2
-  const val MAX_ROWS = 5
+  const val MAX_ROWS = 7
 
   private const val TITLE_AREA_DP = 44 // 위젯 여백 + 제목 줄
   private const val ROW_DP = 26 // 15sp 한글 한 줄(약 22dp) + 위아래 여백
@@ -35,7 +35,7 @@ object WidgetScheduleView {
 
   /**
    * 위젯 높이(dp)에 글자가 잘리지 않고 들어가는 줄 수(제목 줄 제외, "+N개" 줄 포함).
-   * 4x2(약 110dp)에서는 2줄, 4x3(약 180dp) 이상에서는 5줄이다.
+   * 4x2(약 110dp)에서는 2줄, 높이에 따라 최대 7줄이다(딸 폰 4x2는 기본 높이가 커서 더 많이 들어간다).
    */
   fun capacityFor(heightDp: Int, fontScale: Float = 1f): Int {
     val scale = fontScale.coerceAtLeast(1f) // 글자 크기 설정이 크면 줄도 그만큼 높아진다

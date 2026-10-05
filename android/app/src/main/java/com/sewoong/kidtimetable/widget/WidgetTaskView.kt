@@ -19,7 +19,7 @@ object WidgetTaskView {
   const val NO_TASKS_MESSAGE = "오늘 할 일이 없어요"
   const val ALL_DONE_MESSAGE = "오늘 할 일을 다 했어!"
   const val MIN_ROWS = 2
-  const val MAX_ROWS = 4
+  const val MAX_ROWS = 6
 
   private const val TITLE_AREA_DP = 44
   private const val ROW_DP = 30

@@ -61,6 +61,16 @@ class WidgetTaskViewTest {
     assertEquals(before.rows.map { it.id }, after.rows.map { it.id })
   }
 
+  @Test fun 칸이_높으면_할_일을_최대_6줄까지_보여준다() {
+    assertEquals(6, WidgetTaskView.capacityFor(300))
+    assertEquals(2, WidgetTaskView.capacityFor(110))
+    val tasks = (1..7).map { task(it, "할$it") }.toTypedArray()
+    val view = build(day(*tasks), capacity = 6)
+    assertEquals(listOf("할1", "할2", "할3", "할4", "할5"), view.rows.map { it.title })
+    assertEquals(2, view.moreCount)
+    assertEquals(6, build(day(*tasks.take(6).toTypedArray()), capacity = 6).rows.size)
+  }
+
   @Test fun 할_일이_없으면_없다고_알려준다() {
     val view = build(day())
     assertEquals(WidgetTaskView.NO_TASKS_MESSAGE, view.message)
@@ -137,7 +147,7 @@ class WidgetTaskViewTest {
     assertEquals(2, WidgetTaskView.capacityFor(110)) // 2x2 기본
     assertEquals(3, WidgetTaskView.capacityFor(150))
     assertEquals(4, WidgetTaskView.capacityFor(170))
-    assertEquals(4, WidgetTaskView.capacityFor(400)) // 최대 4줄
+    assertEquals(6, WidgetTaskView.capacityFor(400)) // 최대 6줄
   }
 
   @Test fun 글자_크기_설정이_크면_줄_수가_줄어든다() {

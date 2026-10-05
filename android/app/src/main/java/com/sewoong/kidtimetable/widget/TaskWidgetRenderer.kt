@@ -18,6 +18,8 @@ object TaskWidgetRenderer {
     intArrayOf(R.id.task_row_2, R.id.task_box_2, R.id.task_title_2),
     intArrayOf(R.id.task_row_3, R.id.task_box_3, R.id.task_title_3),
     intArrayOf(R.id.task_row_4, R.id.task_box_4, R.id.task_title_4),
+    intArrayOf(R.id.task_row_5, R.id.task_box_5, R.id.task_title_5),
+    intArrayOf(R.id.task_row_6, R.id.task_box_6, R.id.task_title_6),
   )
   private const val OPEN_APP_REQUEST_CODE = 5506
   private const val TOGGLE_REQUEST_CODE_BASE = 6100

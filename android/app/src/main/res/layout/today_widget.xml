@@ -30,5 +30,15 @@
     <TextView android:id="@+id/widget_time_5" android:layout_width="46dp" android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" />
     <TextView android:id="@+id/widget_title_5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
   </LinearLayout>
+  <LinearLayout android:id="@+id/widget_row_6" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="2dp" android:paddingBottom="2dp" android:paddingLeft="4dp" android:paddingRight="4dp" android:visibility="gone">
+    <TextView android:id="@+id/widget_marker_6" android:layout_width="6dp" android:layout_height="18dp" android:layout_marginRight="6dp" />
+    <TextView android:id="@+id/widget_time_6" android:layout_width="46dp" android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" />
+    <TextView android:id="@+id/widget_title_6" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+  </LinearLayout>
+  <LinearLayout android:id="@+id/widget_row_7" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="2dp" android:paddingBottom="2dp" android:paddingLeft="4dp" android:paddingRight="4dp" android:visibility="gone">
+    <TextView android:id="@+id/widget_marker_7" android:layout_width="6dp" android:layout_height="18dp" android:layout_marginRight="6dp" />
+    <TextView android:id="@+id/widget_time_7" android:layout_width="46dp" android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" />
+    <TextView android:id="@+id/widget_title_7" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textSize="15sp" android:maxLines="1" android:ellipsize="end" />
+  </LinearLayout>
   <TextView android:id="@+id/widget_more" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingLeft="4dp" android:paddingTop="2dp" android:textSize="14sp" android:maxLines="1" android:visibility="gone" />
 </LinearLayout>

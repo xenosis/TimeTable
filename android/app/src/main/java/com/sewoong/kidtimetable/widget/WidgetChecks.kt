@@ -91,16 +91,23 @@ object WidgetChecks {
     checks.forEach { put(JSONObject().put("taskId", it.taskId).put("date", it.date).put("completed", it.completed)) }
   }.toString()
 
-  /** 위젯에서 누른 줄을 남겨 두는 시간. 그 안에는 잘못 누른 줄을 그 자리에서 되돌릴 수 있고, 지나면 남은 할 일이 다시 올라온다(2026-10-05 사용자 결정). */
+  /**
+   * 위젯에서 누른 줄을 남겨 두는 시간(2026-10-05 사용자 결정 "누르고 1분만 유지"). 마지막으로 누른 뒤 이 시간 안에는 이어서 누른 줄을
+   * 모두 그 자리에 두어 연속으로 눌러도 줄이 움직이지 않고 잘못 누른 줄을 되돌릴 수 있다. 지나면 남은 할 일이 다시 올라온다.
+   */
   const val TOUCH_HOLD_MILLIS = 60_000L
 
-  /** [date]에 위젯에서 누른 지 [TOUCH_HOLD_MILLIS] 안 된 할 일 id. 날짜가 다르거나 깨졌으면 빈 집합. */
-  fun touchedIds(touchedJson: String?, date: String, nowMillis: Long): Set<Int> = touches(touchedJson, date)
-    .filter { (_, at) -> nowMillis - at in 0 until TOUCH_HOLD_MILLIS }.keys
+  /** [date]에 마지막으로 누른 지 [TOUCH_HOLD_MILLIS]가 안 됐으면 이어서 누른 할 일 id 전체, 아니면 빈 집합. 날짜가 다르거나 깨졌으면 빈 집합. */
+  fun touchedIds(touchedJson: String?, date: String, nowMillis: Long): Set<Int> {
+    val touches = touches(touchedJson, date)
+    val latest = touches.values.maxOrNull() ?: return emptySet()
+    return if (nowMillis - latest in 0 until TOUCH_HOLD_MILLIS) touches.keys else emptySet()
+  }
 
-  /** [date]에 [taskId]를 [nowMillis]에 누른 기록을 더한다. 시간이 지난 기록과 다른 날짜의 기록은 버린다. */
+  /** [date]에 [taskId]를 [nowMillis]에 누른 기록을 더한다. 직전 누름이 유지 시간 안이면 이어서 쌓고, 지났거나 날짜가 다르면 새로 시작한다. */
   fun withTouched(touchedJson: String?, date: String, taskId: Int, nowMillis: Long): String {
-    val kept = touches(touchedJson, date).filter { (id, at) -> id != taskId && nowMillis - at in 0 until TOUCH_HOLD_MILLIS }
+    val active = touchedIds(touchedJson, date, nowMillis)
+    val kept = touches(touchedJson, date).filterKeys { it in active && it != taskId }
     val array = JSONArray()
     (kept + (taskId to nowMillis)).forEach { (id, at) -> array.put(JSONObject().put("id", id).put("at", at)) }
     return JSONObject().put("date", date).put("touches", array).toString()

@@ -89,7 +89,8 @@ class WidgetScheduleViewTest {
     assertEquals(2, WidgetScheduleView.capacityFor(110)) // 4x2 기본
     assertEquals(3, WidgetScheduleView.capacityFor(130))
     assertEquals(5, WidgetScheduleView.capacityFor(180)) // 4x3
-    assertEquals(5, WidgetScheduleView.capacityFor(400)) // 최대 5줄
+    assertEquals(7, WidgetScheduleView.capacityFor(240)) // 높은 칸(딸 폰 4x2 등)
+    assertEquals(7, WidgetScheduleView.capacityFor(400)) // 최대 7줄
   }
 
   @Test fun 글자_크기_설정이_크면_줄_수가_줄어든다() {

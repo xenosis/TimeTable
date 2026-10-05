@@ -112,13 +112,13 @@ class WidgetChecksTest {
     assertEquals(checks, WidgetChecks.parse(WidgetChecks.encode(checks)))
   }
 
-  @Test fun 누른_기록은_1분_동안만_쓰고_날짜가_바뀌거나_깨지면_비운다() {
+  @Test fun 누른_기록은_마지막_누름_1분_동안_이어서_누른_줄을_모두_남기고_날짜가_바뀌거나_깨지면_비운다() {
     val t0 = 1_000_000L
     val first = WidgetChecks.withTouched(null, "2026-10-05", 5, t0)
     val second = WidgetChecks.withTouched(first, "2026-10-05", 2, t0 + 30_000)
     assertEquals(setOf(2, 5), WidgetChecks.touchedIds(second, "2026-10-05", t0 + 40_000))
-    // 5는 누른 지 1분이 지나 빠지고 2만 남는다
-    assertEquals(setOf(2), WidgetChecks.touchedIds(second, "2026-10-05", t0 + 61_000))
+    // 5는 누른 지 1분이 지났지만 마지막 누름(2)이 1분 안이라 이어서 누른 줄로 함께 남는다(연속으로 누르는 중 줄이 움직이지 않게)
+    assertEquals(setOf(2, 5), WidgetChecks.touchedIds(second, "2026-10-05", t0 + 61_000))
     assertEquals(emptySet<Int>(), WidgetChecks.touchedIds(second, "2026-10-05", t0 + 120_000))
     assertEquals(emptySet<Int>(), WidgetChecks.touchedIds(second, "2026-10-06", t0 + 40_000))
     assertEquals(emptySet<Int>(), WidgetChecks.touchedIds("{깨진", "2026-10-05", t0))

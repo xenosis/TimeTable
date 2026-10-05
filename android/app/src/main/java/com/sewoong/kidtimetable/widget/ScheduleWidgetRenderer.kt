@@ -13,6 +13,8 @@ object ScheduleWidgetRenderer {
     intArrayOf(R.id.widget_row_3, R.id.widget_marker_3, R.id.widget_time_3, R.id.widget_title_3),
     intArrayOf(R.id.widget_row_4, R.id.widget_marker_4, R.id.widget_time_4, R.id.widget_title_4),
     intArrayOf(R.id.widget_row_5, R.id.widget_marker_5, R.id.widget_time_5, R.id.widget_title_5),
+    intArrayOf(R.id.widget_row_6, R.id.widget_marker_6, R.id.widget_time_6, R.id.widget_title_6),
+    intArrayOf(R.id.widget_row_7, R.id.widget_marker_7, R.id.widget_time_7, R.id.widget_title_7),
   )
   private const val OPEN_APP_REQUEST_CODE = 5505
 
