@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
-import '../src/notifications/backgroundRollingRefresh';
 import { RollingRefreshLifecycle } from '../src/notifications/RollingRefreshLifecycle';
 import { ThemeProvider, useActiveTheme } from '../src/theme/provider';
 

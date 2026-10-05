@@ -10,8 +10,8 @@ class WidgetTaskViewTest {
   private fun day(vararg tasks: WidgetTaskEntry, hidden: Int = 0, date: String = "2026-09-30") =
     WidgetDay(date, emptyList(), tasks.toList(), 0, hidden)
 
-  private fun build(day: WidgetDay, capacity: Int = 4) =
-    WidgetTaskView.build(WidgetSnapshot("평소", "2026-09-30T01:00:00.000Z", listOf(day)), day.date, capacity)
+  private fun build(day: WidgetDay, capacity: Int = 4, touched: Set<Int> = emptySet()) =
+    WidgetTaskView.build(WidgetSnapshot("평소", "2026-09-30T01:00:00.000Z", listOf(day)), day.date, capacity, touched)
 
   @Test fun 제목에_끝낸_개수와_전체_개수가_나온다() {
     val view = build(day(task(1, "숙제", true), task(2, "준비물"), task(3, "책 읽기")))
@@ -30,6 +30,20 @@ class WidgetTaskViewTest {
     val view = build(day(*tasks), capacity = 4)
     assertEquals(listOf("할1", "할2", "할3"), view.rows.map { it.title })
     assertEquals(3, view.moreCount)
+  }
+
+  @Test fun 줄이_모자라도_오늘_위젯에서_누른_끝낸_일은_빼지_않아_다시_눌러_되돌릴_수_있다() {
+    // 딸 폰에서 본 경우: 5개 중 1·2·5를 끝냈고 5를 방금 위젯에서 눌렀다
+    val tasks = arrayOf(task(1, "QT1", true), task(2, "QT2", true), task(3, "QT3"), task(4, "QT4"), task(5, "QT5", true))
+    assertEquals(listOf("QT1", "QT3", "QT4"), build(day(*tasks), capacity = 4).rows.map { it.title })
+    val view = build(day(*tasks), capacity = 4, touched = setOf(5))
+    assertEquals(listOf("QT3", "QT4", "QT5"), view.rows.map { it.title })
+    assertEquals(2, view.moreCount)
+  }
+
+  @Test fun 모두_끝낸_뒤_줄이_모자라도_마지막으로_누른_줄은_보인다() {
+    val tasks = arrayOf(task(1, "가", true), task(2, "나", true), task(3, "다", true), task(4, "라", true))
+    assertEquals(listOf("라"), build(day(*tasks), capacity = 3, touched = setOf(4)).rows.map { it.title })
   }
 
   @Test fun 하나를_완료해도_보이는_다른_줄의_위치는_바뀌지_않는다() {

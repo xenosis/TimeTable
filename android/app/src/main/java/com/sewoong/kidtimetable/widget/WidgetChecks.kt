@@ -90,4 +90,17 @@ object WidgetChecks {
   fun encode(checks: List<PendingCheck>): String = JSONArray().apply {
     checks.forEach { put(JSONObject().put("taskId", it.taskId).put("date", it.date).put("completed", it.completed)) }
   }.toString()
+
+  /** 오늘([date]) 위젯에서 누른 할 일 id. 날짜가 다르거나 깨졌으면 빈 집합(어제 누른 기록은 오늘 줄 선택에 쓰지 않는다). */
+  fun touchedIds(touchedJson: String?, date: String): Set<Int> = try {
+    val item = if (touchedJson.isNullOrBlank()) null else JSONObject(touchedJson)
+    if (item == null || item.optString("date") != date) emptySet() else {
+      val ids = item.optJSONArray("ids") ?: JSONArray()
+      (0 until ids.length()).map { ids.optInt(it, -1) }.filter { it >= 0 }.toSet()
+    }
+  } catch (_: Exception) { emptySet() }
+
+  /** [date]에 [taskId]를 누른 기록을 더한다. 날짜가 바뀌었으면 이전 날짜 기록은 버리고 새로 시작한다. */
+  fun withTouched(touchedJson: String?, date: String, taskId: Int): String =
+    JSONObject().put("date", date).put("ids", JSONArray((touchedIds(touchedJson, date) + taskId).sorted())).toString()
 }

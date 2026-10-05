@@ -111,4 +111,13 @@ class WidgetChecksTest {
     val checks = listOf(PendingCheck(1, "2026-10-01", true), PendingCheck(2, "2026-10-02", false))
     assertEquals(checks, WidgetChecks.parse(WidgetChecks.encode(checks)))
   }
+
+  @Test fun 오늘_누른_할_일_기록은_날짜가_같을_때만_쓰고_날짜가_바뀌면_새로_시작한다() {
+    val first = WidgetChecks.withTouched(null, "2026-10-05", 5)
+    val second = WidgetChecks.withTouched(first, "2026-10-05", 2)
+    assertEquals(setOf(2, 5), WidgetChecks.touchedIds(second, "2026-10-05"))
+    assertEquals(emptySet<Int>(), WidgetChecks.touchedIds(second, "2026-10-06"))
+    assertEquals(setOf(3), WidgetChecks.touchedIds(WidgetChecks.withTouched(second, "2026-10-06", 3), "2026-10-06"))
+    assertEquals(emptySet<Int>(), WidgetChecks.touchedIds("{깨진", "2026-10-05"))
+  }
 }

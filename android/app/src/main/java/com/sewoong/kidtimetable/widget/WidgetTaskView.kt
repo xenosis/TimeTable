@@ -33,7 +33,8 @@ object WidgetTaskView {
     return ((heightDp - TITLE_AREA_DP * scale) / (ROW_DP * scale)).toInt().coerceIn(MIN_ROWS, MAX_ROWS)
   }
 
-  fun build(snapshot: WidgetSnapshot?, today: String, capacity: Int): TaskView {
+  /** [touched]: 오늘 위젯에서 누른 할 일 id. 줄이 모자라도 이 줄은 빼지 않아, 방금 누른 줄을 그 자리에서 다시 눌러 되돌릴 수 있다. */
+  fun build(snapshot: WidgetSnapshot?, today: String, capacity: Int, touched: Set<Int> = emptySet()): TaskView {
     val day = WidgetDayResolver.dayFor(snapshot, today)
       ?: return TaskView(today, "오늘 할 일", emptyList(), 0, WidgetDayResolver.STALE_MESSAGE)
     val tasks = day.tasks
@@ -48,14 +49,19 @@ object WidgetTaskView {
       val room = lines - 1
       // 작은 위젯에서도 최소 한 줄은 남겨, 모두 끝낸 뒤 잘못 눌렀을 때 다시 눌러 되돌릴 수 있게 한다
       val count = if (tasks.size <= room) tasks.size else maxOf(1, room - 1)
-      return TaskView(day.date, heading, tasks.take(count).map { TaskRow(it.id, it.title, it.completed) }, tasks.size - count, ALL_DONE_MESSAGE)
+      val shown = keepInOrder(tasks) { it.id in touched }.take(count).sorted().map { tasks[it] }
+      return TaskView(day.date, heading, shown.map { TaskRow(it.id, it.title, it.completed) }, tasks.size - count, ALL_DONE_MESSAGE)
     }
     val needMore = tasks.size > lines || day.hiddenTaskCount > 0
     val maxRows = if (tasks.size + (if (needMore) 1 else 0) <= lines) tasks.size else lines - 1
-    // 줄이 모자라면 못 한 일을 먼저 남기고 끝낸 일을 뺀다(안 한 일이 잘려 나가지 않게). 보이는 줄은 원래 순서를 지켜,
-    // 누르면 그 자리에서 체크 표시만 바뀌고 줄이 이동하지 않는다(연타하면 다른 할 일이 눌리는 일을 막는다).
-    val kept = (tasks.indices.filter { !tasks[it].completed } + tasks.indices.filter { tasks[it].completed }).take(maxRows).sorted()
+    // 줄이 모자라면 못 한 일과 오늘 위젯에서 누른 일을 먼저 남기고 나머지 끝낸 일부터 뺀다(방금 누른 줄이 사라져 되돌릴 수 없게 되는 일을 막는다).
+    // 보이는 줄은 원래 순서를 지켜, 누르면 그 자리에서 체크 표시만 바뀌고 줄이 이동하지 않는다(연타하면 다른 할 일이 눌리는 일을 막는다).
+    val kept = keepInOrder(tasks) { !it.completed || it.id in touched }.take(maxRows).sorted()
     val shown = kept.map { tasks[it] }
     return TaskView(day.date, heading, shown.map { TaskRow(it.id, it.title, it.completed) }, tasks.size - shown.size + day.hiddenTaskCount, null)
   }
+
+  /** [first]에 맞는 줄의 순번을 먼저, 나머지를 뒤에 둔다(각각 원래 순서). */
+  private fun <T> keepInOrder(tasks: List<T>, first: (T) -> Boolean): List<Int> =
+    tasks.indices.filter { first(tasks[it]) } + tasks.indices.filterNot { first(tasks[it]) }
 }

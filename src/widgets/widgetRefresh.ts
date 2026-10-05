@@ -6,12 +6,21 @@ import { notifyWidgetChecksApplied } from './widgetChecksSignal';
 import { applyPendingWidgetChecks } from './widgetPendingChecks';
 import { buildWidgetData } from './widgetDataV2';
 
+/**
+ * 위젯에서 누른 체크를 앱 안 체크와 같은 규칙으로 DB에 기록하고, 기록한 것이 있으면 열려 있는 오늘 화면에 알린다.
+ * 할 일 알림을 예약하기 전에도 부른다: 예약이 대기 체크 반영 전의 완료 상태를 읽으면 끝낸 할 일의 알림이 남을 수 있다.
+ */
+export async function applyPendingWidgetChecksNow(database: Awaited<ReturnType<typeof getDatabase>>): Promise<number> {
+  const applied = await applyPendingWidgetChecks(database, peekPendingWidgetChecks, ackPendingWidgetChecks);
+  if (applied > 0) notifyWidgetChecksApplied(); // 열려 있는 오늘 화면이 완료 상태와 연속 기록을 다시 읽게 한다
+  return applied;
+}
+
 async function refreshWidgetFromDatabase(): Promise<void> {
   const [database, theme] = await Promise.all([getDatabase(), themeSelectionStore.load()]);
-  // 위젯에서 누른 체크를 먼저 앱 안 체크와 같은 규칙으로 DB에 기록한다. 그래야 아래에서 쓰는 위젯 데이터가 누른 결과를 되돌리지 않는다.
-  const applied = await applyPendingWidgetChecks(database, peekPendingWidgetChecks, ackPendingWidgetChecks);
+  // 위젯에서 누른 체크를 먼저 DB에 기록한다. 그래야 아래에서 쓰는 위젯 데이터가 누른 결과를 되돌리지 않는다.
+  const applied = await applyPendingWidgetChecksNow(database);
   if (applied > 0) {
-    notifyWidgetChecksApplied(); // 열려 있는 오늘 화면이 완료 상태와 보석을 다시 읽게 한다
     // 끝낸 할 일의 재알림이 더 울리지 않게 할 일 알림도 다시 예약한다(앱 안 체크와 같다).
     // 할 일 예약 모듈은 이 파일을 불러오는 쪽이므로 순환을 피하려고 필요할 때만 불러온다(Metro와 Jest 모두 동작하는 지연 require).
     // eslint-disable-next-line @typescript-eslint/no-require-imports
