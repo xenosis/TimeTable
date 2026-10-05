@@ -50,7 +50,7 @@ describe('timetable item persistence', () => {
     const database = { runAsync: jest.fn(async () => undefined) };
     await expect(createTimetableItem(database, {
       weekday: 1, periodNo: 2, startTime: '09:00', endTime: '09:40', title: '수학', category: 'school', colorKey: 'math', iconKey: 'number', setId: 3,
-    })).rejects.toThrow('both a period and a time range');
+    })).rejects.toThrow('교시와 직접 입력 시간 중 하나만');
   });
 
   it('creates selected weekdays independently and scopes update and delete to the family', async () => {
@@ -74,8 +74,8 @@ describe('timetable item persistence', () => {
     const calls = database.runAsync.mock.calls as unknown[][];
     expect(calls[0]).toEqual(['DELETE FROM timetable_items WHERE family_id = ? AND weekday = ? AND set_id = ?', 'local-family', 3, 3]);
     expect(calls[1][0]).toContain('SELECT family_id, ?');
-    await expect(copyTimetableWeekday(database, 1, 1, 3)).rejects.toThrow('must differ');
-    await expect(copyTimetableWeekday({ ...database, getAllAsync: async <T,>() => [{ count: 0 }] as unknown as T[] }, 1, 3, 3)).rejects.toThrow('source weekday has no items');
+    await expect(copyTimetableWeekday(database, 1, 1, 3)).rejects.toThrow('다르게 골라 주세요');
+    await expect(copyTimetableWeekday({ ...database, getAllAsync: async <T,>() => [{ count: 0 }] as unknown as T[] }, 1, 3, 3)).rejects.toThrow('복사할 요일에 항목이 없어요.');
   });
 
   it('loads a period item with its resolved period times for an alarm link', async () => {
