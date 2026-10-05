@@ -196,9 +196,9 @@
 - **결정(2026-10-01, D7): PIN은 딸 폰에서 로컬로 확인한다.** 딸 계정에 시간표·할 일 수정 권한을 주고 PIN은 화면 잠금으로만 쓴다(PIN 권한 확인은 중요도가 낮다는 사용자 판단). 그래서 서버 PIN 확인(Postgres RPC)과 `families.parent_pin_hash`는 만들지 않는다. 대신 딸 기기의 로그인 토큰만 있으면 서버 데이터를 고칠 수 있다는 점을 받아들인다.
 - (이전 설계, 폐기) 딸 계정은 DB상 수정 권한이 없고 PIN을 서버 함수(Postgres RPC)에서 확인한 뒤 수정을 처리한다. PIN은 해시로만 저장한다(pgcrypto).
 - 연속으로 틀리면 잠시 잠근다(로컬 `src/security/pin.ts`, 5회 실패 시 5분 잠금 후 자동 해제). 관리자 편집은 시간이 지나도 자동으로 잠기지 않고, 앱이 백그라운드로 가면 다시 PIN을 요구한다(2026-10-01 사용자 결정: 5분 자동 잠금 제거).
-- 딸 폰에서 PIN으로 수정할 때는 인터넷 연결이 필요하다.
-- **로컬 단계(서버 연동 전)**에는 PIN 해시를 기기 보안 저장소(expo-secure-store)에 두는 임시 방식을 쓴다.
-- **더 단순한 대안:** 딸 계정에 수정 권한을 주고 PIN은 화면 잠금으로만 쓴다. 초2 수준에서는 충분할 수 있지만, 추천은 서버 확인 방식이다.
+- (D7로 폐기) 서버 확인 방식이었다면 딸 폰에서 PIN으로 수정할 때 인터넷 연결이 필요했다. D7 결정으로 PIN은 로컬 확인이라 오프라인에서도 수정할 수 있다.
+- PIN 해시는 기기 보안 저장소(expo-secure-store)에 둔다(서버 연동 뒤에도 같음, D7).
+- (D7로 채택) 딸 계정에 수정 권한을 주고 PIN은 화면 잠금으로만 쓴다. 2026-10-05에 보상 목표·보석 장부·교시·휴일 쓰기와 지난 날짜 체크까지 딸 계정에 허용했다(D4·P6.3).
 
 ---
 
@@ -206,7 +206,7 @@
 
 | 테이블 | 주요 컬럼 | 설명 |
 |--------|-----------|------|
-| `families` | id, name, parent_pin_hash | 가족 단위 |
+| `families` | id, name (parent_pin_hash는 D7로 만들지 않음) | 가족 단위. 실제 서버 테이블은 tt_ 접두사 13개 — `supabase/migrations/` 참고 |
 | `family_members` | family_id, user_id, role(`parent`/`child`), display_name | 계정 ↔ 가족 연결 |
 | `periods` | family_id, period_no, start_time, end_time | 교시 시간 정의 (예: 1교시 09:00~09:40). 종 시간이 바뀌면 여기만 고친다 |
 | `timetable_items` | family_id, weekday, period_no 또는 start/end_time, title, category(학교/학원/생활), color_key, icon_key, alert_mode(`none`/`notify`/`alarm`), alert_before_min | 시간표 항목. 색·아이콘의 의미 키를 저장하고 실제 모양은 선택된 테마가 해석한다 |
