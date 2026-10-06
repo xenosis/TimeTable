@@ -64,6 +64,8 @@ test('빈 폰은 올리지 않고, 서버 개수가 로컬과 다르면 성공�
   expect(hasLocalData(payload)).toBe(true);
   const empty = Object.fromEntries(Object.keys(payload).map((key) => [key, key === 'timetable_settings' ? null : []])) as unknown as ImportPayload;
   expect(hasLocalData(empty)).toBe(false);
+  // 새로 설치한 폰처럼 기본 세트 '평소'와 적용 세트만 있으면 빈 폰이다
+  expect(hasLocalData({ ...empty, timetable_sets: [{ id: 1, name: '평소' }], timetable_settings: { active_set_id: 1 } })).toBe(false);
   expect(countsMatch(payload, expectedCounts)).toBe(true);
   expect(countsMatch(payload, { ...expectedCounts, tasks: 0 })).toBe(false);
   expect(countsMatch(payload, { ...expectedCounts, timetable_settings: 0 })).toBe(false);

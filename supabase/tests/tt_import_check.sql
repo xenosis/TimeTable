@@ -66,8 +66,21 @@ select set_config('tt.payload', $j${
 
 -- 외부인(다른 가족)은 이 가족에 넣을 수 없다
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000d0003","role":"authenticated"}', true);
-select pg_temp.tt_rec('외부인: 남의 가족으로 이전 거부', 'P0001:TT_IMPORT: 이 가족의 딸 계정을 찾지 못했습니다',
+select pg_temp.tt_rec('외부인: 남의 가족으로 이전 거부', 'P0001:TT_IMPORT: 이 가족의 딸 계정으로만 올릴 수 있습니다',
   pg_temp.tt_try(format('select public.tt_import_local(%L, %L::jsonb)', current_setting('tt.fam'), current_setting('tt.payload'))));
+
+-- 아빠 계정도 이 함수로는 올릴 수 없다(딸 폰 데이터를 딸 계정으로만 올린다)
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000d0001","role":"authenticated"}', true);
+select pg_temp.tt_rec('아빠: 이전 거부', 'P0001:TT_IMPORT: 이 가족의 딸 계정으로만 올릴 수 있습니다',
+  pg_temp.tt_try(format('select public.tt_import_local(%L, %L::jsonb)', current_setting('tt.fam'), current_setting('tt.payload'))));
+
+-- 마지막 행이 잘못되면(없는 세트를 가리키는 항목) 앞에서 넣은 교시·세트까지 모두 되돌아간다
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000d0002","role":"authenticated"}', true);
+select pg_temp.tt_rec('딸: 중간에 실패하면 아무것도 남지 않음', 'P0001:TT_IMPORT: 세트가 없는 시간표 항목이 있습니다|0|0',
+  pg_temp.tt_try(format('select public.tt_import_local(%L, %L::jsonb)', current_setting('tt.fam'),
+    '{"periods":[{"period_no":1,"start_time":"09:00","end_time":"09:40"}],"timetable_sets":[{"id":1,"name":"평소"}],"timetable_items":[{"set_id":77,"weekday":1,"period_no":1,"title":"x","category":"school","color_key":"math","icon_key":"number"}]}'))
+  || '|' || (select count(*) from public.tt_periods where family_id = current_setting('tt.fam')::uuid)
+  || '|' || (select count(*) from public.tt_timetable_sets where family_id = current_setting('tt.fam')::uuid));
 
 -- 딸 계정으로 이전
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000d0002","role":"authenticated"}', true);

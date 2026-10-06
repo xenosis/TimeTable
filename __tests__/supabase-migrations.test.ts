@@ -16,13 +16,14 @@ const read = (suffix: string) => readFileSync(`${directory}/${files.find((name: 
 const schema = read('_tt_schema.sql');
 const rls = read('_tt_rls.sql');
 const gemImport = read('_tt_gem_rights_import.sql');
+const importGuard = read('_tt_import_guard.sql');
 
 const createdTables = [...schema.matchAll(/create table public\.(tt_\w+)/g)].map((match) => match[1]);
 const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`).join(', ');
 
 describe('supabase 마이그레이션', () => {
   it('파일 이름이 시간순으로 스키마 → 보안 규칙 → 보석 자격·이전 함수 순서로 적용되게 정렬된다', () => {
-    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql']);
+    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql']);
   });
 
   it('보석 자격 테이블도 RLS·권한·anon 회수가 다른 가족 테이블과 같다(P6.5)', () => {
@@ -42,6 +43,14 @@ describe('supabase 마이그레이션', () => {
     expect(gemImport).toContain('revoke execute on function public.tt_import_local(uuid, jsonb) from public, anon;');
     expect(gemImport).toContain('grant execute on function public.tt_import_local(uuid, jsonb) to authenticated;');
     expect(gemImport).toContain("raise exception 'TT_IMPORT: 서버에 이미 이 가족의 데이터가 있습니다'");
+  });
+
+  it('이전 함수 보완: 호출한 딸 계정만 이전하고 같은 가족 동시 호출은 잠금으로 하나씩 처리한다', () => {
+    expect(importGuard).toContain('create or replace function public.tt_import_local(p_family uuid, p_payload jsonb) returns jsonb');
+    expect(importGuard).toContain('security invoker');
+    expect(importGuard).not.toMatch(/security definer/);
+    expect(importGuard).toContain('pg_advisory_xact_lock');
+    expect(importGuard).toContain("m.user_id = (select auth.uid()) and m.role = 'child'");
   });
 
   it('모든 테이블 이름에 tt_ 접두사가 붙어 Doro 테이블과 겹치지 않는다', () => {

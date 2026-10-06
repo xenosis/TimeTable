@@ -34,9 +34,12 @@ export async function readLocalPayload(database: Pick<TimetableDatabase, 'getAll
   };
 }
 
-/** 올릴 데이터가 있는지(시간표·할 일·보석 중 하나라도). 빈 폰에서 올려 서버를 '이미 이전됨'으로 막는 일을 피한다. */
+/**
+ * 올릴 데이터가 있는지(시간표 항목·할 일·보석 등 하나라도). 빈 폰에서 올려 서버를 '이미 이전됨'으로 막는 일을 피한다.
+ * 시간표 세트는 앱 설치 때 '평소'가 자동으로 생기므로(로컬 스키마 V9) 데이터로 치지 않는다.
+ */
 export function hasLocalData(payload: ImportPayload): boolean {
-  return importTables.some((table) => payload[table].length > 0);
+  return importTables.some((table) => table !== 'timetable_sets' && payload[table].length > 0);
 }
 
 /** 서버가 넣었다고 알려 준 개수가 로컬 개수와 모두 같은지. 다르면 이전 성공으로 보지 않는다. */
