@@ -69,7 +69,22 @@ test('로그인하면 서버에서 역할을 읽고, 인터넷이 없을 때는 
   mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'Network request failed' } });
   const restored = await restoreAccount();
   expect(restored).toEqual({ kind: 'signedIn', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' }, offline: true });
-  expect(accountSummary(restored)).toContain('마지막으로 확인한 정보');
+  expect(accountSummary(restored)).toContain('이 폰에 저장된 정보');
+});
+
+test('앱을 켜면 서버 확인 전에 저장된 역할로 먼저 화면을 정한다', async () => {
+  memory.set('tt.account.membership', JSON.stringify({ userId: 'user-dad', role: 'parent', familyId: 'f1' }));
+  mockGetSession.mockResolvedValue({ data: { session: { user: dad } } });
+  let resolveQuery: (value: unknown) => void = () => undefined;
+  mockMaybeSingle.mockReturnValueOnce(new Promise((resolve) => { resolveQuery = resolve; }));
+  const onStored = jest.fn();
+  const pending = restoreAccount(onStored);
+  await new Promise((resolve) => setImmediate(resolve));
+  // 서버 응답이 오기 전인데도 아빠 화면으로 정해진다
+  expect(onStored).toHaveBeenCalledWith({ kind: 'signedIn', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' }, offline: true });
+  expect(isParentDevice(onStored.mock.calls[0][0])).toBe(true);
+  resolveQuery({ data: { role: 'parent', family_id: 'f1' }, error: null });
+  await expect(pending).resolves.toEqual({ kind: 'signedIn', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' }, offline: false });
 });
 
 test('다른 계정의 역할 캐시는 쓰지 않는다', async () => {

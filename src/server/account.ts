@@ -7,7 +7,7 @@ export type Membership = { readonly role: FamilyRole; readonly familyId: string 
  * 이 기기의 서버 계정 상태.
  * - local: 로그인하지 않음. 지금처럼 이 폰에만 저장하며 쓴다(사용자 결정 2026-10-06).
  * - signedIn: 로그인함. membership이 null이면 아직 가족에 연결되지 않은 계정이다.
- *   offline이면 인터넷이 없어 서버에서 역할을 확인하지 못해, 이 기기에 마지막으로 확인해 둔 역할을 쓰는 중이다.
+ *   offline이면 서버에서 역할을 아직 확인하지 못해(앱을 막 켰거나 인터넷이 없음) 이 기기에 마지막으로 확인해 둔 역할을 쓰는 중이다.
  */
 export type AccountState =
   | { readonly kind: 'checking' }
@@ -58,11 +58,17 @@ async function loadSignedIn(userId: string, email: string): Promise<AccountState
   return { kind: 'signedIn', email, membership, offline: false };
 }
 
-/** 앱을 켤 때: 저장된 로그인이 있으면 이어서 쓰고, 없으면 로컬 모드다. */
-export async function restoreAccount(): Promise<AccountState> {
+/**
+ * 앱을 켤 때: 저장된 로그인이 있으면 이어서 쓰고, 없으면 로컬 모드다.
+ * 서버 확인은 인터넷이 없으면 실패하기까지 10초 넘게 걸릴 수 있어(딸 폰 2026-10-06 확인), 그 전에 이 기기에 저장해 둔 역할로
+ * 화면을 먼저 정하도록 onStored로 알려 준다. 그동안 아빠 폰에 아이 화면이 잠깐 보이지 않게 하기 위해서다.
+ */
+export async function restoreAccount(onStored?: (state: AccountState) => void): Promise<AccountState> {
   const { data } = await getSupabase().auth.getSession();
   const user = data.session?.user;
-  return user ? loadSignedIn(user.id, user.email ?? '') : { kind: 'local' };
+  if (!user) return { kind: 'local' };
+  onStored?.({ kind: 'signedIn', email: user.email ?? '', membership: readCache(user.id), offline: true });
+  return loadSignedIn(user.id, user.email ?? '');
 }
 
 export async function signIn(email: string, password: string): Promise<AccountState> {

@@ -52,7 +52,7 @@ export function accountSummary(account: AccountState): string {
   if (account.kind === 'checking') return '로그인 상태를 확인하는 중이에요.';
   if (account.kind === 'local') return '로그인하지 않았어요. 이 폰에만 저장하며 쓰는 중이에요.';
   const who = account.membership ? (account.membership.role === 'parent' ? '아빠' : '딸') : null;
-  const offline = account.offline ? ' (인터넷이 없어 마지막으로 확인한 정보예요)' : '';
+  const offline = account.offline ? ' (서버에서 다시 확인하기 전, 이 폰에 저장된 정보예요)' : '';
   if (!who) return `${account.email}로 로그인했지만 아직 가족에 연결되지 않았어요.${offline}`;
   return `${account.email} · ${who} 계정으로 로그인했어요.${offline}`;
 }
