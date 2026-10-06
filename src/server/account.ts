@@ -1,4 +1,5 @@
 import { getSupabase } from './supabaseClient';
+import { SUPABASE_URL } from './supabaseConfig';
 
 export type FamilyRole = 'parent' | 'child';
 export type Membership = { readonly role: FamilyRole; readonly familyId: string };
@@ -33,20 +34,30 @@ export function signInErrorMessage(error: unknown): string {
   return '로그인하지 못했어요. 잠시 뒤 다시 해 주세요.';
 }
 
-type CachedMembership = Membership & { readonly userId: string };
+/** supabase-js가 로그인 정보를 저장하는 기본 키(sb-<프로젝트>-auth-token). 오프라인 로그아웃이 실패할 때 직접 지우는 데 쓴다. */
+export const AUTH_STORAGE_KEY = `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
 
-function readCache(userId: string): Membership | null {
+/** 이 기기에서 마지막으로 서버와 확인한 계정. 인터넷이 없거나 토큰 갱신이 실패해도 화면(아빠/아이)을 유지하는 데 쓴다. */
+type CachedAccount = { readonly userId: string; readonly email: string; readonly membership: Membership | null };
+
+function readCachedAccount(): CachedAccount | null {
   try {
-    const cached = JSON.parse(globalThis.localStorage?.getItem(CACHE_KEY) ?? 'null') as CachedMembership | null;
-    return cached?.userId === userId ? parseMembership({ role: cached.role, family_id: cached.familyId }) : null;
+    const cached = JSON.parse(globalThis.localStorage?.getItem(CACHE_KEY) ?? 'null') as Partial<CachedAccount> | null;
+    if (!cached || typeof cached.userId !== 'string' || !cached.userId) return null;
+    const membership = cached.membership ? parseMembership({ role: cached.membership.role, family_id: cached.membership.familyId }) : null;
+    return { userId: cached.userId, email: typeof cached.email === 'string' ? cached.email : '', membership };
   } catch {
     return null;
   }
 }
 
-function writeCache(userId: string, membership: Membership | null): void {
-  if (membership) globalThis.localStorage?.setItem(CACHE_KEY, JSON.stringify({ userId, ...membership }));
-  else globalThis.localStorage?.removeItem(CACHE_KEY);
+function readCache(userId: string): Membership | null {
+  const cached = readCachedAccount();
+  return cached?.userId === userId ? cached.membership : null;
+}
+
+function writeCache(account: CachedAccount): void {
+  globalThis.localStorage?.setItem(CACHE_KEY, JSON.stringify(account));
 }
 
 /** 로그인한 계정의 가족·역할을 서버에서 읽는다. 인터넷이 없으면 마지막으로 확인한 역할을 쓴다. */
@@ -54,7 +65,7 @@ async function loadSignedIn(userId: string, email: string): Promise<AccountState
   const { data, error } = await getSupabase().from('tt_family_members').select('role, family_id').eq('user_id', userId).maybeSingle();
   if (error) return { kind: 'signedIn', email, membership: readCache(userId), offline: true };
   const membership = parseMembership(data);
-  writeCache(userId, membership);
+  writeCache({ userId, email, membership });
   return { kind: 'signedIn', email, membership, offline: false };
 }
 
@@ -64,9 +75,17 @@ async function loadSignedIn(userId: string, email: string): Promise<AccountState
  * 화면을 먼저 정하도록 onStored로 알려 준다. 그동안 아빠 폰에 아이 화면이 잠깐 보이지 않게 하기 위해서다.
  */
 export async function restoreAccount(onStored?: (state: AccountState) => void): Promise<AccountState> {
-  const { data } = await getSupabase().auth.getSession();
+  const { data, error } = await getSupabase().auth.getSession();
   const user = data.session?.user;
-  if (!user) return { kind: 'local' };
+  if (!user) {
+    // 토큰이 만료됐는데 인터넷이 없어 갱신하지 못하면 세션 없음과 오류가 함께 온다(저장된 세션은 남아 있음).
+    // 이때는 로그아웃이 아니므로 마지막으로 확인한 계정·역할을 유지하고, 인터넷이 돌아오면 다시 확인한다.
+    const cached = error ? readCachedAccount() : null;
+    if (!cached) return { kind: 'local' };
+    const stored: AccountState = { kind: 'signedIn', email: cached.email, membership: cached.membership, offline: true };
+    onStored?.(stored);
+    return stored;
+  }
   onStored?.({ kind: 'signedIn', email: user.email ?? '', membership: readCache(user.id), offline: true });
   return loadSignedIn(user.id, user.email ?? '');
 }
@@ -77,9 +96,13 @@ export async function signIn(email: string, password: string): Promise<AccountSt
   return loadSignedIn(data.user.id, data.user.email ?? email.trim());
 }
 
-/** 이 기기에서만 로그아웃한다(다른 기기의 로그인은 그대로). 로컬 데이터는 지우지 않는다. */
+/**
+ * 이 기기에서만 로그아웃한다(다른 기기의 로그인은 그대로). 로컬 데이터는 지우지 않는다.
+ * 오프라인에서 토큰이 만료돼 라이브러리가 세션을 지우지 못하면(오류 반환) 저장된 로그인 정보를 직접 지워, 다음에 켤 때 다시 로그인되지 않게 한다.
+ */
 export async function signOut(): Promise<AccountState> {
-  await getSupabase().auth.signOut({ scope: 'local' });
+  const { error } = await getSupabase().auth.signOut({ scope: 'local' });
+  if (error) globalThis.localStorage?.removeItem(AUTH_STORAGE_KEY);
   globalThis.localStorage?.removeItem(CACHE_KEY);
   return { kind: 'local' };
 }

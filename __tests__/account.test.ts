@@ -1,6 +1,6 @@
-import { parseMembership, restoreAccount, signIn, signInErrorMessage, signOut } from '../src/server/account';
+import { AUTH_STORAGE_KEY, parseMembership, restoreAccount, signIn, signInErrorMessage, signOut } from '../src/server/account';
 import { accountSummary } from '../src/components/AccountPanel';
-import { isParentDevice } from '../src/store/accountStore';
+import { accountUserActions, getAccount, isParentDevice, setAccount, setAccountByUser } from '../src/store/accountStore';
 
 const mockGetSession = jest.fn();
 const mockSignInWithPassword = jest.fn();
@@ -73,7 +73,7 @@ test('로그인하면 서버에서 역할을 읽고, 인터넷이 없을 때는 
 });
 
 test('앱을 켜면 서버 확인 전에 저장된 역할로 먼저 화면을 정한다', async () => {
-  memory.set('tt.account.membership', JSON.stringify({ userId: 'user-dad', role: 'parent', familyId: 'f1' }));
+  memory.set('tt.account.membership', JSON.stringify({ userId: 'user-dad', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' } }));
   mockGetSession.mockResolvedValue({ data: { session: { user: dad } } });
   let resolveQuery: (value: unknown) => void = () => undefined;
   mockMaybeSingle.mockReturnValueOnce(new Promise((resolve) => { resolveQuery = resolve; }));
@@ -88,7 +88,7 @@ test('앱을 켜면 서버 확인 전에 저장된 역할로 먼저 화면을 �
 });
 
 test('다른 계정의 역할 캐시는 쓰지 않는다', async () => {
-  memory.set('tt.account.membership', JSON.stringify({ userId: 'someone-else', role: 'parent', familyId: 'f1' }));
+  memory.set('tt.account.membership', JSON.stringify({ userId: 'someone-else', email: 'x@example.com', membership: { role: 'parent', familyId: 'f1' } }));
   mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'user-child', email: 'kid@example.com' } } } });
   mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'offline' } });
   const restored = await restoreAccount();
@@ -101,10 +101,47 @@ test('로그인 실패는 한글 오류로 던지고, 로그아웃은 이 기기
   await expect(signIn('dad@example.com', 'wrong')).rejects.toThrow('이메일이나 비밀번호가 맞지 않아요.');
 
   memory.set('tt.account.membership', '{}');
+  memory.set(AUTH_STORAGE_KEY, '{"token":"t"}');
   mockSignOut.mockResolvedValue({ error: null });
   await expect(signOut()).resolves.toEqual({ kind: 'local' });
   expect(mockSignOut).toHaveBeenCalledWith({ scope: 'local' });
   expect(memory.has('tt.account.membership')).toBe(false);
+  // 라이브러리가 지우는 것이 정상 경로라 로그인 정보는 직접 건드리지 않는다
+  expect(memory.has(AUTH_STORAGE_KEY)).toBe(true);
+});
+
+test('오프라인에서 토큰이 만료돼 로그아웃이 실패해도 저장된 로그인 정보를 지워 다시 로그인되지 않는다', async () => {
+  expect(AUTH_STORAGE_KEY).toMatch(/^sb-[a-z0-9]+-auth-token$/);
+  memory.set(AUTH_STORAGE_KEY, '{"token":"t"}');
+  mockSignOut.mockResolvedValue({ error: { message: 'Network request failed' } });
+  await expect(signOut()).resolves.toEqual({ kind: 'local' });
+  expect(memory.has(AUTH_STORAGE_KEY)).toBe(false);
+});
+
+test('토큰이 만료됐는데 인터넷이 없어 갱신하지 못하면 마지막으로 확인한 계정·역할을 유지한다', async () => {
+  memory.set('tt.account.membership', JSON.stringify({ userId: 'user-dad', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' } }));
+  mockGetSession.mockResolvedValue({ data: { session: null }, error: { message: 'Network request failed' } });
+  const onStored = jest.fn();
+  const restored = await restoreAccount(onStored);
+  expect(restored).toEqual({ kind: 'signedIn', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' }, offline: true });
+  expect(onStored).toHaveBeenCalledWith(restored);
+  expect(isParentDevice(restored)).toBe(true);
+  expect(mockFrom).not.toHaveBeenCalled();
+});
+
+test('세션도 없고 오류도 없으면(로그아웃 상태) 저장된 계정이 있어도 로컬 모드', async () => {
+  memory.set('tt.account.membership', JSON.stringify({ userId: 'user-dad', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' } }));
+  mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+  await expect(restoreAccount()).resolves.toEqual({ kind: 'local' });
+});
+
+test('사용자가 직접 바꾸면 조작 횟수가 늘어 늦게 끝난 자동 확인 결과를 가려낼 수 있다', () => {
+  const before = accountUserActions();
+  setAccount({ kind: 'local' });
+  expect(accountUserActions()).toBe(before);
+  setAccountByUser({ kind: 'signedIn', email: 'kid@example.com', membership: null, offline: false });
+  expect(accountUserActions()).toBe(before + 1);
+  expect(getAccount()).toEqual({ kind: 'signedIn', email: 'kid@example.com', membership: null, offline: false });
 });
 
 test('딸 계정·가족 미연결·로컬은 아이 화면, 상태 문구도 구분된다', () => {

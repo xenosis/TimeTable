@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { signIn, signOut, type AccountState } from '../server/account';
-import { setAccount, useAccount } from '../store/accountStore';
+import { setAccountByUser, useAccount } from '../store/accountStore';
 import { userErrorMessage } from '../utils/userErrorMessage';
 
 /** 관리자 '기타' 영역의 서버 연결. 로그인하지 않아도 앱은 지금처럼 이 폰에만 저장하며 쓴다. */
@@ -19,7 +19,7 @@ export function AccountPanel({ theme }: { readonly theme: ThemeDefinition }) {
     setBusy(true);
     setMessage('');
     try {
-      setAccount(await action());
+      setAccountByUser(await action());
       setPassword('');
       setMessage(done);
     } catch (error) {
