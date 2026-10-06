@@ -15,6 +15,7 @@ import { borderRadius, fontSize, spacing } from '../../src/theme';
 import { useActiveTheme } from '../../src/theme/provider';
 import { msUntilNextLocalMidnight } from '../../src/utils/date';
 import { defaultSchoolWeekday, SCHOOL_WEEKDAYS } from '../../src/utils/weekdays';
+import { subscribeWidgetChecksApplied } from '../../src/widgets/widgetChecksSignal';
 
 const today = () => new Date().getDay();
 
@@ -33,12 +34,15 @@ export default function TimetableScreen() {
   // 가로 주간 보기에서는 앱 헤더·하단 탭도 숨겨 표가 화면 높이를 최대한 쓰게 한다(세로로 돌리거나 요일별 보기로 돌아오면 복구)
   useEffect(() => { setImmersive(compact && weekView); return () => setImmersive(false); }, [compact, weekView]);
 
-  useFocusEffect(useCallback(() => {
+  const reloadSet = useCallback(() => {
     let active = true;
     void getDatabase().then((database) => getActiveTimetableSet(database)).then((saved) => { if (active) setTimetableSet(saved); }).catch(() => undefined)
       .finally(() => { if (active) setRefreshKey((value) => value + 1); });
     return () => { active = false; };
-  }, []));
+  }, []);
+  useFocusEffect(reloadSet);
+  // 서버와 맞춘 뒤(동기화)나 위젯 체크 반영 뒤에는 적용 세트(id가 바뀔 수 있음)와 표를 다시 읽는다
+  useEffect(() => subscribeWidgetChecksApplied(() => { reloadSet(); }), [reloadSet]);
 
   // 화면을 켜 둔 채 자정을 넘기거나 백그라운드에서 돌아오면 "오늘" 기준(강조·오늘로 가기)을 다시 계산한다
   useEffect(() => {

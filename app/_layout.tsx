@@ -4,10 +4,11 @@ import { StatusBar } from 'expo-status-bar';
 
 import { RollingRefreshLifecycle } from '../src/notifications/RollingRefreshLifecycle';
 import { AccountLifecycle } from '../src/server/AccountLifecycle';
+import { SyncLifecycle } from '../src/sync/SyncLifecycle';
 import { ThemeProvider, useActiveTheme } from '../src/theme/provider';
 
 export default function RootLayout() {
-  return <ThemeProvider><RollingRefreshLifecycle /><AccountLifecycle /><ThemedRootLayout /></ThemeProvider>;
+  return <ThemeProvider><RollingRefreshLifecycle /><AccountLifecycle /><SyncLifecycle /><ThemedRootLayout /></ThemeProvider>;
 }
 
 function ThemedRootLayout() {
