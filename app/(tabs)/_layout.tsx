@@ -6,6 +6,8 @@ import { useImmersive } from '../../src/store/immersiveMode';
 import { fontSize, spacing, touchTarget } from '../../src/theme';
 import { useActiveTheme } from '../../src/theme/provider';
 import { GemCollectionArtwork } from '../../src/components/GemCollectionArtwork';
+import { ParentHome } from '../../src/components/ParentHome';
+import { isParentDevice, useAccount } from '../../src/store/accountStore';
 
 const tabs = [
   { path: '/', label: '오늘', icon: '☀️' },
@@ -18,6 +20,13 @@ export default function TabsLayout() {
   const { theme } = useActiveTheme();
   const insets = useSafeAreaInsets();
   const immersive = useImmersive();
+  const account = useAccount();
+
+  // 아빠 계정으로 로그인한 기기는 아이 화면 대신 아빠 화면을 보인다(화면 이동 없이 같은 자리에 그려 관리자 화면이 열려 있어도 튀지 않는다)
+  if (isParentDevice(account)) return <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <Stack.Screen options={{ headerShown: false }} />
+    <ParentHome theme={theme} />
+  </View>;
 
   return <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
     <Stack.Screen options={{ headerShown: false }} />

@@ -3,10 +3,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { RollingRefreshLifecycle } from '../src/notifications/RollingRefreshLifecycle';
+import { AccountLifecycle } from '../src/server/AccountLifecycle';
 import { ThemeProvider, useActiveTheme } from '../src/theme/provider';
 
 export default function RootLayout() {
-  return <ThemeProvider><RollingRefreshLifecycle /><ThemedRootLayout /></ThemeProvider>;
+  return <ThemeProvider><RollingRefreshLifecycle /><AccountLifecycle /><ThemedRootLayout /></ThemeProvider>;
 }
 
 function ThemedRootLayout() {
