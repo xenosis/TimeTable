@@ -1,10 +1,12 @@
-import { isEmptyPlan, ledgerKey, planChildPush, toIso, type ChildRecords } from '../src/sync/pushChildRecords';
+import { isEmptyPlan, ledgerKey, planChildPush, toIso, type ChildRecords, type ServerChildRecords } from '../src/sync/pushChildRecords';
 
 jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => { throw new Error('이 테스트는 서버를 부르지 않는다'); } }));
 
 const FAMILY = 'fam-1';
 const CHILD = 'child-uid';
 const none: ChildRecords = { completions: [], history: [], ledger: [], gems: [] };
+const tasks = new Set([7001, 7002]);
+const srv = (records: ChildRecords): ServerChildRecords => ({ ...records, taskIds: tasks });
 
 test('같은 기록이면 올릴 것이 없다(서버 ISO 시각과 폰 SQLite 시각을 같은 것으로 본다)', () => {
   const local: ChildRecords = {
@@ -19,13 +21,13 @@ test('같은 기록이면 올릴 것이 없다(서버 ISO 시각과 폰 SQLite �
     ledger: [{ id: 95, delta: 3, reason: 'manual-count:gem', task_id: null, created_at: '2026-10-07T01:02:03+00:00' }],
     gems: [{ id: 92, earned_date: '2026-10-05', state: 'requested' }],
   };
-  expect(isEmptyPlan(planChildPush(local, server, FAMILY, CHILD))).toBe(true);
+  expect(isEmptyPlan(planChildPush(local, srv(server), FAMILY, CHILD))).toBe(true);
 });
 
 test('폰에서 체크하면 넣고, 체크를 취소하면 서버에서 지우되 완료 이력은 남긴다', () => {
   const local: ChildRecords = { ...none, completions: [{ task_id: 7002, completion_date: '2026-10-07', done_at: '2026-10-07 02:00:00', done_by: 'child' }], history: [{ task_id: 7002, completion_date: '2026-10-07' }] };
   const server: ChildRecords = { ...none, completions: [{ id: 91, task_id: 7001, completion_date: '2026-10-07' }], history: [{ task_id: 7001, completion_date: '2026-10-07' }] };
-  const plan = planChildPush(local, server, FAMILY, CHILD);
+  const plan = planChildPush(local, srv(server), FAMILY, CHILD);
   expect(plan.completionInserts).toEqual([{ family_id: FAMILY, task_id: 7002, completion_date: '2026-10-07', done_at: '2026-10-07T02:00:00Z', done_by: 'child' }]);
   expect(plan.completionDeletes).toEqual([91]);
   expect(plan.historyInserts).toEqual([{ family_id: FAMILY, task_id: 7002, completion_date: '2026-10-07' }]);
@@ -43,7 +45,7 @@ test('장부: 하루 완료는 사유로 비교하고, 조정은 같은 시각·
     { id: 2, reason: 'manual-count:gem', delta: 1, created_at: '2026-10-07T09:00:00+00:00' },
     { id: 3, reason: 'daily-completion:2026-10-06', delta: 0, created_at: '2026-10-06T09:00:00+00:00' },
   ] };
-  const plan = planChildPush(local, server, FAMILY, CHILD);
+  const plan = planChildPush(local, srv(server), FAMILY, CHILD);
   expect(plan.ledgerInserts).toEqual([{ family_id: FAMILY, child_id: CHILD, delta: 1, reason: 'manual-count:gem', task_id: null, created_at: '2026-10-07T09:00:00Z' }]);
   // 폰에서 취소한 10월 6일 하루 완료는 서버에서도 지운다
   expect(plan.ledgerDeletes).toEqual([3]);
@@ -60,7 +62,7 @@ test('보석 자격: 폰이 더 나아간 상태면 올리고, 서버가 줬어�
     { id: 3, earned_date: '2026-09-25', state: 'available' },
     { id: 4, earned_date: '2026-09-20', state: 'given' },
   ] };
-  const plan = planChildPush(local, server, FAMILY, CHILD);
+  const plan = planChildPush(local, srv(server), FAMILY, CHILD);
   expect(plan.gemUpserts).toEqual([{ family_id: FAMILY, child_id: CHILD, earned_date: '2026-10-05', state: 'requested', requested_at: '2026-10-07T01:00:00Z', given_at: null, created_at: '2026-10-05T00:00:00Z' }]);
   expect(plan.gemDeletes).toEqual([3]);
 });
@@ -68,4 +70,17 @@ test('보석 자격: 폰이 더 나아간 상태면 올리고, 서버가 줬어�
 test('로컬 시각을 서버용 ISO로 바꾼다', () => {
   expect(toIso('2026-10-07 01:02:03')).toBe('2026-10-07T01:02:03Z');
   expect(toIso(null)).toBeNull();
+});
+
+test('서버에서 지운 할 일의 체크·이력은 올리지 않고, 장부는 할 일 연결만 비워 올린다(동기화가 멈추지 않게)', () => {
+  const local: ChildRecords = {
+    completions: [{ task_id: 9999, completion_date: '2026-10-07', done_at: '2026-10-07 01:00:00' }],
+    history: [{ task_id: 9999, completion_date: '2026-10-07' }],
+    ledger: [{ reason: 'manual', delta: 1, task_id: 9999, created_at: '2026-10-07 01:00:00' }],
+    gems: [],
+  };
+  const plan = planChildPush(local, srv(none), FAMILY, CHILD);
+  expect(plan.completionInserts).toEqual([]);
+  expect(plan.historyInserts).toEqual([]);
+  expect(plan.ledgerInserts).toEqual([{ family_id: FAMILY, child_id: CHILD, delta: 1, reason: 'manual', task_id: null, created_at: '2026-10-07T01:00:00Z' }]);
 });

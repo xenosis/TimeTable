@@ -11,6 +11,8 @@ import { toSqliteUtc } from './snapshotMapping';
  */
 type Row = Record<string, unknown>;
 export type ChildRecords = { readonly completions: readonly Row[]; readonly history: readonly Row[]; readonly ledger: readonly Row[]; readonly gems: readonly Row[] };
+/** 서버 기록 + 지금 서버에 있는 할 일 id. 서버(아빠)가 지운 할 일을 가리키는 폰 기록은 올리지 않는다(올리면 외래키 오류로 동기화가 멈춘다). */
+export type ServerChildRecords = ChildRecords & { readonly taskIds: ReadonlySet<number> };
 export type ChildPushPlan = {
   readonly completionInserts: readonly Row[]; readonly completionDeletes: readonly number[];
   readonly historyInserts: readonly Row[];
@@ -42,7 +44,15 @@ function multisetDiff(local: readonly Row[], server: readonly Row[], key: (row: 
   return { inserts, deletes: [...remaining.values()].flat() };
 }
 
-export function planChildPush(local: ChildRecords, server: ChildRecords, familyId: string, childId: string): ChildPushPlan {
+export function planChildPush(localAll: ChildRecords, server: ServerChildRecords, familyId: string, childId: string): ChildPushPlan {
+  const alive = (row: Row) => server.taskIds.has(Number(row.task_id));
+  const local: ChildRecords = {
+    ...localAll,
+    completions: localAll.completions.filter(alive),
+    history: localAll.history.filter(alive),
+    // 지워진 할 일을 가리키던 장부 줄은 할 일 연결만 비우고 올린다(서버 외래키 on delete set null과 같은 결과)
+    ledger: localAll.ledger.map((row) => (row.task_id !== null && row.task_id !== undefined && !alive(row) ? { ...row, task_id: null } : row)),
+  };
   const serverCompletions = new Map(server.completions.map((row) => [dayKey(row), row]));
   const localCompletions = new Set(local.completions.map(dayKey));
   const serverHistory = new Set(server.history.map(dayKey));
@@ -84,12 +94,12 @@ export async function readLocalChildRecords(database: Pick<RewardDatabase, 'getA
   return { completions, history, ledger, gems };
 }
 
-async function readServerChildRecords(familyId: string): Promise<ChildRecords> {
-  const [completions, history, ledger, gems] = await Promise.all([
+async function readServerChildRecords(familyId: string): Promise<ServerChildRecords> {
+  const [completions, history, ledger, gems, tasks] = await Promise.all([
     fetchFamilyRows('tt_task_completions', familyId), fetchFamilyRows('tt_task_completion_history', familyId),
-    fetchFamilyRows('tt_sticker_ledger', familyId), fetchFamilyRows('tt_gem_rights', familyId),
+    fetchFamilyRows('tt_sticker_ledger', familyId), fetchFamilyRows('tt_gem_rights', familyId), fetchFamilyRows('tt_tasks', familyId),
   ]);
-  return { completions, history, ledger, gems };
+  return { completions, history, ledger, gems, taskIds: new Set(tasks.map((task) => Number(task.id))) };
 }
 
 function check(result: { error: { message: string } | null }): void {
