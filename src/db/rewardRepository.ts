@@ -1,4 +1,4 @@
-import { bumpChildChangeVersion } from './childChangeVersion';
+import { withRewardQueue, withRewardTransaction } from './rewardQueue';
 import { syncGemRightForDate } from './gemRightRepository';
 import type { TimetableDatabase } from './types';
 
@@ -27,20 +27,8 @@ async function clearCompletion(database: RewardDatabase, date: string): Promise<
   await syncGemRightForDate(database, date); // 그날 체크를 취소했으면 아직 요청하지 않은 그날의 자격도 없앤다
 }
 
-let transactionQueue: Promise<unknown> = Promise.resolve();
-/** 체크·보석 기록과 동기화 교체가 서로 겹치지 않게 한 줄로 세운다(트랜잭션은 action이 직접 연다). */
-export function withRewardQueue<T>(action: () => Promise<T>): Promise<T> {
-  const run = transactionQueue.then(action);
-  transactionQueue = run.catch(() => undefined);
-  return run;
-}
-export function withRewardTransaction<T>(database: RewardDatabase, action: () => Promise<T>): Promise<T> {
-  return withRewardQueue(async () => {
-    await database.execAsync('BEGIN IMMEDIATE');
-    try { const result = await action(); await database.execAsync('COMMIT'); bumpChildChangeVersion(); return result; }
-    catch (error) { await database.execAsync('ROLLBACK'); throw error; }
-  });
-}
+// 줄과 트랜잭션은 rewardQueue에 있다(보석 자격 저장소와 함께 쓴다). 기존 호출부를 위해 다시 내보낸다
+export { withRewardQueue, withRewardTransaction };
 
 export async function setTaskCompletionWithRewards(database: RewardDatabase, taskId: number, date: string, weekday: number, completed: boolean): Promise<null> {
   return withRewardTransaction(database, async () => {

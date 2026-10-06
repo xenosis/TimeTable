@@ -9,6 +9,7 @@ import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { applyPendingWidgetChecksNow, requestWidgetRefresh } from '../widgets/widgetRefresh';
 import { fetchLocalSnapshot, NETWORK_ERROR, replaceLocalWithSnapshot, serverHasFamilyData } from './pullSnapshot';
 import { pushChildRecords } from './pushChildRecords';
+import { requestSyncSoon } from './syncSoon';
 import { setSyncStatus } from './syncStatus';
 
 const SYNCED_FAMILY_KEY = 'tt.sync.family';
@@ -104,6 +105,8 @@ export function runSync(target: SyncTarget): Promise<boolean> {
       notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 데이터를 다시 읽는다
       await Promise.allSettled([refreshAllRollingOwners(), requestWidgetRefresh(), recordDeviceSync(target.familyId, at)]);
       setSyncStatus({ state: 'idle', lastSyncedAt: at });
+      // 올린 뒤 생긴 체크·보석 변경은 폰에 지켜졌으니 곧 다시 올린다(다음 앱 복귀까지 기다리지 않게)
+      if (target.role === 'child' && childChangeVersion() !== versionAtPush) requestSyncSoon();
       return true;
     } catch (error) {
       setSyncStatus({ state: 'error', lastSyncedAt: lastSyncedAt(), message: syncErrorMessage(error) });

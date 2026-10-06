@@ -7,11 +7,13 @@ import { rewardPolicy } from '../rewards/rewardPolicy';
 import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { requestSyncSoon } from '../sync/syncSoon';
+import { isParentDevice, useAccount } from '../store/accountStore';
 
 const todayKey = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; };
 
 /** 관리자(아빠) 화면: 딸이 요청한 실물 보석을 확인하고, 준 만큼 "줬어요"로 처리한다. 앱의 보석 개수(장부)는 바꾸지 않는다. */
 export function GemRequestsPanel({ theme }: { readonly theme: ThemeDefinition }) {
+  const account = useAccount();
   const [summary, setSummary] = useState<GemRightSummary | null>(null);
   const [given, setGiven] = useState('');
   const [busy, setBusy] = useState(false);
@@ -45,11 +47,14 @@ export function GemRequestsPanel({ theme }: { readonly theme: ThemeDefinition })
     } catch (error) { setMessage(error instanceof Error ? error.message : '기록하지 못했어요.'); } finally { setBusy(false); }
   };
 
+  // 아빠 계정 폰은 보석 기록을 서버에 올리지 않아(딸 폰이 주인, P6.14) 여기서 기록해도 곧 서버 내용으로 되돌아간다. 아빠 화면(P6.8) 전까지 막는다
+  const parentDevice = isParentDevice(account);
   return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
     <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>보석 요청</Text>
     <Text style={[styles.hint, { color: colors.textMuted }]}>{`할 일을 모두 끝낸 날이 ${rewardPolicy.giftStreakDays}일 연속될 때마다 보석 1개를 받을 수 있어요.`}</Text>
     {summary && <Text style={[styles.body, { color: colors.text }]}>{`요청 ${summary.requested}개 · 아직 요청 안 함 ${summary.available}개 · 지금까지 받음 ${summary.given}개`}</Text>}
-    {summary && summary.requested > 0 && <View style={styles.row}>
+    {parentDevice && <Text style={[styles.hint, { color: colors.textMuted }]}>아빠 계정 폰에서는 보석 지급을 기록할 수 없어요. 딸 폰의 관리자 설정에서 기록해 주세요.</Text>}
+    {!parentDevice && summary && summary.requested > 0 && <View style={styles.row}>
       <TextInput accessibilityLabel="준 보석 개수" value={given} onChangeText={setGiven} keyboardType="number-pad" maxLength={3} editable={!busy} placeholderTextColor={colors.textMuted} style={[styles.input, { borderColor: colors.border, color: colors.text }]} />
       <Pressable accessibilityRole="button" accessibilityLabel="보석을 줬어요" disabled={busy} onPress={askGiven} style={[styles.button, { backgroundColor: colors.primary, opacity: busy ? 0.6 : 1 }]}><Text style={[styles.buttonText, { color: colors.onPrimary }]}>줬어요</Text></Pressable>
     </View>}

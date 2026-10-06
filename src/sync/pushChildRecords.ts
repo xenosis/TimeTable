@@ -63,7 +63,8 @@ export function planChildPush(localAll: ChildRecords, server: ServerChildRecords
     completionInserts: local.completions.filter((row) => !serverCompletions.has(dayKey(row))).map((row) => ({
       family_id: familyId, task_id: row.task_id, completion_date: row.completion_date, done_at: toIso(row.done_at), done_by: row.done_by ?? 'child',
     })),
-    completionDeletes: server.completions.filter((row) => !localCompletions.has(dayKey(row))).map((row) => Number(row.id)),
+    // 딸 폰이 체크·장부의 주인이다(2026-10-07 결정). 다만 아빠가 남긴 체크(done_by='parent')는 딸 폰이 지우지 않는다
+    completionDeletes: server.completions.filter((row) => !localCompletions.has(dayKey(row)) && row.done_by !== 'parent').map((row) => Number(row.id)),
     historyInserts: local.history.filter((row) => !serverHistory.has(dayKey(row))).map((row) => ({ family_id: familyId, task_id: row.task_id, completion_date: row.completion_date })),
     ledgerInserts: ledger.inserts.map((row) => ({ family_id: familyId, child_id: childId, delta: row.delta, reason: row.reason, task_id: row.task_id ?? null, created_at: toIso(row.created_at) })),
     ledgerDeletes: ledger.deletes.map((row) => Number(row.id)),
@@ -78,6 +79,16 @@ export function planChildPush(localAll: ChildRecords, server: ServerChildRecords
     })),
     gemDeletes: server.gems.filter((row) => !localGemDates.has(String(row.earned_date)) && row.state === 'available').map((row) => Number(row.id)),
   };
+}
+
+/**
+ * 폰의 기록이 통째로 비었는데 서버에는 기록이 있으면(앱 데이터 초기화 등) 서버를 지우지 않고 멈춘다.
+ * 정상이라면 '서버 기준 첫 동기화'를 다시 해야 하는 상황이다.
+ */
+export function wouldWipeServer(local: ChildRecords, server: ChildRecords): boolean {
+  const localEmpty = local.completions.length === 0 && local.history.length === 0 && local.ledger.length === 0 && local.gems.length === 0;
+  const serverHas = server.completions.length + server.history.length + server.ledger.length + server.gems.length > 0;
+  return localEmpty && serverHas;
 }
 
 export function isEmptyPlan(plan: ChildPushPlan): boolean {
@@ -108,7 +119,10 @@ function check(result: { error: { message: string } | null }): void {
 
 /** 폰의 기록을 서버와 맞춘다. 같은 계획을 다시 실행해도 결과가 같다(실패하면 다음 동기화에서 다시). 올린 건수를 돌려준다. */
 export async function pushChildRecords(database: Pick<RewardDatabase, 'getAllAsync'>, familyId: string, childId: string): Promise<number> {
-  const plan = planChildPush(await readLocalChildRecords(database), await readServerChildRecords(familyId), familyId, childId);
+  const local = await readLocalChildRecords(database);
+  const server = await readServerChildRecords(familyId);
+  if (wouldWipeServer(local, server)) throw new Error('이 폰의 기록이 비어 있어 서버 기록을 지우지 않았어요. 아빠에게 알려 주세요.');
+  const plan = planChildPush(local, server, familyId, childId);
   if (isEmptyPlan(plan)) return 0;
   const db = getSupabase();
   if (plan.completionDeletes.length) check(await db.from('tt_task_completions').delete().in('id', plan.completionDeletes));

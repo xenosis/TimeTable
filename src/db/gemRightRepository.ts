@@ -2,7 +2,7 @@ import { rewardPolicy } from '../rewards/rewardPolicy';
 import { getCompletedDates } from './stickerRepository';
 import { hasTasksOn } from './taskDayQuery';
 import type { TimetableDatabase } from './types';
-import { bumpChildChangeVersion } from './childChangeVersion';
+import { withRewardTransaction } from './rewardQueue';
 
 /**
  * 연속 달성으로 얻는 "실물 보석을 받을 자격".
@@ -91,19 +91,22 @@ export async function getGemRightSummary(database: Db, today: string): Promise<G
 }
 
 /** 받을 수 있는 자격 전체를 아빠에게 요청한다. 요청된 개수를 돌려준다(없으면 0). */
-export async function requestAvailableRights(database: Db): Promise<number> {
-  const result = await database.runAsync("UPDATE gem_rights SET state = 'requested', requested_at = CURRENT_TIMESTAMP WHERE family_id = ? AND state = 'available'", familyId) as { readonly changes?: number };
-  bumpChildChangeVersion();
-  return result.changes ?? 0;
+export async function requestAvailableRights(database: Db & Pick<TimetableDatabase, 'execAsync'>): Promise<number> {
+  // 체크 기록·동기화 교체와 같은 줄에서 한 트랜잭션으로 바꾼다(동기화가 이 변경을 덮지 않게)
+  return withRewardTransaction(database, async () => {
+    const result = await database.runAsync("UPDATE gem_rights SET state = 'requested', requested_at = CURRENT_TIMESTAMP WHERE family_id = ? AND state = 'available'", familyId) as { readonly changes?: number };
+    return result.changes ?? 0;
+  });
 }
 
 /** 아빠가 실물 보석을 준 만큼(오래된 요청부터) 지급 처리한다. 장부(보석 개수)는 바꾸지 않는다. */
-export async function markRequestedGiven(database: Db, count: number): Promise<number> {
+export async function markRequestedGiven(database: Db & Pick<TimetableDatabase, 'execAsync'>, count: number): Promise<number> {
   if (!Number.isInteger(count) || count < 1) throw new Error('지급한 개수는 1 이상의 숫자로 적어 주세요.');
-  const requested = (await database.getFirstAsync<{ count: number }>("SELECT COUNT(*) AS count FROM gem_rights WHERE family_id = ? AND state = 'requested'", familyId))?.count ?? 0;
-  if (count > requested) throw new Error(`요청된 보석은 ${requested}개예요.`);
-  // 한 문장으로 처리해 중간에 실패해도 일부만 지급 처리되지 않게 한다
-  await database.runAsync("UPDATE gem_rights SET state = 'given', given_at = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM gem_rights WHERE family_id = ? AND state = 'requested' ORDER BY earned_date, id LIMIT ?)", familyId, count);
-  bumpChildChangeVersion();
-  return count;
+  return withRewardTransaction(database, async () => {
+    const requested = (await database.getFirstAsync<{ count: number }>("SELECT COUNT(*) AS count FROM gem_rights WHERE family_id = ? AND state = 'requested'", familyId))?.count ?? 0;
+    if (count > requested) throw new Error(`요청된 보석은 ${requested}개예요.`);
+    // 한 문장으로 처리해 중간에 실패해도 일부만 지급 처리되지 않게 한다
+    await database.runAsync("UPDATE gem_rights SET state = 'given', given_at = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM gem_rights WHERE family_id = ? AND state = 'requested' ORDER BY earned_date, id LIMIT ?)", familyId, count);
+    return count;
+  });
 }

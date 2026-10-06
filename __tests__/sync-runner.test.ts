@@ -21,6 +21,8 @@ jest.mock('../src/widgets/widgetChecksSignal', () => ({ notifyWidgetChecksApplie
 jest.mock('../src/notifications/rollingOwners', () => ({ refreshAllRollingOwners: async () => { calls.push('alarms'); } }));
 jest.mock('../src/server/localImport', () => ({ readLocalPayload: async () => ({}), hasLocalData: () => mockHasLocalData() }));
 jest.mock('../src/sync/syncStatus', () => ({ setSyncStatus: (status: unknown) => mockStatus(status) }));
+const mockSoon = jest.fn();
+jest.mock('../src/sync/syncSoon', () => ({ requestSyncSoon: () => mockSoon() }));
 jest.mock('../src/sync/pullSnapshot', () => ({
   NETWORK_ERROR: 'Network request failed',
   fetchLocalSnapshot: (...args: unknown[]) => { calls.push('fetch'); return mockFetch(...args); },
@@ -69,6 +71,7 @@ test('올리는 사이 폰에서 새 체크가 생기면 폰 기록을 지키고
   mockPush.mockImplementationOnce(async () => { bumpChildChangeVersion(); return 1; });
   await runSync(target);
   expect(calls).toContain('replace:true');
+  expect(mockSoon).toHaveBeenCalledTimes(1); // 지켜 둔 새 체크를 곧 다시 올린다
   calls.length = 0;
   setAccount({ kind: 'signedIn', email: 'dad@example.com', membership: { role: 'parent', familyId: 'fam-1' }, offline: false });
   await runSync({ familyId: 'fam-1', role: 'parent' });
