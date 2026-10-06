@@ -15,6 +15,8 @@ export function SyncPanel({ theme }: { readonly theme: ThemeDefinition }) {
   const busy = status.state === 'syncing';
   return <View style={[styles.container, { borderColor: theme.decorations.cardBorder }]}>
     <Text accessibilityLiveRegion="polite" style={[styles.body, { color: theme.colors.text }]}>{syncSummary(status, lastSyncedAt())}</Text>
+    {/* P6.15(편집을 서버에 먼저 저장) 전까지의 안내. 체크·보석 기록은 이 폰 것을 지킨다 */}
+    <Text style={[styles.body, { color: theme.colors.textMuted }]}>지금은 로그인한 폰에서 고친 시간표·할 일이 다음에 서버와 맞출 때 서버 내용으로 바뀔 수 있어요.</Text>
     <Pressable accessibilityRole="button" disabled={busy} onPress={() => void runSync(target)} style={[styles.button, { backgroundColor: theme.colors.primary, opacity: busy ? 0.6 : 1 }]}>
       <Text style={[styles.buttonText, { color: theme.colors.onPrimary }]}>{busy ? '맞추는 중' : '지금 서버와 맞추기'}</Text>
     </Pressable>

@@ -58,11 +58,17 @@ const mappers: Readonly<Record<LocalTable, (row: Row) => LocalRow>> = {
     alert_before_min: num(r.alert_before_min) ?? 0, memo: textOr(r.memo, ''), created_at: createdAt(r),
   }),
   day_exceptions: (r) => ({ id: num(r.id), family_id: LOCAL_FAMILY, start_date: text(r.start_date), end_date: text(r.end_date), type: text(r.type), note: textOr(r.note, '') }),
-  tasks: (r) => ({
-    id: num(r.id), family_id: LOCAL_FAMILY, title: text(r.title), repeat_weekdays: toWeekdayCsv(r.repeat_weekdays), task_date: text(r.task_date),
-    remind_time: text(r.remind_time), alert_mode: textOr(r.alert_mode, 'none'), sticker_reward: num(r.sticker_reward),
-    effective_from: text(r.effective_from), effective_until: text(r.effective_until), created_at: createdAt(r),
-  }),
+  tasks: (r) => {
+    const repeatWeekdays = toWeekdayCsv(r.repeat_weekdays);
+    const created = createdAt(r);
+    // 로컬 조회는 반복 할 일의 시작일(effective_from)이 있어야 목록에 넣는다. 서버에서 비워 만들었으면 로컬 V6처럼 만든 날로 채운다
+    const effectiveFrom = text(r.effective_from) ?? (repeatWeekdays ? created.slice(0, 10) : null);
+    return {
+      id: num(r.id), family_id: LOCAL_FAMILY, title: text(r.title), repeat_weekdays: repeatWeekdays, task_date: text(r.task_date),
+      remind_time: text(r.remind_time), alert_mode: textOr(r.alert_mode, 'none'), sticker_reward: num(r.sticker_reward),
+      effective_from: effectiveFrom, effective_until: text(r.effective_until), created_at: created,
+    };
+  },
   task_completions: (r) => ({ id: num(r.id), task_id: num(r.task_id), completion_date: text(r.completion_date), done_at: toSqliteUtc(r.done_at) ?? createdAt({}), done_by: textOr(r.done_by, 'child') }),
   task_completion_history: (r) => ({ task_id: num(r.task_id), completion_date: text(r.completion_date) }),
   sticker_ledger: (r) => ({ id: num(r.id), family_id: LOCAL_FAMILY, child_id: LOCAL_CHILD, delta: num(r.delta), reason: text(r.reason), task_id: num(r.task_id), created_at: createdAt(r) }),

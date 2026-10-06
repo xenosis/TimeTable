@@ -6,6 +6,7 @@ const mockGetAllAsync = jest.fn();
 
 jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => ({ rpc: mockRpc }) }));
 jest.mock('../src/db/database', () => ({ getDatabase: async () => ({ getAllAsync: mockGetAllAsync }) }));
+jest.mock('../src/sync/syncRunner', () => ({ hasSyncedFamily: () => false, runSync: jest.fn() }));
 
 const memory = new Map<string, string>();
 Object.defineProperty(globalThis, 'localStorage', {

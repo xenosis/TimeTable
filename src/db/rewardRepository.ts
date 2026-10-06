@@ -27,14 +27,18 @@ async function clearCompletion(database: RewardDatabase, date: string): Promise<
 }
 
 let transactionQueue: Promise<unknown> = Promise.resolve();
+/** 체크·보석 기록과 동기화 교체가 서로 겹치지 않게 한 줄로 세운다(트랜잭션은 action이 직접 연다). */
+export function withRewardQueue<T>(action: () => Promise<T>): Promise<T> {
+  const run = transactionQueue.then(action);
+  transactionQueue = run.catch(() => undefined);
+  return run;
+}
 export function withRewardTransaction<T>(database: RewardDatabase, action: () => Promise<T>): Promise<T> {
-  const run = transactionQueue.then(async () => {
+  return withRewardQueue(async () => {
     await database.execAsync('BEGIN IMMEDIATE');
     try { const result = await action(); await database.execAsync('COMMIT'); return result; }
     catch (error) { await database.execAsync('ROLLBACK'); throw error; }
   });
-  transactionQueue = run.catch(() => undefined);
-  return run;
 }
 
 export async function setTaskCompletionWithRewards(database: RewardDatabase, taskId: number, date: string, weekday: number, completed: boolean): Promise<null> {

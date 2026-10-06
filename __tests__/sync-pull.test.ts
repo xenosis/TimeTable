@@ -4,7 +4,7 @@ import { createTask, getTodayTasks } from '../src/db/taskRepository';
 import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
 import { getTimetableItemsForWeekday } from '../src/db/timetableRepository';
 import { getGemRightSummary } from '../src/db/gemRightRepository';
-import { replaceLocalWithSnapshot } from '../src/sync/pullSnapshot';
+import { buildReplaceScript, replaceLocalWithSnapshot, serverHasFamilyData, sqlLiteral } from '../src/sync/pullSnapshot';
 import { toLocalSnapshot, toSqliteUtc, toWeekdayCsv, type ServerSnapshot } from '../src/sync/snapshotMapping';
 import { formatSyncTime } from '../src/sync/syncStatus';
 import { syncSummary } from '../src/components/SyncPanel';
@@ -103,4 +103,49 @@ test('가족에 연결된 계정만 동기화 대상이고, 상태 문구는 한
   expect(syncSummary({ state: 'syncing' }, null, now)).toBe('서버와 맞추는 중이에요.');
   expect(syncSummary({ state: 'idle' }, null, now)).toBe('마지막으로 맞춘 때: 아직 없음');
   expect(syncErrorMessage(new Error('Network request failed'))).toContain('인터넷이 연결되지 않아');
+  expect(syncErrorMessage(new Error('서버에서 가족 데이터를 읽지 못했어요.'))).toBe('서버에서 가족 데이터를 읽지 못했어요.');
+});
+
+test('SQL 값은 작은따옴표를 안전하게 감싸고, 제목에 따옴표가 있어도 그대로 저장된다', async () => {
+  expect(sqlLiteral("엄마's 숙제")).toBe("'엄마''s 숙제'");
+  expect(sqlLiteral(null)).toBe('NULL');
+  expect(sqlLiteral(3)).toBe('3');
+  expect(() => sqlLiteral(Number.NaN)).toThrow();
+  const quoted = { ...server, tt_tasks: [{ ...server.tt_tasks[0], title: "엄마's 숙제'); DROP TABLE tasks; --" }], tt_task_completions: [], tt_task_completion_history: [] };
+  await replaceLocalWithSnapshot(database, toLocalSnapshot(quoted));
+  expect(await database.getAllAsync<{ title: string }>('SELECT title FROM tasks')).toEqual([{ title: "엄마's 숙제'); DROP TABLE tasks; --" }]);
+});
+
+test('첫 동기화 뒤에는 체크·완료 이력·보석 기록을 폰 것으로 지키고, 서버에서 지운 할 일의 기록은 버린다', async () => {
+  await replaceLocalWithSnapshot(database, toLocalSnapshot(server));
+  // 폰에서 줄넘기(7001)를 체크하고 보석 자격을 요청한 상태
+  await database.runAsync("INSERT INTO task_completions (task_id, completion_date) VALUES (7001, '2026-10-06')");
+  await database.runAsync("INSERT INTO task_completion_history (task_id, completion_date) VALUES (7001, '2026-10-06')");
+  await database.runAsync("INSERT INTO sticker_ledger (family_id, child_id, delta, reason, task_id) VALUES ('local-family', 'local-child', 0, 'daily-completion:2026-10-06', 7002)");
+  // 서버에서는 준비물(7002)이 지워졌고, 서버의 체크·보석 기록은 비어 있다
+  const next = { ...server, tt_tasks: [server.tt_tasks[0]], tt_task_completions: [], tt_task_completion_history: [], tt_sticker_ledger: [], tt_gem_rights: [] };
+  await replaceLocalWithSnapshot(database, toLocalSnapshot(next), true);
+  expect(await database.getAllAsync('SELECT task_id, completion_date FROM task_completions ORDER BY task_id')).toEqual([{ task_id: 7001, completion_date: '2026-10-06' }]);
+  expect(await database.getAllAsync('SELECT task_id FROM task_completion_history ORDER BY task_id')).toEqual([{ task_id: 7001 }]);
+  // 원장은 지키되 지워진 할 일을 가리키던 task_id는 비운다
+  expect(await database.getAllAsync('SELECT reason, task_id FROM sticker_ledger ORDER BY id')).toEqual([{ reason: 'manual-count:gem', task_id: null }, { reason: 'daily-completion:2026-10-06', task_id: null }]);
+  expect((await getGemRightSummary(database, '2026-10-06')).requested).toBe(1);
+});
+
+test('교체 스크립트는 한 번에 실행되는 트랜잭션 묶음이다', () => {
+  const script = buildReplaceScript(toLocalSnapshot(server));
+  expect(script.startsWith('BEGIN IMMEDIATE;')).toBe(true);
+  expect(script.trimEnd().endsWith('COMMIT;')).toBe(true);
+  expect(script.indexOf('DELETE FROM task_completions;')).toBeLessThan(script.indexOf('DELETE FROM tasks;'));
+});
+
+test('서버에서 시작일 없이 만든 반복 할 일은 만든 날을 시작일로 채운다', () => {
+  const local = toLocalSnapshot({ ...server, tt_tasks: [{ ...server.tt_tasks[0], effective_from: null }] });
+  expect(local.tasks[0].effective_from).toBe('2026-09-01');
+});
+
+test('세트·적용 세트만 있는 서버 가족은 빈 가족으로 본다', () => {
+  const empty = Object.fromEntries(Object.keys(server).map((key) => [key, []])) as unknown as ServerSnapshot;
+  expect(serverHasFamilyData(toLocalSnapshot({ ...empty, tt_timetable_sets: server.tt_timetable_sets, tt_timetable_settings: server.tt_timetable_settings }))).toBe(false);
+  expect(serverHasFamilyData(toLocalSnapshot(server))).toBe(true);
 });

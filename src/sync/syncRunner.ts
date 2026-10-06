@@ -1,14 +1,17 @@
 import { getDatabase } from '../db/database';
 import { refreshAllRollingOwners } from '../notifications/rollingOwners';
 import type { AccountState } from '../server/account';
+import { hasLocalData, readLocalPayload } from '../server/localImport';
 import { getSupabase } from '../server/supabaseClient';
+import { getAccount } from '../store/accountStore';
 import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { applyPendingWidgetChecksNow, requestWidgetRefresh } from '../widgets/widgetRefresh';
-import { pullFamilySnapshot } from './pullSnapshot';
+import { fetchLocalSnapshot, NETWORK_ERROR, replaceLocalWithSnapshot, serverHasFamilyData } from './pullSnapshot';
 import { setSyncStatus } from './syncStatus';
 
 const SYNCED_FAMILY_KEY = 'tt.sync.family';
 const LAST_SYNC_KEY = 'tt.sync.last';
+export const NEEDS_IMPORT_MESSAGE = "서버에 아직 데이터가 없어요. 이 폰의 데이터를 아래 '서버로 올리기'로 먼저 올려 주세요.";
 
 export type SyncTarget = { readonly familyId: string; readonly role: 'parent' | 'child' };
 
@@ -21,7 +24,7 @@ function readStorage(key: string): string | null {
   try { return globalThis.localStorage?.getItem(key) ?? null; } catch { return null; }
 }
 
-/** 이 폰이 이 가족으로 한 번이라도 받아왔는지. 첫 동기화는 서버 기준으로 로컬을 통째로 바꾼다(P6.5 리뷰 H2 결정). */
+/** 이 폰이 이 가족으로 한 번이라도 받아왔는지. 첫 동기화는 서버 기준으로 로컬을 통째로 바꾸고(P6.5 리뷰 H2 결정), 그 뒤로는 딸 폰 기록을 지킨다. */
 export function hasSyncedFamily(familyId: string): boolean {
   return readStorage(SYNCED_FAMILY_KEY) === familyId;
 }
@@ -30,39 +33,58 @@ export function lastSyncedAt(): string | null {
   return readStorage(LAST_SYNC_KEY);
 }
 
-/** 서버의 내 기기 행에 마지막 동기화 시각을 남긴다(아빠가 딸 폰 반영 여부를 볼 때 쓴다). 실패해도 동기화는 성공으로 둔다. */
+/**
+ * 서버의 내 기기 행에 마지막 동기화 시각을 남긴다(아빠가 딸 폰 반영 여부를 볼 때 쓴다). 지금은 계정 단위 한 행이며(푸시 토큰이 없는 행),
+ * 설치본·푸시 토큰 단위 기록은 푸시(P6.9)에서 정한다. 실패해도 동기화는 성공으로 두고 경고만 남긴다.
+ */
 async function recordDeviceSync(familyId: string, at: string): Promise<void> {
   const supabase = getSupabase();
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth.user?.id;
   if (!userId) return;
-  const { data: existing } = await supabase.from('tt_devices').select('id').eq('user_id', userId).is('push_token', null).limit(1);
+  const { data: existing, error: readError } = await supabase.from('tt_devices').select('id').eq('user_id', userId).is('push_token', null).limit(1);
+  if (readError) { console.warn('TimeTable: 기기 동기화 기록을 읽지 못했어요.'); return; }
   const row = { last_synced_at: at, app_version: appVersion(), family_id: familyId };
-  if (existing && existing.length > 0) await supabase.from('tt_devices').update(row).eq('id', existing[0].id);
-  else await supabase.from('tt_devices').insert({ ...row, user_id: userId });
+  const { error } = existing && existing.length > 0
+    ? await supabase.from('tt_devices').update(row).eq('id', existing[0].id)
+    : await supabase.from('tt_devices').insert({ ...row, user_id: userId });
+  if (error) console.warn('TimeTable: 기기 동기화 기록을 남기지 못했어요.');
 }
 
 function appVersion(): string | null {
-  // app.json의 버전. 네이티브 모듈 없이 번들에 들어 있는 값을 쓴다
+  // app.json과 같은 버전(버전 정책상 함께 올린다). 네이티브 모듈 없이 번들에 들어 있는 값을 쓴다
   const { version } = require('../../package.json') as { version?: string };
   return version ?? null;
 }
 
-let running: Promise<boolean> | null = null;
+let running: { readonly familyId: string; readonly promise: Promise<boolean> } | null = null;
 
 /**
  * 서버에서 받아와 로컬을 바꾸고, 알림 재예약·위젯 갱신·화면 다시 읽기·마지막 동기화 기록까지 한다.
- * 동시에 여러 번 불리면 진행 중인 동기화 하나를 같이 기다린다. 인터넷이 없거나 실패하면 로컬은 그대로이고 false를 돌려준다.
+ * 같은 가족 동기화가 진행 중이면 그것을 같이 기다리고, 다른 가족이면 끝난 뒤 다시 한다.
+ * 인터넷이 없거나 실패하면 로컬은 그대로이고 false를 돌려준다.
  */
 export function runSync(target: SyncTarget): Promise<boolean> {
-  if (running) return running;
-  running = (async () => {
+  if (running) {
+    if (running.familyId === target.familyId) return running.promise;
+    return running.promise.then(() => runSync(target));
+  }
+  const promise = (async () => {
     setSyncStatus({ state: 'syncing' });
     try {
       const database = await getDatabase();
-      // 위젯에서 누른 체크를 먼저 로컬에 기록한다(첫 동기화가 아니면 P6.14에서 서버로 올린 뒤 받아온다)
+      const first = !hasSyncedFamily(target.familyId);
+      // 위젯에서 누른 체크를 먼저 로컬에 기록한다(첫 동기화가 아니면 아래에서 지켜진다)
       await applyPendingWidgetChecksNow(database).catch(() => 0);
-      await pullFamilySnapshot(database, target.familyId);
+      const snapshot = await fetchLocalSnapshot(target.familyId);
+      // 서버가 비어 있는데 이 폰에 데이터가 있으면 덮지 않는다. P6.5 '서버로 올리기'를 먼저 하게 안내한다
+      if (first && !serverHasFamilyData(snapshot) && hasLocalData(await readLocalPayload(database))) {
+        setSyncStatus({ state: 'error', lastSyncedAt: lastSyncedAt(), message: NEEDS_IMPORT_MESSAGE });
+        return false;
+      }
+      // 받아오는 사이 로그아웃하거나 다른 가족으로 바꿨으면 로컬을 바꾸지 않는다
+      if (syncTarget(getAccount())?.familyId !== target.familyId) { setSyncStatus({ state: 'idle', lastSyncedAt: lastSyncedAt() }); return false; }
+      await replaceLocalWithSnapshot(database, snapshot, !first);
       const at = new Date().toISOString();
       globalThis.localStorage?.setItem(SYNCED_FAMILY_KEY, target.familyId);
       globalThis.localStorage?.setItem(LAST_SYNC_KEY, at);
@@ -77,12 +99,13 @@ export function runSync(target: SyncTarget): Promise<boolean> {
       running = null;
     }
   })();
-  return running;
+  running = { familyId: target.familyId, promise };
+  return promise;
 }
 
 export function syncErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : '';
+  if (message === NETWORK_ERROR || /network|fetch|timed? ?out/i.test(message)) return '인터넷이 연결되지 않아 이 폰에 저장된 내용으로 보여 주고 있어요.';
   if (/[가-힣]/.test(message)) return message;
-  if (/network|fetch|timed? ?out/i.test(message)) return '인터넷이 연결되지 않아 이 폰에 저장된 내용으로 보여 주고 있어요.';
   return '서버와 맞추지 못했어요. 이 폰에 저장된 내용으로 보여 주고 있어요.';
 }

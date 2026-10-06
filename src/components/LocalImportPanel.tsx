@@ -5,6 +5,7 @@ import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { canImport, importAlreadyDone, importLocalData, type ImportCounts } from '../server/localImport';
 import { useAccount } from '../store/accountStore';
+import { hasSyncedFamily, runSync } from '../sync/syncRunner';
 import { userErrorMessage } from '../utils/userErrorMessage';
 
 /** 관리자 '기타 → 서버 연결' 아래: 딸 폰의 로컬 데이터를 서버로 처음 한 번 올린다(P6.5). 딸 계정으로 로그인한 폰에서만 보인다. */
@@ -13,7 +14,8 @@ export function LocalImportPanel({ theme }: { readonly theme: ThemeDefinition })
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState('');
-  if (!canImport(account)) return null;
+  // 이미 서버와 맞춘 폰(서버 기준 첫 동기화를 마친 폰)은 올릴 것이 없으므로 보이지 않는다
+  if (!canImport(account) || hasSyncedFamily(account.membership.familyId)) return null;
   const familyId = account.membership.familyId;
   const done = importAlreadyDone(familyId);
 
@@ -22,6 +24,7 @@ export function LocalImportPanel({ theme }: { readonly theme: ThemeDefinition })
     setMessage('');
     try {
       setMessage(`서버에 올렸어요. ${importSummary(await importLocalData(familyId))}`);
+      void runSync({ familyId, role: 'child' }); // 올린 뒤 바로 서버와 맞춰 서버 id로 바꾼다
     } catch (error) {
       setMessage(userErrorMessage(error, '서버로 올리지 못했어요. 이 폰의 데이터는 그대로예요.'));
     } finally {
@@ -33,7 +36,7 @@ export function LocalImportPanel({ theme }: { readonly theme: ThemeDefinition })
   return <View style={[styles.container, { borderColor: theme.decorations.cardBorder }]}>
     <Text style={[styles.title, { color: theme.colors.text }]}>이 폰의 데이터를 서버로 처음 올리기</Text>
     <Text style={[styles.body, { color: theme.colors.textMuted }]}>
-      {done ? '이 폰의 데이터는 이미 서버에 올렸어요.' : '시간표·할 일·보석 기록을 서버로 한 번 올려요. 이 폰의 데이터는 지워지지 않아요. 서버에 이미 데이터가 있으면 올리지 않아요.'}
+      {done ? '이 폰의 데이터는 이미 서버에 올렸어요.' : '시간표·할 일·보석 기록을 서버로 한 번 올려요. 올린 뒤에는 서버 내용으로 이 폰을 맞춰요. 서버에 이미 데이터가 있으면 올리지 않아요.'}
     </Text>
     {!done && (confirming ? <View style={styles.row}>
       <Pressable accessibilityRole="button" disabled={busy} onPress={() => void upload()} style={[styles.button, styles.flex, { backgroundColor: theme.colors.primary, opacity: busy ? 0.6 : 1 }]}>
