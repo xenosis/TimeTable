@@ -15,13 +15,33 @@ const files = readdirSync(directory).filter((name: string) => name.endsWith('.sq
 const read = (suffix: string) => readFileSync(`${directory}/${files.find((name: string) => name.endsWith(suffix)) ?? ''}`, 'utf8');
 const schema = read('_tt_schema.sql');
 const rls = read('_tt_rls.sql');
+const gemImport = read('_tt_gem_rights_import.sql');
 
 const createdTables = [...schema.matchAll(/create table public\.(tt_\w+)/g)].map((match) => match[1]);
 const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`).join(', ');
 
 describe('supabase 마이그레이션', () => {
-  it('파일 이름이 시간순으로 스키마 다음에 보안 규칙이 적용되게 정렬된다', () => {
-    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql']);
+  it('파일 이름이 시간순으로 스키마 → 보안 규칙 → 보석 자격·이전 함수 순서로 적용되게 정렬된다', () => {
+    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql']);
+  });
+
+  it('보석 자격 테이블도 RLS·권한·anon 회수가 다른 가족 테이블과 같다(P6.5)', () => {
+    expect(gemImport).toContain('create table public.tt_gem_rights');
+    expect(gemImport).toContain('alter table public.tt_gem_rights enable row level security;');
+    expect(gemImport).toContain('using ((select tt_private.is_family_member(family_id)))');
+    expect(gemImport).toContain('grant select, insert, update, delete on public.tt_gem_rights to authenticated, service_role;');
+    expect(gemImport).toContain('revoke all on public.tt_gem_rights from anon;');
+    expect(gemImport).toContain('revoke truncate, references, trigger on public.tt_gem_rights from authenticated;');
+    // 로컬 gem_rights의 상태 값과 같다
+    expect(gemImport).toContain("check (state in ('available', 'requested', 'given'))");
+  });
+
+  it('이전 함수는 호출한 사람 권한(RLS 적용)으로 돌고 로그인한 사용자만 부를 수 있다', () => {
+    expect(gemImport).toMatch(/create function public\.tt_import_local\(p_family uuid, p_payload jsonb\) returns jsonb\r?\nlanguage plpgsql\r?\nsecurity invoker\r?\nset search_path = ''/);
+    expect(gemImport).not.toMatch(/security definer/);
+    expect(gemImport).toContain('revoke execute on function public.tt_import_local(uuid, jsonb) from public, anon;');
+    expect(gemImport).toContain('grant execute on function public.tt_import_local(uuid, jsonb) to authenticated;');
+    expect(gemImport).toContain("raise exception 'TT_IMPORT: 서버에 이미 이 가족의 데이터가 있습니다'");
   });
 
   it('모든 테이블 이름에 tt_ 접두사가 붙어 Doro 테이블과 겹치지 않는다', () => {

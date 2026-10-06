@@ -7,6 +7,7 @@ import { borderRadius, touchTarget } from '../src/theme';
 import { AdminCollapsible } from '../src/components/AdminCollapsible';
 import { AdminSectionMenu } from '../src/components/AdminSectionMenu';
 import { AccountPanel } from '../src/components/AccountPanel';
+import { LocalImportPanel } from '../src/components/LocalImportPanel';
 import { DeviceTestPanel } from '../src/components/DeviceTestPanel';
 import { GemRequestsPanel } from '../src/components/GemRequestsPanel';
 import { PeriodSettings } from '../src/components/PeriodSettings';
@@ -100,7 +101,7 @@ export default function ManageScreen() {
           <RewardGoalEditor theme={theme} onChanged={() => undefined} />
         </>}
         {section === 'etc' && <>
-          <AdminCollapsible title="서버 연결 (로그인)" theme={theme}><AccountPanel theme={theme} /></AdminCollapsible>
+          <AdminCollapsible title="서버 연결 (로그인)" theme={theme}><AccountPanel theme={theme} /><LocalImportPanel theme={theme} /></AdminCollapsible>
           <AdminCollapsible title="기기 테스트 (알림·알람)" theme={theme}><DeviceTestPanel theme={theme} /></AdminCollapsible>
           <AdminCollapsible title="진단: 과목 색상 미리보기" theme={theme}>
             <View accessibilityLabel="시간표 과목 색상 미리보기" style={styles.categoryPreview}>
