@@ -1,3 +1,4 @@
+import { bumpChildChangeVersion } from './childChangeVersion';
 import { syncGemRightForDate } from './gemRightRepository';
 import type { TimetableDatabase } from './types';
 
@@ -36,7 +37,7 @@ export function withRewardQueue<T>(action: () => Promise<T>): Promise<T> {
 export function withRewardTransaction<T>(database: RewardDatabase, action: () => Promise<T>): Promise<T> {
   return withRewardQueue(async () => {
     await database.execAsync('BEGIN IMMEDIATE');
-    try { const result = await action(); await database.execAsync('COMMIT'); return result; }
+    try { const result = await action(); await database.execAsync('COMMIT'); bumpChildChangeVersion(); return result; }
     catch (error) { await database.execAsync('ROLLBACK'); throw error; }
   });
 }

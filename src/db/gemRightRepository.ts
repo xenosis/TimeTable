@@ -2,6 +2,7 @@ import { rewardPolicy } from '../rewards/rewardPolicy';
 import { getCompletedDates } from './stickerRepository';
 import { hasTasksOn } from './taskDayQuery';
 import type { TimetableDatabase } from './types';
+import { bumpChildChangeVersion } from './childChangeVersion';
 
 /**
  * 연속 달성으로 얻는 "실물 보석을 받을 자격".
@@ -92,6 +93,7 @@ export async function getGemRightSummary(database: Db, today: string): Promise<G
 /** 받을 수 있는 자격 전체를 아빠에게 요청한다. 요청된 개수를 돌려준다(없으면 0). */
 export async function requestAvailableRights(database: Db): Promise<number> {
   const result = await database.runAsync("UPDATE gem_rights SET state = 'requested', requested_at = CURRENT_TIMESTAMP WHERE family_id = ? AND state = 'available'", familyId) as { readonly changes?: number };
+  bumpChildChangeVersion();
   return result.changes ?? 0;
 }
 
@@ -102,5 +104,6 @@ export async function markRequestedGiven(database: Db, count: number): Promise<n
   if (count > requested) throw new Error(`요청된 보석은 ${requested}개예요.`);
   // 한 문장으로 처리해 중간에 실패해도 일부만 지급 처리되지 않게 한다
   await database.runAsync("UPDATE gem_rights SET state = 'given', given_at = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM gem_rights WHERE family_id = ? AND state = 'requested' ORDER BY earned_date, id LIMIT ?)", familyId, count);
+  bumpChildChangeVersion();
   return count;
 }

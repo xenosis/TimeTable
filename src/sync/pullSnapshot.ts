@@ -14,7 +14,7 @@ const orderColumns: Readonly<Record<ServerTable, readonly string[]>> = {
 export const NETWORK_ERROR = 'Network request failed';
 
 /** 서버 한 테이블에서 이 가족 행을 모두 읽는다. Supabase API는 한 번에 최대 1000행이라 정렬해서 나눠 읽는다. */
-async function fetchFamilyRows(table: ServerTable, familyId: string): Promise<Record<string, unknown>[]> {
+export async function fetchFamilyRows(table: ServerTable, familyId: string): Promise<Record<string, unknown>[]> {
   const rows: Record<string, unknown>[] = [];
   for (let from = 0; ; from += PAGE) {
     let query = getSupabase().from(table).select('*').eq('family_id', familyId);
@@ -92,9 +92,11 @@ async function readChildOwnedRows(database: RewardDatabase): Promise<Record<Chil
  * 로컬 SQLite의 가족 데이터를 서버 내용으로 바꾼다. 실패하면 되돌린다(ROLLBACK).
  * keepChildOwned이면 체크·완료 이력·보석 기록은 폰 것을 지킨다. 앱·위젯 체크와 같은 줄(withRewardQueue)에 선다.
  */
-export async function replaceLocalWithSnapshot(database: RewardDatabase, snapshot: LocalSnapshot, keepChildOwned = false): Promise<void> {
+export async function replaceLocalWithSnapshot(database: RewardDatabase, snapshot: LocalSnapshot, keepChildOwned: boolean | (() => boolean) = false): Promise<void> {
   await withRewardQueue(async () => {
-    const keep = keepChildOwned ? await readChildOwnedRows(database) : undefined;
+    // 지킬지 여부는 줄에 선 뒤에 정한다: 받아오는 사이 폰에서 새 체크가 생겼는지 이때 알 수 있다
+    const keepNow = typeof keepChildOwned === 'function' ? keepChildOwned() : keepChildOwned;
+    const keep = keepNow ? await readChildOwnedRows(database) : undefined;
     try {
       await database.execAsync(buildReplaceScript(snapshot, keep));
     } catch (error) {

@@ -6,6 +6,7 @@ import { getGemRightSummary, markRequestedGiven, type GemRightSummary } from '..
 import { rewardPolicy } from '../rewards/rewardPolicy';
 import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
+import { requestSyncSoon } from '../sync/syncSoon';
 
 const todayKey = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; };
 
@@ -38,6 +39,7 @@ export function GemRequestsPanel({ theme }: { readonly theme: ThemeDefinition })
     setBusy(true);
     try {
       const count = await markRequestedGiven(await getDatabase(), Number(given));
+      requestSyncSoon();
       setMessage(`보석 ${count}개를 줬다고 기록했어요. 앱의 보석 개수는 바뀌지 않아요.`);
       setReload((value) => value + 1);
     } catch (error) { setMessage(error instanceof Error ? error.message : '기록하지 못했어요.'); } finally { setBusy(false); }

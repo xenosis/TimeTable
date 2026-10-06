@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDatabase } from '../db/database';
 import { maximumGemCount, updateGemCounts, type GemCounts } from '../db/gemCountRepository';
 import type { ThemeDefinition } from '../theme';
+import { requestSyncSoon } from '../sync/syncSoon';
 
 export function GemCountEditor({ counts, theme, onSaved, onClose }: { readonly counts: GemCounts; readonly theme: ThemeDefinition; readonly onSaved: () => void; readonly onClose: () => void }) {
   const [gems, setGems] = useState(String(Math.max(0, counts.gems)));
@@ -15,7 +16,7 @@ export function GemCountEditor({ counts, theme, onSaved, onClose }: { readonly c
     if (busy) return;
     if (!/^\d+$/.test(gems) || !/^\d+$/.test(largeGems)) { setError('개수를 숫자로 적어 주세요. 0개도 괜찮아요.'); return; }
     setBusy(true); setError('');
-    try { await updateGemCounts(await getDatabase(), { gems: Number(gems), largeGems: Number(largeGems) }); onSaved(); onClose(); }
+    try { await updateGemCounts(await getDatabase(), { gems: Number(gems), largeGems: Number(largeGems) }); requestSyncSoon(); onSaved(); onClose(); }
     catch (failure) { setError(failure instanceof Error && failure.message.includes('정수') ? failure.message : '개수를 저장하지 못했어요. 다시 시도해 주세요.'); }
     finally { setBusy(false); }
   };

@@ -6,6 +6,7 @@ import { getGemRightSummary, requestAvailableRights, type GemRightSummary } from
 import { rewardPolicy } from '../rewards/rewardPolicy';
 import type { ThemeDefinition } from '../theme';
 import { ThemedProgressMark } from './ThemedProgressMark';
+import { requestSyncSoon } from '../sync/syncSoon';
 
 const todayKey = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; };
 
@@ -33,6 +34,7 @@ export function GemRightsCard({ theme, refreshKey }: { readonly theme: ThemeDefi
     setBusy(true);
     try {
       const count = await requestAvailableRights(await getDatabase());
+      requestSyncSoon();
       setMessage(count > 0 ? `아빠에게 보석 ${count}개를 달라고 했어요!` : '');
       setReload((value) => value + 1);
     } catch { setMessage('요청하지 못했어요. 다시 눌러 주세요.'); } finally { setBusy(false); }

@@ -5,6 +5,7 @@ import { setTaskCompletionWithRewards } from '../db/rewardRepository';
 import { getTodayTasks, type TodayTask } from '../db/taskRepository';
 import { requestTaskRollingScheduleRefresh } from '../notifications/taskRollingSchedule';
 import { borderRadius, spacing, touchTarget, type ThemeDefinition } from '../theme';
+import { requestSyncSoon } from '../sync/syncSoon';
 
 const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
@@ -65,6 +66,7 @@ export function TodayTasksCard({ theme, refreshKey, onChanged }: { readonly them
     try {
       const database = await getDatabase();
       await setTaskCompletionWithRewards(database, task.id, date, weekday, !task.completed);
+      requestSyncSoon(); // 로그인한 폰이면 잠시 뒤 서버에 올린다(P6.14)
       try { await requestTaskRollingScheduleRefresh(); } catch { scheduleRefreshFailed = true; }
       const updated = await getTodayTasks(database, date, weekday);
       if (!task.completed && updated.length && updated.every((item) => item.completed)) setCelebration({ date, message: '오늘 할 일을 모두 끝냈어요! ✨' });

@@ -1,3 +1,4 @@
+import { childChangeVersion } from '../db/childChangeVersion';
 import { getDatabase } from '../db/database';
 import { refreshAllRollingOwners } from '../notifications/rollingOwners';
 import type { AccountState } from '../server/account';
@@ -7,6 +8,7 @@ import { getAccount } from '../store/accountStore';
 import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { applyPendingWidgetChecksNow, requestWidgetRefresh } from '../widgets/widgetRefresh';
 import { fetchLocalSnapshot, NETWORK_ERROR, replaceLocalWithSnapshot, serverHasFamilyData } from './pullSnapshot';
+import { pushChildRecords } from './pushChildRecords';
 import { setSyncStatus } from './syncStatus';
 
 const SYNCED_FAMILY_KEY = 'tt.sync.family';
@@ -51,6 +53,13 @@ async function recordDeviceSync(familyId: string, at: string): Promise<void> {
   if (error) console.warn('TimeTable: 기기 동기화 기록을 남기지 못했어요.');
 }
 
+async function currentUserId(): Promise<string> {
+  const { data } = await getSupabase().auth.getSession();
+  const id = data.session?.user.id;
+  if (!id) throw new Error('로그인 정보가 없어 기록을 올리지 못했어요. 다시 로그인해 주세요.');
+  return id;
+}
+
 function appVersion(): string | null {
   // app.json과 같은 버전(버전 정책상 함께 올린다). 네이티브 모듈 없이 번들에 들어 있는 값을 쓴다
   const { version } = require('../../package.json') as { version?: string };
@@ -74,8 +83,11 @@ export function runSync(target: SyncTarget): Promise<boolean> {
     try {
       const database = await getDatabase();
       const first = !hasSyncedFamily(target.familyId);
-      // 위젯에서 누른 체크를 먼저 로컬에 기록한다(첫 동기화가 아니면 아래에서 지켜진다)
+      // 위젯에서 누른 체크를 먼저 로컬에 기록한다
       await applyPendingWidgetChecksNow(database).catch(() => 0);
+      // 딸 폰은 첫 동기화 뒤부터 체크·보석 기록을 서버에 먼저 올린다(P6.14). 올리기 시작 시점의 기록 변경 횟수를 기억해 둔다
+      const versionAtPush = childChangeVersion();
+      if (!first && target.role === 'child') await pushChildRecords(database, target.familyId, await currentUserId());
       const snapshot = await fetchLocalSnapshot(target.familyId);
       // 서버가 비어 있는데 이 폰에 데이터가 있으면 덮지 않는다. P6.5 '서버로 올리기'를 먼저 하게 안내한다
       if (first && !serverHasFamilyData(snapshot) && hasLocalData(await readLocalPayload(database))) {
@@ -84,7 +96,8 @@ export function runSync(target: SyncTarget): Promise<boolean> {
       }
       // 받아오는 사이 로그아웃하거나 다른 가족으로 바꿨으면 로컬을 바꾸지 않는다
       if (syncTarget(getAccount())?.familyId !== target.familyId) { setSyncStatus({ state: 'idle', lastSyncedAt: lastSyncedAt() }); return false; }
-      await replaceLocalWithSnapshot(database, snapshot, !first);
+      // 올린 뒤에는 서버 내용이 기준이다(아빠가 '줬어요'로 바꾼 보석 등도 내려온다). 다만 그 사이 폰에서 새 체크가 생겼으면 폰 기록을 지키고 다음에 올린다
+      await replaceLocalWithSnapshot(database, snapshot, () => !first && target.role === 'child' && childChangeVersion() !== versionAtPush);
       const at = new Date().toISOString();
       globalThis.localStorage?.setItem(SYNCED_FAMILY_KEY, target.familyId);
       globalThis.localStorage?.setItem(LAST_SYNC_KEY, at);

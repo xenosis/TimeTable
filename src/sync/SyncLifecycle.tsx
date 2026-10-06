@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 
 import { getAccount, useAccount } from '../store/accountStore';
 import { runSync, syncTarget } from './syncRunner';
+import { registerSyncSoonRunner } from './syncSoon';
 
 /**
  * 가족에 연결된 계정이면 서버와 맞춘다: 로그인(앱 시작 때 로그인 복원 포함)으로 가족이 정해질 때 한 번, 앱으로 돌아올 때마다 한 번.
@@ -19,11 +20,13 @@ export function SyncLifecycle(): null {
   }, [familyId, role]);
 
   useEffect(() => {
+    // 화면에서 체크·보석 기록을 바꾸면 곧 서버와 맞추도록 실행 함수를 등록한다(로그인한 가족 계정일 때만 실제로 돈다)
+    registerSyncSoonRunner(() => { const current = syncTarget(getAccount()); if (current) void runSync(current); });
     const subscription = AppState.addEventListener('change', (state) => {
       const current = syncTarget(getAccount());
       if (state === 'active' && current) void runSync(current);
     });
-    return () => subscription.remove();
+    return () => { subscription.remove(); registerSyncSoonRunner(null); };
   }, []);
   return null;
 }

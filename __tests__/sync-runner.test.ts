@@ -1,5 +1,6 @@
 import { setAccount } from '../src/store/accountStore';
 import { hasSyncedFamily, NEEDS_IMPORT_MESSAGE, runSync } from '../src/sync/syncRunner';
+import { bumpChildChangeVersion } from '../src/db/childChangeVersion';
 
 const calls: string[] = [];
 const mockFetch = jest.fn();
@@ -9,7 +10,9 @@ const mockHasLocalData = jest.fn();
 const mockStatus = jest.fn();
 
 jest.mock('../src/db/database', () => ({ getDatabase: async () => ({}) }));
-jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }) }));
+jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => ({ auth: { getUser: async () => ({ data: { user: null } }), getSession: async () => ({ data: { session: { user: { id: 'child-uid' } } } }) } }) }));
+const mockPush = jest.fn();
+jest.mock('../src/sync/pushChildRecords', () => ({ pushChildRecords: (...args: unknown[]) => { calls.push('push'); return mockPush(...args); } }));
 jest.mock('../src/widgets/widgetRefresh', () => ({
   applyPendingWidgetChecksNow: async () => { calls.push('pending'); return 0; },
   requestWidgetRefresh: async () => { calls.push('widget'); },
@@ -21,7 +24,11 @@ jest.mock('../src/sync/syncStatus', () => ({ setSyncStatus: (status: unknown) =>
 jest.mock('../src/sync/pullSnapshot', () => ({
   NETWORK_ERROR: 'Network request failed',
   fetchLocalSnapshot: (...args: unknown[]) => { calls.push('fetch'); return mockFetch(...args); },
-  replaceLocalWithSnapshot: (...args: unknown[]) => { calls.push(`replace:${String(args[2])}`); return mockReplace(...args); },
+  replaceLocalWithSnapshot: (...args: unknown[]) => {
+    const keep = typeof args[2] === 'function' ? (args[2] as () => boolean)() : args[2];
+    calls.push(`replace:${String(keep)}`);
+    return mockReplace(...args);
+  },
   serverHasFamilyData: () => mockServerHasData(),
 }));
 
@@ -40,18 +47,41 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockFetch.mockResolvedValue({});
   mockReplace.mockResolvedValue(undefined);
+  mockPush.mockResolvedValue(0);
   mockServerHasData.mockReturnValue(true);
   mockHasLocalData.mockReturnValue(false);
   signedIn('fam-1');
 });
 
-test('첫 동기화: 위젯 체크 반영 → 받아오기 → 서버 기준 통째 교체 → 화면 알림 → 알림·위젯 갱신, 이후는 폰 기록을 지킨다', async () => {
+test('첫 동기화는 올리지 않고 서버 기준으로 바꾸고, 그 뒤로는 폰 기록을 먼저 올린 뒤 서버 내용으로 맞춘다', async () => {
   await expect(runSync(target)).resolves.toBe(true);
   expect(calls).toEqual(['pending', 'fetch', 'replace:false', 'notify', 'alarms', 'widget']);
   expect(hasSyncedFamily('fam-1')).toBe(true);
   calls.length = 0;
   await runSync(target);
+  expect(calls).toEqual(['pending', 'push', 'fetch', 'replace:false', 'notify', 'alarms', 'widget']);
+  expect(mockPush).toHaveBeenCalledWith({}, 'fam-1', 'child-uid');
+});
+
+test('올리는 사이 폰에서 새 체크가 생기면 폰 기록을 지키고(다음에 올림), 아빠 계정은 올리지 않는다', async () => {
+  await runSync(target);
+  calls.length = 0;
+  mockPush.mockImplementationOnce(async () => { bumpChildChangeVersion(); return 1; });
+  await runSync(target);
   expect(calls).toContain('replace:true');
+  calls.length = 0;
+  setAccount({ kind: 'signedIn', email: 'dad@example.com', membership: { role: 'parent', familyId: 'fam-1' }, offline: false });
+  await runSync({ familyId: 'fam-1', role: 'parent' });
+  expect(calls).not.toContain('push');
+  expect(calls).toContain('replace:false');
+});
+
+test('올리기에 실패하면 받아오지 않고 폰 데이터를 그대로 둔다(다음에 다시 올림)', async () => {
+  await runSync(target);
+  calls.length = 0;
+  mockPush.mockRejectedValueOnce(new Error('Network request failed'));
+  await expect(runSync(target)).resolves.toBe(false);
+  expect(calls).toEqual(['pending', 'push']);
 });
 
 test('같은 가족 동기화가 진행 중이면 한 번만 실행된다', async () => {
