@@ -4949,7 +4949,7 @@
     },
     {
       "id": "P6.4",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "security",
       "title": "로그인 · 역할 분기",
@@ -4965,7 +4965,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-06T11:35:11.585Z",
-      "updated_at": "2026-10-06T11:53:05.533Z",
+      "updated_at": "2026-10-06T13:23:57.488Z",
       "log": [
         {
           "at": "2026-10-06T11:35:11.585Z",
@@ -4978,8 +4978,28 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "코드 완료(커밋 3768fd4, v1.48.0): 관리자 '기타' 서버 연결(로그인·로그아웃), 앱 시작 때 로그인 복원, 아빠 계정이면 ParentHome, 딸·미연결·로컬은 아이 화면, 오프라인이면 마지막 역할. Jest 8건 추가, check는 lint 경고 수정 뒤 lint·테스트 재확인(전체 check 재실행은 완료 전 예정). 남은 것: 사용자 계정 준비(서버에 Doro 계정 2개뿐, TimeTable 가족 연결 0) → Claude가 CLI로 가족·parent·child 등록 → 두 폰에서 로그인 분기 실기기 확인 → 리뷰."
+        },
+        {
+          "at": "2026-10-06T12:36:48.972Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "계정 준비 완료(아빠 kimterius 기존 계정, 딸 olivia 임시 계정), 가족 등록 후 실기기 확인 재개."
+        },
+        {
+          "at": "2026-10-06T12:36:50.984Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "가족 '채아네' 등록(supabase/setup/tt_family_setup.sql). 딸 폰 1.48.0~1.48.1: 로컬 모드 유지, 딸 로그인=아이 화면, 아빠 로그인=아빠 화면, 재시작 유지, 로그아웃=로컬, 오프라인 시작 시 저장된 역할로 즉시 분기(1.48.1 수정). npm run check 통과(1.48.1, Jest 357+). 근거 docs/device-verification-2026-10-05.md 마지막 절. 리뷰 예정."
+        },
+        {
+          "at": "2026-10-06T13:23:57.488Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA 5ba7f370) 지적 반영(1.48.2, 커밋 0946ce9): H1 토큰 만료·오프라인 역할 유지, M1 오프라인 로그아웃 보장, M2 늦은 자동 확인 무시, M3 백업 제외 확인(해당 없음), M4 문서 정정, Q2 SQL 이메일 자리표시자. Q1: done_when 원문 기준 딸 폰 한 대에서 두 역할 확인으로 충족, 아빠 실제 폰 확인은 P6.8에서. Q5(아빠 기기 로컬 알림)는 P6.8에서 결정."
         }
-      ]
+      ],
+      "done_at": "2026-10-06",
+      "evidence": "커밋 3768fd4·0d2392b·0946ce9, src/server/{account,AccountLifecycle,supabaseClient,supabaseConfig}, src/store/accountStore.ts, src/components/{AccountPanel,ParentHome}.tsx, app/(tabs)/_layout.tsx, supabase/setup/tt_family_setup.sql(가족 '채아네' 등록 완료) · 검증: npm run check 통과(1.48.2, Jest 361), 딸 폰 SM-A245N: 로컬 모드·딸 로그인=아이 화면·아빠 로그인=아빠 화면·재시작 유지·로그아웃·비행기 모드 시작(1.48.1·1.48.2) 확인(docs/device-verification-2026-10-05.md), critical-reviewer·backlog-explainer 병렬 리뷰(SHA 5ba7f370)"
     },
     {
       "id": "P6.5",
