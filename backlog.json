@@ -4133,7 +4133,7 @@
     },
     {
       "id": "P5.6",
-      "status": "todo",
+      "status": "in_progress",
       "priority": null,
       "category": "release",
       "title": "MVP 배포",
@@ -4149,9 +4149,9 @@
       "done_when": "딸 폰에 Device-arm64-v8a 릴리즈 APK를 설치하고 할 일·일정 위젯 추가를 확인한 뒤 1주일 이상 실사용, 피드백 목록 기록. 실사용 중 위젯 갱신·알림 문제가 보이면 새 작업으로 등록",
       "est_min": null,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-10-06T11:22:12.980Z",
+      "owner": "claude",
+      "claimed_at": "2026-10-06T11:22:51.839Z",
+      "updated_at": "2026-10-06T11:22:51.839Z",
       "log": [
         {
           "at": "2026-10-05T06:29:42.730Z",
@@ -4182,6 +4182,12 @@
           "owner": null,
           "status": "todo",
           "note": "사용자 결정 2026-10-06: P5.4는 딸 폰 adb 시험으로 완료, 절전은 고려하지 않음. P5.6 완료 조건에서 P5.4 남은 확인을 빼고, 실사용 중 위젯 갱신 문제가 보이면 새 작업으로 등록하도록 바꿈."
+        },
+        {
+          "at": "2026-10-06T11:22:51.839Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "실사용 시작 2026-10-06: 딸 폰 SM-A245N에 TimeTable-v1.47.3-release-Device-arm64-v8a.apk(arm64-v8a, versionCode 121, 서명 295d86…) 설치, 홈 화면 일정·할 일 위젯 추가 확인(docs/device-verification-2026-10-05.md). 2026-10-13 이후 사용자 피드백 목록을 받아 기록하면 완료 판단."
         }
       ]
     },
