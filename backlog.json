@@ -5065,6 +5065,97 @@
       "log": []
     },
     {
+      "id": "P6.13",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "동기화 1: 서버에서 딸 폰으로 받아오기",
+      "summary": "로그인한 폰이 서버 가족 데이터를 받아 로컬 SQLite를 서버 id 그대로 바꾸고 알림 재예약, 위젯 갱신, 마지막 동기화 시각 기록. 앱 시작, 앱 복귀, 로그인 직후, 수동 버튼에서 실행. 인터넷이 없으면 로컬 캐시 유지.",
+      "where": "src/sync/",
+      "parent": "P6.6",
+      "deps": [
+        "P6.5"
+      ],
+      "doc": null,
+      "done_when": "서버 임시 데이터를 딸 폰이 받아 화면, 위젯, 알림 예약에 반영. 오프라인에서는 기존 데이터로 동작. 서버 기준 첫 동기화가 옛 로컬 데이터를 정리. Jest, npm run check 통과, 실기기 확인, 임시 데이터 정리",
+      "est_min": null,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-10-06T14:16:59.146Z",
+      "updated_at": "2026-10-06T15:17:22.560Z",
+      "log": [
+        {
+          "at": "2026-10-06T14:16:59.146Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "착수: 서버 기준 받아오기(snapshot→SQLite 교체), 알림 재예약·위젯 갱신·마지막 동기화 기록, 앱 시작·복귀·로그인 직후·수동 버튼."
+        },
+        {
+          "at": "2026-10-06T14:43:45.825Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현 커밋 e0c6e3b(v1.50.0): src/sync(snapshotMapping·pullSnapshot·syncRunner·syncStatus·SyncLifecycle), SyncPanel. Jest 5건(실제 SQLite: 서버 id 교체·멱등·실패 시 그대로), npm run check 통과(375). 딸 폰: 시작 시 서버 임시 데이터 반영·위젯·변경/삭제 반영·오프라인 유지·알림 재예약/취소·last_synced_at 기록, 임시 데이터 정리. 주의: 체크 올리기(P6.14) 전까지 동기화가 폰의 체크를 서버 내용으로 덮는다. 리뷰 예정."
+        },
+        {
+          "at": "2026-10-06T15:17:22.560Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA 14a1f9f0) 반영(커밋 e17bb8b, v1.50.1): H1 교체를 한 번의 execAsync SQL 묶음으로(같은 연결 끼어들기 차단, 체크 줄 withRewardQueue), H2 정렬 페이지, H3 첫 동기화 뒤 체크·완료 이력·원장·보석 자격 보존(올리기는 P6.14), 로그인 상태 편집 덮임은 관리자 안내 후 P6.15, M1 시작일 보정, M2 오프라인 문구, M3 서버 빈 가족+폰 데이터면 보류·올리기 안내, M5 기기 기록 오류 경고(설치본 단위는 P6.9), M6 다른 가족·계정 변경 시 교체 안 함, M7 실행 순서 테스트. M4(첫 동기화 직전 위젯 대기 체크) 수용: 첫 동기화 뒤 id는 서버 id로 고정. 1.50.1 설치 완료, 보존 동작 실기기 확인은 딸 폰 잠금으로 P6.14 시험에서 함께."
+        }
+      ],
+      "done_at": "2026-10-06",
+      "evidence": "src/sync/{snapshotMapping,pullSnapshot,syncRunner,syncStatus,SyncLifecycle}, src/components/SyncPanel.tsx, 커밋 e0c6e3b·e17bb8b, docs/device-verification-2026-10-05.md(서버에서 받아오기 동기화 절) · 검증: npm run check 통과(1.50.1, Jest 385: sync-pull 10·sync-runner 5), 딸 폰 1.50.0: 서버 임시 데이터 반영·위젯·변경/삭제·오프라인 유지·알림 재예약/취소·last_synced_at, 임시 데이터 정리, critical-reviewer·backlog-explainer 병렬 리뷰(SHA 14a1f9f0)"
+    },
+    {
+      "id": "P6.14",
+      "status": "in_progress",
+      "priority": null,
+      "category": "feature",
+      "title": "동기화 2: 완료 체크와 보석 기록 올리기",
+      "summary": "딸 폰이 주인인 체크 기록, 완료 이력, 보석 장부, 보석 자격을 오프라인에서도 기록하고 연결되면 서버와 맞춘다(체크 대기열). 위젯 체크 포함.",
+      "where": "src/sync/",
+      "parent": "P6.6",
+      "deps": [
+        "P6.13"
+      ],
+      "doc": null,
+      "done_when": "오프라인에서 앱과 위젯으로 체크한 뒤 연결하면 서버에 반영되고 다시 받아와도 그대로이며 체크 취소와 보석 자격 변화도 맞춰짐. Jest, npm run check, 실기기 확인",
+      "est_min": null,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-10-06T15:17:24.791Z",
+      "updated_at": "2026-10-06T15:17:24.791Z",
+      "log": [
+        {
+          "at": "2026-10-06T15:17:24.791Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "착수: 딸 폰이 주인인 task_completions·task_completion_history·sticker_ledger·gem_rights를 자연 키로 서버와 맞춤(올리기 후 받아오기). 서버 시험 할 일 'SY 체크 시험'(매일, 알림 없음)을 시험용으로 넣어 둠."
+        }
+      ]
+    },
+    {
+      "id": "P6.15",
+      "status": "todo",
+      "priority": null,
+      "category": "feature",
+      "title": "동기화 3: 로그인 상태 편집은 서버에 먼저 저장",
+      "summary": "로그인한 폰에서 시간표, 세트, 교시, 할 일, 보상 목표 편집은 서버에 먼저 저장한 뒤 받아온다. 인터넷이 없으면 연결이 필요하다고 알린다. P6.8 아빠 화면이 같은 저장 함수를 쓴다.",
+      "where": "src/sync/",
+      "parent": "P6.6",
+      "deps": [
+        "P6.14"
+      ],
+      "doc": null,
+      "done_when": "로그인 상태 관리자 편집이 서버에 저장되고 동기화 뒤에도 유지되며 오프라인 편집은 안내 후 막힘. 로그인하지 않은 로컬 모드는 지금과 같음. Jest, npm run check, 실기기 확인",
+      "est_min": null,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-06T14:16:33.247Z",
+      "log": []
+    },
+    {
       "id": "P6.7",
       "status": "todo",
       "priority": null,
