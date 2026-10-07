@@ -62,6 +62,15 @@ test('처음 연결에는 동기화하지 않고, 오류 뒤 라이브러리가 
   expect(onChange).toHaveBeenCalledTimes(1);
 });
 
+test('인터넷 없이 시작해 처음 연결 전에 오류가 났으면, 처음 이어질 때도 한 번 맞춘다(시작 동기화가 실패했을 수 있음)', () => {
+  const onChange = jest.fn();
+  subscribeFamilyChanges('fam-1', onChange);
+  mockStatusCallback('TIMED_OUT');
+  mockStatusCallback('SUBSCRIBED');
+  jest.advanceTimersByTime(2000);
+  expect(onChange).toHaveBeenCalledTimes(1);
+});
+
 test('채널이 완전히 닫히면 5초 뒤 새 채널로 다시 구독하고, 이어지면 한 번 맞춘다', () => {
   const onChange = jest.fn();
   subscribeFamilyChanges('fam-1', onChange);

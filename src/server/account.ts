@@ -1,5 +1,6 @@
 import { getSupabase } from './supabaseClient';
 import { SUPABASE_URL } from './supabaseConfig';
+import { ACCOUNT_CACHE_KEY } from './accountCacheKey';
 import { clearSyncedFamily } from '../sync/syncMarkers';
 
 export type FamilyRole = 'parent' | 'child';
@@ -16,7 +17,7 @@ export type AccountState =
   | { readonly kind: 'local' }
   | { readonly kind: 'signedIn'; readonly email: string; readonly membership: Membership | null; readonly offline: boolean };
 
-const CACHE_KEY = 'tt.account.membership';
+const CACHE_KEY = ACCOUNT_CACHE_KEY;
 
 /** 서버의 tt_family_members 한 줄을 앱이 쓰는 소속 정보로 바꾼다. 모양이 다르면 소속 없음으로 본다. */
 export function parseMembership(row: unknown): Membership | null {

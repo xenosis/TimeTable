@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
-import { getAccount, useAccount } from '../store/accountStore';
+import { refreshAllRollingOwners } from '../notifications/rollingOwners';
+import { getAccount, isParentDevice, useAccount } from '../store/accountStore';
 import { runSync, syncTarget } from './syncRunner';
 import { registerSyncSoonRunner } from './syncSoon';
 import { runAdminEdit } from './adminEdit';
@@ -17,6 +18,15 @@ export function SyncLifecycle(): null {
   const target = syncTarget(account);
   const familyId = target?.familyId ?? null;
   const role = target?.role ?? null;
+  const parentDevice = isParentDevice(account);
+  const previousParent = useRef<boolean | null>(null);
+
+  // 아빠 계정으로 로그인하거나 로그아웃해 이 폰의 역할이 바뀌면 알림을 다시 예약한다(아빠 폰은 딸 알람을 지우고, 로그아웃하면 되살림, P6.8)
+  useEffect(() => {
+    if (account.kind === 'checking') return;
+    if (previousParent.current !== null && previousParent.current !== parentDevice) void refreshAllRollingOwners().catch(() => undefined);
+    previousParent.current = parentDevice;
+  }, [account.kind, parentDevice]);
 
   useEffect(() => {
     if (familyId && role) void runSync({ familyId, role });

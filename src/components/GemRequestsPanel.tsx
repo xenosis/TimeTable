@@ -47,7 +47,7 @@ export function GemRequestsPanel({ theme }: { readonly theme: ThemeDefinition })
     } catch (error) { setMessage(error instanceof Error ? error.message : '기록하지 못했어요.'); } finally { setBusy(false); }
   };
 
-  // 아빠 계정 폰은 보석 기록을 서버에 올리지 않아(딸 폰이 주인, P6.14) 여기서 기록해도 곧 서버 내용으로 되돌아간다. 아빠 화면(P6.8) 전까지 막는다
+  // 아빠 계정 폰은 보석 기록을 서버에 올리지 않아(딸 폰이 주인, P6.14) 여기서 기록해도 곧 서버 내용으로 되돌아간다. 아빠 폰에서 '줬어요'를 서버에 바로 기록하는 기능은 사용자 결정 전까지 막는다(P6.8 리뷰 M3)
   const parentDevice = isParentDevice(account);
   return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
     <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>보석 요청</Text>

@@ -1,5 +1,7 @@
 import { NativeModules, PermissionsAndroid, Platform } from 'react-native';
 
+import { suppressChildAlarms } from './parentDeviceAlarms';
+
 const TEST_DELAY_MS = 15_000;
 
 type SecureAlarmModule = {
@@ -28,7 +30,11 @@ export async function requestAndroidNotificationPermission(): Promise<boolean> {
   if (Number(Platform.Version) < 33) return (await getAndroidPermissionStatus()).notifications;
   return (await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS)) === PermissionsAndroid.RESULTS.GRANTED;
 }
-export async function replaceAndroidRollingSchedule(entries: readonly { id: string; title: string; memo?: string; triggerAt: number; mode: 'notify' | 'alarm' }[], owner: 'timetable' | 'tasks' = 'timetable'): Promise<number> { requireAndroid(); return getModule().replaceRollingSchedule(entries, owner); }
+/** 아빠 폰이면 예약할 목록을 비워 이미 걸린 딸 알림·알람도 함께 지운다(P6.8, parentDeviceAlarms.ts). */
+export async function replaceAndroidRollingSchedule(entries: readonly { id: string; title: string; memo?: string; triggerAt: number; mode: 'notify' | 'alarm' }[], owner: 'timetable' | 'tasks' = 'timetable'): Promise<number> {
+  requireAndroid();
+  return getModule().replaceRollingSchedule(suppressChildAlarms() ? [] : entries, owner);
+}
 
 function requireAndroid(): void {
   if (Platform.OS !== 'android') throw new Error('잠금 화면 알람 PoC는 Android에서만 확인할 수 있어요.');

@@ -5,7 +5,7 @@ import { getSupabase } from '../server/supabaseClient';
 import { getAccount } from '../store/accountStore';
 import { buildReplaceScript, childOwnedTables, NETWORK_ERROR } from './pullSnapshot';
 import { snapshotTables, type LocalRow, type LocalSnapshot, type LocalTable } from './snapshotMapping';
-import { hasSyncedFamily } from './syncMarkers';
+import { hasSyncedFamily, markAdminEdit } from './syncMarkers';
 import { syncTarget } from './syncRunner';
 import { requestSyncSoon } from './syncSoon';
 import { withSyncLock } from './syncLock';
@@ -132,6 +132,7 @@ export async function runAdminEdit<T>(action: () => Promise<T>): Promise<T> {
       await revertParentTables(database, before);
       throw new Error(editErrorMessage(failure));
     }
+    markAdminEdit(new Date().toISOString());
     return value;
   });
   requestSyncSoon(); // 서버 내용으로 다시 맞추고(다른 기기 변경 포함) 알림·위젯을 갱신한다

@@ -27,7 +27,6 @@ export function subscribeFamilyChanges(familyId: string, onChange: () => void, d
   let firstSignalAt: number | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectAttempt = 0;
-  let subscribedOnce = false;
   let missedSignals = false;
   let stopped = false;
   let channel: RealtimeChannel | null = null;
@@ -59,9 +58,9 @@ export function subscribeFamilyChanges(familyId: string, onChange: () => void, d
       if (stopped || channel !== next) return;
       if (status === 'SUBSCRIBED') {
         reconnectAttempt = 0;
-        // 처음 연결은 앱 시작·로그인 동기화가 이미 돈다. 끊겼다 다시 이어진 연결이면 놓친 변경을 받으려고 한 번 더 맞춘다
-        if (subscribedOnce && missedSignals) schedule();
-        subscribedOnce = true;
+        // 처음 연결은 앱 시작·로그인 동기화가 이미 돈다. 끊겼다 다시 이어진 연결이면(처음 연결 전에 끊겨 있었던 경우 포함,
+        // 예: 인터넷 없이 앱을 켜 시작 동기화가 실패함) 놓친 변경을 받으려고 한 번 더 맞춘다
+        if (missedSignals) schedule();
         missedSignals = false;
         return;
       }
