@@ -18,13 +18,14 @@ const rls = read('_tt_rls.sql');
 const gemImport = read('_tt_gem_rights_import.sql');
 const importGuard = read('_tt_import_guard.sql');
 const familyEdit = read('_tt_apply_family_edit.sql');
+const realtime = read('_tt_realtime.sql');
 
 const createdTables = [...schema.matchAll(/create table public\.(tt_\w+)/g)].map((match) => match[1]);
 const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`).join(', ');
 
 describe('supabase 마이그레이션', () => {
   it('파일 이름이 시간순으로 스키마 → 보안 규칙 → 보석 자격·이전 함수 순서로 적용되게 정렬된다', () => {
-    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql']);
+    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql', 'tt_realtime.sql']);
   });
 
   it('보석 자격 테이블도 RLS·권한·anon 회수가 다른 가족 테이블과 같다(P6.5)', () => {
@@ -55,6 +56,13 @@ describe('supabase 마이그레이션', () => {
     expect(familyEdit).toContain("raise exception 'TT_EDIT: 다른 기기에서 지운 항목이에요");
     expect(familyEdit).toContain('tt_task_completion_history');
     expect(familyEdit).toContain('pg_advisory_xact_lock');
+  });
+
+  it('Realtime 게시는 가족 데이터 테이블만 넣고 기기 기록은 빼며, 삭제도 거를 수 있게 replica identity full을 켠다(P6.7)', () => {
+    for (const table of ['tt_tasks', 'tt_timetable_items', 'tt_task_completions', 'tt_gem_rights']) expect(realtime).toContain("'" + table + "'");
+    expect(realtime).not.toMatch(/'tt_devices'|'tt_families'|'tt_family_members'/);
+    expect(realtime).toContain('replica identity full');
+    expect(realtime).toContain('alter publication supabase_realtime add table');
   });
 
   it('이전 함수 보완: 호출한 딸 계정만 이전하고 같은 가족 동시 호출은 잠금으로 하나씩 처리한다', () => {
