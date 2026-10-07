@@ -40,7 +40,7 @@ export function SyncLifecycle(): null {
       if (state === 'active') { clearTimeout(retry); void apply(); }
     });
     return () => { disposed = true; clearTimeout(retry); subscription.remove(); };
-  }, [account.kind, parentDevice]);
+  }, [account.kind, parentDevice, role, familyId]);
 
   useEffect(() => {
     if (familyId && role) void runSync({ familyId, role });

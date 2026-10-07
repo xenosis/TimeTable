@@ -53,6 +53,12 @@ const checks = [
     timeoutMs: 600_000,
     fix: 'Android Gradle 오류를 수정한 뒤 npm run build를 다시 실행하세요. APK 배포는 별도 작업입니다.',
   },
+  {
+    name: 'push-tests',
+    ...npmInvocation('run', 'test:push'),
+    timeoutMs: 30_000,
+    fix: '변경 푸시 함수의 인증·가족 분리·전송 응답 검증 실패를 수정하세요.',
+  },
 ];
 
 let failed = false;
@@ -92,4 +98,4 @@ if (failed) {
   console.error('\nQUALITY_CHECKS_FAILED: 실패 또는 미검증 항목이 남아 있습니다.');
   process.exit(1);
 }
-console.log('\nQUALITY_CHECKS_OK: agent-instructions, code-length, lint, typecheck, test, build 모두 통과했습니다.');
+console.log('\nQUALITY_CHECKS_OK: agent-instructions, code-length, lint, typecheck, test, build, push-tests 모두 통과했습니다.');

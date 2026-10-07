@@ -1,0 +1,8 @@
+project_id = "chaea-timetable"
+
+[functions.tt-notify-change]
+verify_jwt = true
+
+[functions.tt-push-worker]
+# 전용 비밀 헤더를 작업자 함수에서 검증한다. 사용자 변경 함수의 JWT 검사는 유지한다.
+verify_jwt = false

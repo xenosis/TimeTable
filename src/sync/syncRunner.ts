@@ -123,7 +123,7 @@ async function syncOnce(target: SyncTarget, options: { readonly forceServer?: bo
     if (!first && target.role === 'child') {
       const userId = await currentUserId();
       if (!sameAccount(target, generation)) return false;
-      await pushChildRecords(database, target.familyId, userId);
+      await pushChildRecords(database, target.familyId, userId, () => sameAccount(target, generation));
     }
     let snapshot = await fetchLocalSnapshot(target.familyId);
     if (!sameAccount(target, generation)) { requestSyncSoon(); return false; }

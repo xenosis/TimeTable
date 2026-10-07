@@ -118,19 +118,23 @@ function check(result: { error: { message: string } | null }): void {
 }
 
 /** 폰의 기록을 서버와 맞춘다. 같은 계획을 다시 실행해도 결과가 같다(실패하면 다음 동기화에서 다시). 올린 건수를 돌려준다. */
-export async function pushChildRecords(database: Pick<RewardDatabase, 'getAllAsync'>, familyId: string, childId: string): Promise<number> {
+export async function pushChildRecords(database: Pick<RewardDatabase, 'getAllAsync'>, familyId: string, childId: string, isCurrent: () => boolean = () => true): Promise<number> {
   const local = await readLocalChildRecords(database);
   const server = await readServerChildRecords(familyId);
+  const activeDb = () => {
+    if (!isCurrent()) throw new Error('로그인 계정이 바뀌어 이전 업로드를 취소했어요.');
+    return getSupabase();
+  };
+  activeDb();
   const plan = planChildPush(local, server, familyId, childId);
   if (wouldWipeServer(local, plan)) throw new Error('이 폰의 기록이 비어 있어 서버 기록을 지우지 않았어요. 아빠에게 알려 주세요.');
   if (isEmptyPlan(plan)) return 0;
-  const db = getSupabase();
-  if (plan.completionDeletes.length) check(await db.from('tt_task_completions').delete().in('id', plan.completionDeletes));
-  if (plan.ledgerDeletes.length) check(await db.from('tt_sticker_ledger').delete().in('id', plan.ledgerDeletes));
-  if (plan.gemDeletes.length) check(await db.from('tt_gem_rights').delete().in('id', plan.gemDeletes));
-  if (plan.completionInserts.length) check(await db.from('tt_task_completions').upsert(plan.completionInserts, { onConflict: 'task_id,completion_date', ignoreDuplicates: true }));
-  if (plan.historyInserts.length) check(await db.from('tt_task_completion_history').upsert(plan.historyInserts, { onConflict: 'task_id,completion_date', ignoreDuplicates: true }));
-  if (plan.ledgerInserts.length) check(await db.from('tt_sticker_ledger').insert(plan.ledgerInserts));
-  if (plan.gemUpserts.length) check(await db.from('tt_gem_rights').upsert(plan.gemUpserts, { onConflict: 'family_id,child_id,earned_date' }));
+  if (plan.completionDeletes.length) check(await activeDb().from('tt_task_completions').delete().in('id', plan.completionDeletes));
+  if (plan.ledgerDeletes.length) check(await activeDb().from('tt_sticker_ledger').delete().in('id', plan.ledgerDeletes));
+  if (plan.gemDeletes.length) check(await activeDb().from('tt_gem_rights').delete().in('id', plan.gemDeletes));
+  if (plan.completionInserts.length) check(await activeDb().from('tt_task_completions').upsert(plan.completionInserts, { onConflict: 'task_id,completion_date', ignoreDuplicates: true }));
+  if (plan.historyInserts.length) check(await activeDb().from('tt_task_completion_history').upsert(plan.historyInserts, { onConflict: 'task_id,completion_date', ignoreDuplicates: true }));
+  if (plan.ledgerInserts.length) check(await activeDb().from('tt_sticker_ledger').insert(plan.ledgerInserts));
+  if (plan.gemUpserts.length) check(await activeDb().from('tt_gem_rights').upsert(plan.gemUpserts, { onConflict: 'family_id,child_id,earned_date' }));
   return Object.values(plan).reduce((sum, items) => sum + items.length, 0);
 }

@@ -19,6 +19,10 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
 class AlarmPocModule(private val context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
  override fun getName() = "SecureAlarmPoc"
+ @ReactMethod fun setRemotePushFamily(familyId: String?, promise: Promise) {
+  try { com.sewoong.kidtimetable.push.FamilyPushPolicy.setFamily(context, familyId); promise.resolve(null) }
+  catch (error: Exception) { promise.reject("REMOTE_PUSH_POLICY_FAILED", "변경 알림 설정을 적용하지 못했어요.", error) }
+ }
  @ReactMethod fun setChildAlarmsSuppressed(suppressed: Boolean, promise: Promise) {
   try { RollingAlarmScheduler.setChildAlarmsSuppressed(context, suppressed); promise.resolve(null) }
   catch (error: Exception) { promise.reject("DEVICE_ALARM_POLICY_FAILED", "기기 알림 설정을 적용하지 못했어요.", error) }

@@ -19,13 +19,14 @@ const gemImport = read('_tt_gem_rights_import.sql');
 const importGuard = read('_tt_import_guard.sql');
 const familyEdit = read('_tt_apply_family_edit.sql');
 const realtime = read('_tt_realtime.sql');
+const pushInstallation = read('_tt_push_installation.sql');
 
 const createdTables = [...schema.matchAll(/create table public\.(tt_\w+)/g)].map((match) => match[1]);
 const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`).join(', ');
 
 describe('supabase 마이그레이션', () => {
   it('파일 이름이 시간순으로 스키마 → 보안 규칙 → 보석 자격·이전 함수 순서로 적용되게 정렬된다', () => {
-    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql', 'tt_realtime.sql', 'tt_mark_gems_given.sql']);
+    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql', 'tt_realtime.sql', 'tt_mark_gems_given.sql', 'tt_push_delivery_queue.sql', 'tt_push_installation.sql']);
   });
 
   it('보석 자격 테이블도 RLS·권한·anon 회수가 다른 가족 테이블과 같다(P6.5)', () => {
@@ -68,6 +69,17 @@ describe('supabase 마이그레이션', () => {
     expect(realtime).not.toMatch(/'tt_devices'|'tt_families'|'tt_family_members'/);
     expect(realtime).toContain('replica identity full');
     expect(realtime).toContain('alter publication supabase_realtime add table');
+  });
+
+  it('설치본 기기 등록은 비밀 값의 해시만 비공개 스키마에 두고, 딸 계정만 로그인 상태로 등록할 수 있다(P6.9)', () => {
+    expect(pushInstallation).toContain('create table tt_private.push_installations');
+    expect(pushInstallation).toContain('secret_hash bytea not null check (octet_length(secret_hash) = 32)');
+    expect(pushInstallation).toContain('revoke all on tt_private.push_installations from public, anon, authenticated;');
+    expect(pushInstallation).toContain("m.user_id = caller and m.role = 'child'");
+    // 공개 스키마 함수는 호출자 권한으로 감싸기만 하고, 권한이 필요한 본체는 비공개 스키마에 둔다
+    expect(pushInstallation).toMatch(/create function public\.tt_register_push_installation\([^)]*\) returns uuid language sql security invoker/);
+    expect(pushInstallation).not.toMatch(/create function public\.[^(]*\([^)]*\)[^;]*security definer/);
+    expect(pushInstallation).toMatch(/from public, anon;\s*grant execute on function tt_private\.register_push_installation/);
   });
 
   it('이전 함수 보완: 호출한 딸 계정만 이전하고 같은 가족 동시 호출은 잠금으로 하나씩 처리한다', () => {

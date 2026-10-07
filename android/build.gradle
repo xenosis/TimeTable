@@ -6,6 +6,10 @@ buildscript {
     mavenCentral()
   }
   dependencies {
+    // Firebase 등록 파일이 준비된 빌드에서만 Google 설정 리소스를 생성한다.
+    if (file('app/google-services.json').exists()) {
+      classpath('com.google.gms:google-services:4.5.0')
+    }
     classpath('com.android.tools.build:gradle')
     classpath('com.facebook.react:react-native-gradle-plugin')
     classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')

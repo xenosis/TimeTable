@@ -41,6 +41,19 @@ beforeEach(() => {
   failNextInsert = false;
 });
 
+test('조회 후 계정이 바뀌면 서버 기록을 수정하지 않는다', async () => {
+  await expect(pushChildRecords(database, 'fam-1', 'child-uid', () => false)).rejects.toThrow('이전 업로드');
+  expect(tables.tt_task_completions).toHaveLength(2);
+  expect(tables.tt_sticker_ledger ?? []).toHaveLength(0);
+});
+
+test('첫 요청 후 계정이 바뀌면 뒤따르는 서버 쓰기를 중단한다', async () => {
+  await expect(pushChildRecords(database, 'fam-1', 'child-uid', () => tables.tt_task_completions.some((row) => row.id === 1))).rejects.toThrow('이전 업로드');
+  expect(tables.tt_task_completions).toEqual([expect.objectContaining({ id: 2, done_by: 'parent' })]);
+  expect(tables.tt_task_completion_history).toHaveLength(0);
+  expect(tables.tt_sticker_ledger).toHaveLength(0);
+});
+
 test('중간에 실패해도 다시 실행하면 같은 결과로 맞춰지고(중복 없음), 아빠가 남긴 체크는 지우지 않는다', async () => {
   failNextInsert = true; // 장부 넣기에서 실패
   await expect(pushChildRecords(database, 'fam-1', 'child-uid')).rejects.toThrow('Network request failed');

@@ -10,6 +10,7 @@ import { syncTarget } from './syncRunner';
 import { requestSyncSoon } from './syncSoon';
 import { withSyncLock } from './syncLock';
 import { toIso } from './pushChildRecords';
+import { notifyParentEditSaved } from '../push/familyPush';
 
 /**
  * 로그인한 폰의 관리자 편집을 서버에 먼저 저장한다(P6.15). 편집 함수(검증 규칙 포함)는 지금처럼 로컬에서 실행하고,
@@ -115,6 +116,7 @@ export async function runAdminEdit<T>(action: () => Promise<T>): Promise<T> {
   if (!target) return action(); // 로컬 모드: 지금과 같다
   if (!hasSyncedFamily(target.familyId)) throw new Error(NOT_SYNCED_MESSAGE);
   // 동기화와 겹치지 않게 같은 줄에서 편집 → 비교 → 서버 저장을 끝낸다
+  let saved = false;
   const result = await withSyncLock(async () => {
     const database = await getDatabase();
     const before = await readParentRows(database);
@@ -133,8 +135,10 @@ export async function runAdminEdit<T>(action: () => Promise<T>): Promise<T> {
       throw new Error(editErrorMessage(failure));
     }
     markAdminEdit(target.familyId, new Date().toISOString());
+    saved = true;
     return value;
   });
   requestSyncSoon(); // 서버 내용으로 다시 맞추고(다른 기기 변경 포함) 알림·위젯을 갱신한다
+  if (saved) void notifyParentEditSaved(target.familyId).catch(() => console.warn('TimeTable: 내용은 저장됐지만 변경 알림을 보내지 못했어요.'));
   return result;
 }

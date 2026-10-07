@@ -32,7 +32,7 @@ export async function loadParentGemRecovery(): Promise<ParentGemRecovery> {
     const paid = rows.filter((row) => row.state === 'given');
     return {
       familyId, pendingRaw, fingerprint: JSON.stringify(rows), requested: rows.length - paid.length, given: paid.length,
-      latestGiven: paid.map((row) => row.given_at).sort((a, b) => (b ?? '').localeCompare(a ?? '')).slice(0, 5),
+      latestGiven: paid.map((row) => row.given_at && !row.given_at.includes('T') ? `${row.given_at.replace(' ', 'T')}Z` : row.given_at).sort((a, b) => (b ?? '').localeCompare(a ?? '')).slice(0, 5),
     };
   });
 }

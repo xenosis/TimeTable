@@ -26,3 +26,4 @@
 - 1.54.4/143 딸 폰 설치 성공. 1.54.5/144 전체 check 정상 종료: 74 suites/448 tests, 지침·길이·lint·typecheck·Android build 모두 PASS (.tmp/codex-p68-quality-1545.log). 지정 스크립트 ARM64 릴리즈 생성 성공 (.tmp/codex-p68-device-1545-build.log).
 - 1.54.6/145 전체 check 정상 종료: 74 suites/451 tests 및 Android build PASS (.tmp/codex-p68-quality-1546.log). 별도 가족별 관리자 시각 테스트 1건과 lint·길이 검사 통과. 같은 가족 역할 전환·재로그인 중 이전 동기화 폐기, 역할 조회 실패 시 기존 예약 유지. 지정 ARM64 릴리즈 버전145·기존 SHA-256 서명 일치 확인 (.tmp/codex-p68-device-1546-build.log). 추가 알람 발생 테스트는 수행하지 않았다.
 - 1.54.6/145 딸 폰 설치 Success 및 dumpsys package 버전145 확인. 앱 실행 후 관찰한 AndroidRuntime 오류 없음. critical-reviewer 제한 시간 종료로 이번 리뷰를 통과로 주장하지 않는다.
+- 1.55.0/146 최종 단독 전체 검사 정상 종료: 78 suites/462 tests, 서버 푸시 함수5건·Kotlin 가족 필터2건·Android build PASS (.tmp/codex-p69-quality-1550-single.log). 지정 ARM64 릴리즈 버전146·기존 서명 일치 확인 및 딸 폰 install Success·dumpsys 버전146 확인. Firebase 설정·함수 배포·실제 푸시 수신은 미검증이다.

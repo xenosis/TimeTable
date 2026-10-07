@@ -3,7 +3,7 @@ const path = require('path');
 
 const projectRoot = path.resolve(__dirname, '..');
 const maxLines = Number.parseInt(process.env.MAX_SOURCE_LINES || '300', 10);
-const sourceRoots = ['app', 'src', '__tests__', 'test-utils', 'scripts', 'dashboard', '.claude/hooks', '.codex/hooks', 'android/app/src'];
+const sourceRoots = ['app', 'src', '__tests__', 'test-utils', 'scripts', 'dashboard', '.claude/hooks', '.codex/hooks', 'android/app/src', 'supabase/functions'];
 const normalizedSourceRoots = sourceRoots.map((root) => path.normalize(root));
 const sourceExtensions = new Set(['.cjs', '.css', '.html', '.js', '.jsx', '.mjs', '.ts', '.tsx', '.java', '.kt']);
 const excludedSegments = new Set(['.expo', '.gradle', '.tmp', 'build', 'coverage', 'dist', 'node_modules']);

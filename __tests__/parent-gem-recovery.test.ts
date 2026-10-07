@@ -22,6 +22,11 @@ beforeEach(() => {
 });
 afterEach(() => setAccount({ kind: 'local' }));
 
+test('SQLite UTC 지급 시각에 시간대를 붙여 현지 시각으로 표시할 수 있게 한다', async () => {
+  mockRows.mockResolvedValue([{ id: 7, state: 'given', given_at: '2026-10-08 01:00:00' }]);
+  expect((await loadParentGemRecovery()).latestGiven).toEqual(['2026-10-08T01:00:00Z']);
+});
+
 test('서버 내역 조회만으로는 손상된 대기를 지우지 않고 확인 후에만 복구한다', async () => {
   const reviewed = await loadParentGemRecovery();
   expect(reviewed).toMatchObject({ requested: 1, given: 1, latestGiven: ['2026-10-08T01:00:00Z'] });

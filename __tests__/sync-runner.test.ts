@@ -91,7 +91,7 @@ test('첫 동기화는 올리지 않고 서버 기준으로 바꾸고, 그 뒤�
   calls.length = 0;
   await runSync(target);
   expect(calls).toEqual(['pending', 'push', 'fetch', 'replace:false', 'notify', 'alarms', 'widget']);
-  expect(mockPush).toHaveBeenCalledWith({}, 'fam-1', 'child-uid');
+  expect(mockPush).toHaveBeenCalledWith({}, 'fam-1', 'child-uid', expect.any(Function));
 });
 
 test('올리는 사이 폰에서 새 체크가 생기면 폰 기록을 지키고(다음에 올림), 아빠 계정은 올리지 않는다', async () => {

@@ -5,10 +5,11 @@ import { StatusBar } from 'expo-status-bar';
 import { RollingRefreshLifecycle } from '../src/notifications/RollingRefreshLifecycle';
 import { AccountLifecycle } from '../src/server/AccountLifecycle';
 import { SyncLifecycle } from '../src/sync/SyncLifecycle';
+import { PushLifecycle } from '../src/push/PushLifecycle';
 import { ThemeProvider, useActiveTheme } from '../src/theme/provider';
 
 export default function RootLayout() {
-  return <ThemeProvider><RollingRefreshLifecycle /><AccountLifecycle /><SyncLifecycle /><ThemedRootLayout /></ThemeProvider>;
+  return <ThemeProvider><RollingRefreshLifecycle /><AccountLifecycle /><SyncLifecycle /><PushLifecycle /><ThemedRootLayout /></ThemeProvider>;
 }
 
 function ThemedRootLayout() {
@@ -25,6 +26,7 @@ function ThemedRootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="manage" options={{ title: '관리자 설정' }} />
+        <Stack.Screen name="push-change" options={{ headerShown: false }} />
       </Stack>
     </SafeAreaProvider>
   );
