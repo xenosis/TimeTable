@@ -40,17 +40,38 @@ test('연달아 온 변경은 2초 모아 한 번만 동기화한다', () => {
   expect(onChange).toHaveBeenCalledTimes(1);
 });
 
-test('처음 연결에는 동기화하지 않고, 채널이 오류로 끝나면 5초 뒤 새 채널로 다시 구독해 이어지면 한 번 맞춘다', () => {
+test('처음 연결에는 동기화하지 않고, 오류 뒤 라이브러리가 같은 채널로 다시 이으면 놓친 변경을 받으려고 한 번 맞춘다', () => {
   const onChange = jest.fn();
   subscribeFamilyChanges('fam-1', onChange);
   mockStatusCallback('SUBSCRIBED');
   jest.advanceTimersByTime(3000);
   expect(onChange).not.toHaveBeenCalled();
-  mockStatusCallback('CHANNEL_ERROR');
-  expect(mockRemove).toHaveBeenCalledTimes(1); // 고장 난 채널을 정리한다
   const before = mockOn.mock.calls.length;
+  mockStatusCallback('CHANNEL_ERROR');
+  mockStatusCallback('TIMED_OUT');
+  jest.advanceTimersByTime(30000);
+  // 채널을 지우거나 새로 만들지 않는다(남은 채널이 없으면 라이브러리가 소켓을 끊어 다시 이어지지 않음)
+  expect(mockRemove).not.toHaveBeenCalled();
+  expect(mockOn.mock.calls.length).toBe(before);
+  mockStatusCallback('SUBSCRIBED');
+  jest.advanceTimersByTime(2000);
+  expect(onChange).toHaveBeenCalledTimes(1);
+  // 끊김 없이 다시 SUBSCRIBED가 와도 더 맞추지 않는다
+  mockStatusCallback('SUBSCRIBED');
   jest.advanceTimersByTime(5000);
-  expect(mockOn.mock.calls.length).toBe(before + realtimeTables.length); // 새 채널로 다시 구독
+  expect(onChange).toHaveBeenCalledTimes(1);
+});
+
+test('채널이 완전히 닫히면 5초 뒤 새 채널로 다시 구독하고, 이어지면 한 번 맞춘다', () => {
+  const onChange = jest.fn();
+  subscribeFamilyChanges('fam-1', onChange);
+  mockStatusCallback('SUBSCRIBED');
+  mockStatusCallback('CLOSED');
+  const before = mockOn.mock.calls.length;
+  jest.advanceTimersByTime(4999);
+  expect(mockOn.mock.calls.length).toBe(before);
+  jest.advanceTimersByTime(1);
+  expect(mockOn.mock.calls.length).toBe(before + realtimeTables.length);
   mockStatusCallback('SUBSCRIBED');
   jest.advanceTimersByTime(2000);
   expect(onChange).toHaveBeenCalledTimes(1);

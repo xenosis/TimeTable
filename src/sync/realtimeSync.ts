@@ -8,7 +8,9 @@ import { getSupabase } from '../server/supabaseClient';
  * 받아오기·올리기 규칙은 동기화(P6.13~P6.15)가 맡는다.
  * 넣기·고치기 이벤트는 보안 규칙(RLS)과 family_id 필터로 이 가족 것만 온다. 삭제 이벤트에는 RLS가 적용되지 않지만,
  * 서버 테이블의 replica identity를 full로 두어(20261007000100) family_id 필터로 이 가족 것만 받는다(Supabase 문서).
- * 채널이 오류·시간 초과·닫힘으로 끝나면 몇 초 뒤 새 채널로 다시 구독하고, 다시 이어지면 놓친 변경을 받으려고 한 번 맞춘다.
+ * 오류·시간 초과(인터넷 끊김 등)는 라이브러리가 소켓을 다시 잇고 같은 채널에 자동으로 다시 참여하므로 그대로 두고,
+ * 다시 이어지면(SUBSCRIBED) 놓친 변경을 받으려고 한 번 맞춘다. 채널을 지우고 새로 만들면 남은 채널이 없어진 순간
+ * 라이브러리가 소켓 끊기를 예약해 새 채널이 영영 이어지지 않았다(1.53.1 딸 폰 확인). 채널이 완전히 닫힌 경우(CLOSED)만 새로 만든다.
  * 앱이 백그라운드여도 채널을 유지한다(그동안 서버가 바뀌면 알림을 다시 예약할 수 있게, P6.7 리뷰 결정).
  */
 export const realtimeTables = [
@@ -26,6 +28,7 @@ export function subscribeFamilyChanges(familyId: string, onChange: () => void, d
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectAttempt = 0;
   let subscribedOnce = false;
+  let missedSignals = false;
   let stopped = false;
   let channel: RealtimeChannel | null = null;
 
@@ -56,18 +59,21 @@ export function subscribeFamilyChanges(familyId: string, onChange: () => void, d
       if (stopped || channel !== next) return;
       if (status === 'SUBSCRIBED') {
         reconnectAttempt = 0;
-        // 처음 연결은 앱 시작·로그인 동기화가 이미 돈다. 다시 이어진 연결이면 놓친 변경을 받으려고 한 번 더 맞춘다
-        if (subscribedOnce) schedule();
+        // 처음 연결은 앱 시작·로그인 동기화가 이미 돈다. 끊겼다 다시 이어진 연결이면 놓친 변경을 받으려고 한 번 더 맞춘다
+        if (subscribedOnce && missedSignals) schedule();
         subscribedOnce = true;
+        missedSignals = false;
         return;
       }
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') reconnectLater(next);
+      // 오류·시간 초과는 라이브러리가 다시 참여한다. 그 사이 신호를 놓쳤을 수 있다고만 표시한다
+      missedSignals = true;
+      if (status === 'CLOSED') reconnectLater();
     });
   };
 
-  const reconnectLater = (broken: RealtimeChannel) => {
+  // 닫힌 채널은 라이브러리가 이미 목록에서 뺐으므로 지우지 않고 새 채널만 만든다
+  const reconnectLater = () => {
     if (reconnectTimer || stopped) return;
-    void supabase.removeChannel(broken);
     const delay = RECONNECT_DELAYS_MS[Math.min(reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)];
     reconnectAttempt += 1;
     reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(); }, delay);
