@@ -6,6 +6,7 @@ import { getPeriods, savePeriods, type Period } from '../db/periodRepository';
 import { borderRadius } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { formatTimeInput } from '../utils/timeInput';
+import { runAdminEdit } from '../sync/adminEditGate';
 
 const initialPeriods: readonly Period[] = [];
 
@@ -38,7 +39,7 @@ export function PeriodSettings({ onSaved }: { readonly onSaved?: () => Promise<v
     setSaving(true);
     setMessage('저장하는 중이에요.');
     try {
-      await savePeriods(await getDatabase(), periods);
+      await runAdminEdit(async () => savePeriods(await getDatabase(), periods));
       setSavedPeriodCount(periods.length);
       try {
         await onSaved?.();

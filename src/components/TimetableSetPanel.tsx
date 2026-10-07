@@ -14,6 +14,7 @@ import { refreshWidgetQuietly } from '../widgets/widgetRefresh';
 import { AdminCollapsible } from './AdminCollapsible';
 import { TimetableSetCreate } from './TimetableSetCreate';
 import { TimetableSetRow } from './TimetableSetRow';
+import { runAdminEdit } from '../sync/adminEditGate';
 
 /** 저장소가 한글로 알려 주는 오류(이름 중복 등)는 그대로, 그 밖의 오류는 일반 문구로 보여준다 */
 function reportFailure(report: (message: string) => void, error: unknown, fallback: string): void {
@@ -72,7 +73,7 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
     if (confirmDiscard && !(await confirmDiscard())) return;
     setWorking(true);
     try {
-      await setActiveTimetableSet(await getDatabase(), set.id);
+      await runAdminEdit(async () => setActiveTimetableSet(await getDatabase(), set.id));
     } catch {
       setMessage('시간표를 바꾸지 못했어요.');
       setWorking(false);
@@ -91,12 +92,12 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   };
 
   const create = (name: string, copyFromActive: boolean) => run(async (database) => {
-    await createTimetableSet(database, name, copyFromActive ? { copyFromSetId: activeSet.id } : {});
+    await runAdminEdit(() => createTimetableSet(database, name, copyFromActive ? { copyFromSetId: activeSet.id } : {}));
     return `'${name.trim()}' 시간표를 만들었어요. 목록에서 눌러 적용해요.`;
   }, '시간표를 만들지 못했어요.');
 
   const rename = (set: TimetableSetSummary, name: string) => run(async (database) => {
-    await renameTimetableSet(database, set.id, name);
+    await runAdminEdit(() => renameTimetableSet(database, set.id, name));
     if (set.id === activeSet.id) {
       onRenamed({ id: set.id, name: name.trim() });
       await refreshWidgetQuietly(); // 위젯 데이터에 들어 있는 시간표 이름도 바꾼다(알림 재예약은 필요 없다)
@@ -105,7 +106,7 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
   }, '이름을 바꾸지 못했어요.');
 
   const remove = (set: TimetableSetSummary) => run(async (database) => {
-    await deleteTimetableSet(database, set.id);
+    await runAdminEdit(() => deleteTimetableSet(database, set.id));
     return `'${set.name}' 시간표를 지웠어요.`;
   }, '시간표를 지우지 못했어요.');
 

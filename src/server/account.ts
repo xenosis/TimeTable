@@ -1,5 +1,6 @@
 import { getSupabase } from './supabaseClient';
 import { SUPABASE_URL } from './supabaseConfig';
+import { clearSyncedFamily } from '../sync/syncMarkers';
 
 export type FamilyRole = 'parent' | 'child';
 export type Membership = { readonly role: FamilyRole; readonly familyId: string };
@@ -104,5 +105,7 @@ export async function signOut(): Promise<AccountState> {
   const { error } = await getSupabase().auth.signOut({ scope: 'local' });
   if (error) globalThis.localStorage?.removeItem(AUTH_STORAGE_KEY);
   globalThis.localStorage?.removeItem(CACHE_KEY);
+  // 다음 로그인 때는 서버 기준으로 처음부터 맞춘다(다른 계정·가족으로 로그인해도 옛 기록이 섞여 올라가지 않게)
+  clearSyncedFamily();
   return { kind: 'local' };
 }

@@ -11,6 +11,7 @@ import { formatTimeInput } from '../utils/timeInput';
 import { AdminCollapsible } from './AdminCollapsible';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
 import { DatePicker } from './DatePicker';
+import { runAdminEdit } from '../sync/adminEditGate';
 
 type Draft = { readonly id?: number; readonly title: string; readonly weekdays: readonly number[]; readonly date: string; readonly effectiveFrom: string; readonly remindTime: string; readonly alertMode: 'none' | 'notify' | 'alarm' };
 const blank = (effectiveFrom: string): Draft => ({ title: '', weekdays: [], date: '', effectiveFrom, remindTime: '', alertMode: 'none' });
@@ -55,7 +56,7 @@ export function TaskEditor({ theme, onChanged, onFormState }: { readonly theme: 
     setSaving(true);
     try {
       const database = await getDatabase(); const now = new Date();
-      await editTaskWithRewards(database, today(), now.getDay(), async () => { await action(database); });
+      await runAdminEdit(() => editTaskWithRewards(database, today(), now.getDay(), async () => { await action(database); }));
       closeForm(); load();
       try { await onChanged(); setMessage(done); } catch { setMessage(partial); }
     } catch (error) { setMessage(error instanceof Error ? error.message : failure); } finally { setSaving(false); }

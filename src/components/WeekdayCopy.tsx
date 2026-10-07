@@ -9,6 +9,7 @@ import { borderRadius } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { userErrorMessage } from '../utils/userErrorMessage';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
+import { runAdminEdit } from '../sync/adminEditGate';
 
 const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -25,7 +26,7 @@ export function WeekdayCopy({ theme, onCopied, setId }: { readonly theme: ThemeD
     if (source === target) { setMessage('서로 다른 요일을 골라 주세요.'); return; }
     setSaving(true);
     try {
-      await copyTimetableWeekday(await getDatabase(), source, target, setId);
+      await runAdminEdit(async () => copyTimetableWeekday(await getDatabase(), source, target, setId));
       try { await onCopied(); setMessage(`${weekdays[source]}요일 시간표를 ${weekdays[target]}요일에 복사했고 알림 예약도 새로 만들었어요.`); }
       catch { setMessage(`${weekdays[source]}요일 시간표는 복사했지만 알림 예약을 다시 만들지 못했어요. 알림 준비 권한을 확인해 주세요.`); }
     } catch (error) { setMessage(`복사하지 못했어요: ${userErrorMessage(error, '잠시 뒤 다시 시도해 주세요.')}`); } finally { setSaving(false); }

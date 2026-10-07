@@ -5,7 +5,8 @@ import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { canImport, importAlreadyDone, importLocalData, type ImportCounts } from '../server/localImport';
 import { useAccount } from '../store/accountStore';
-import { hasSyncedFamily, runSync } from '../sync/syncRunner';
+import { runSync } from '../sync/syncRunner';
+import { hasSyncedFamily } from '../sync/syncMarkers';
 import { userErrorMessage } from '../utils/userErrorMessage';
 
 /** 관리자 '기타 → 서버 연결' 아래: 딸 폰의 로컬 데이터를 서버로 처음 한 번 올린다(P6.5). 딸 계정으로 로그인한 폰에서만 보인다. */

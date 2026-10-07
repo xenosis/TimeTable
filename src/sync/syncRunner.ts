@@ -11,9 +11,8 @@ import { fetchLocalSnapshot, NETWORK_ERROR, replaceLocalWithSnapshot, serverHasF
 import { pushChildRecords } from './pushChildRecords';
 import { requestSyncSoon } from './syncSoon';
 import { setSyncStatus } from './syncStatus';
+import { clearSyncedFamily, hasSyncedFamily, lastSyncedAt, markSynced } from './syncMarkers';
 
-const SYNCED_FAMILY_KEY = 'tt.sync.family';
-const LAST_SYNC_KEY = 'tt.sync.last';
 export const NEEDS_IMPORT_MESSAGE = "서버에 아직 데이터가 없어요. 이 폰의 데이터를 아래 '서버로 올리기'로 먼저 올려 주세요.";
 
 export type SyncTarget = { readonly familyId: string; readonly role: 'parent' | 'child' };
@@ -23,18 +22,7 @@ export function syncTarget(account: AccountState): SyncTarget | null {
   return account.kind === 'signedIn' && account.membership ? { familyId: account.membership.familyId, role: account.membership.role } : null;
 }
 
-function readStorage(key: string): string | null {
-  try { return globalThis.localStorage?.getItem(key) ?? null; } catch { return null; }
-}
-
-/** 이 폰이 이 가족으로 한 번이라도 받아왔는지. 첫 동기화는 서버 기준으로 로컬을 통째로 바꾸고(P6.5 리뷰 H2 결정), 그 뒤로는 딸 폰 기록을 지킨다. */
-export function hasSyncedFamily(familyId: string): boolean {
-  return readStorage(SYNCED_FAMILY_KEY) === familyId;
-}
-
-export function lastSyncedAt(): string | null {
-  return readStorage(LAST_SYNC_KEY);
-}
+export { hasSyncedFamily, lastSyncedAt };
 
 /**
  * 서버의 내 기기 행에 마지막 동기화 시각을 남긴다(아빠가 딸 폰 반영 여부를 볼 때 쓴다). 지금은 계정 단위 한 행이며(푸시 토큰이 없는 행),
@@ -100,8 +88,7 @@ export function runSync(target: SyncTarget): Promise<boolean> {
       // 올린 뒤에는 서버 내용이 기준이다(아빠가 '줬어요'로 바꾼 보석 등도 내려온다). 다만 그 사이 폰에서 새 체크가 생겼으면 폰 기록을 지키고 다음에 올린다
       await replaceLocalWithSnapshot(database, snapshot, () => !first && target.role === 'child' && childChangeVersion() !== versionAtPush);
       const at = new Date().toISOString();
-      globalThis.localStorage?.setItem(SYNCED_FAMILY_KEY, target.familyId);
-      globalThis.localStorage?.setItem(LAST_SYNC_KEY, at);
+      markSynced(target.familyId, at);
       notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 데이터를 다시 읽는다
       await Promise.allSettled([refreshAllRollingOwners(), requestWidgetRefresh(), recordDeviceSync(target.familyId, at)]);
       setSyncStatus({ state: 'idle', lastSyncedAt: at });
@@ -117,6 +104,15 @@ export function runSync(target: SyncTarget): Promise<boolean> {
   })();
   running = { familyId: target.familyId, promise };
   return promise;
+}
+
+/**
+ * '서버 내용으로 이 폰 다시 맞추기': 동기화 표시를 지우고 서버 기준 첫 동기화를 다시 한다.
+ * 아직 서버에 올라가지 않은 폰의 체크·보석 기록은 사라진다(화면에서 확인을 받은 뒤 부른다).
+ */
+export function resyncFromServer(target: SyncTarget): Promise<boolean> {
+  clearSyncedFamily();
+  return runSync(target);
 }
 
 export function syncErrorMessage(error: unknown): string {
