@@ -62,10 +62,11 @@ let running: { readonly familyId: string; readonly promise: Promise<boolean> } |
  * 같은 가족 동기화가 진행 중이면 그것을 같이 기다리고, 다른 가족이면 끝난 뒤 다시 한다.
  * 인터넷이 없거나 실패하면 로컬은 그대로이고 false를 돌려준다.
  */
-export function runSync(target: SyncTarget): Promise<boolean> {
+export function runSync(target: SyncTarget, options: { readonly forceServer?: boolean } = {}): Promise<boolean> {
   if (running) {
-    if (running.familyId === target.familyId) return running.promise;
-    return running.promise.then(() => runSync(target));
+    // 직접 고른 '서버 내용으로 다시 맞추기'는 진행 중인 동기화가 끝난 뒤 따로 실행한다
+    if (running.familyId === target.familyId && !options.forceServer) return running.promise;
+    return running.promise.then(() => runSync(target, options));
   }
   const promise = (async () => {
     setSyncStatus({ state: 'syncing' });
@@ -79,7 +80,8 @@ export function runSync(target: SyncTarget): Promise<boolean> {
       if (!first && target.role === 'child') await pushChildRecords(database, target.familyId, await currentUserId());
       const snapshot = await fetchLocalSnapshot(target.familyId);
       // 서버가 비어 있는데 이 폰에 데이터가 있으면 덮지 않는다. P6.5 '서버로 올리기'를 먼저 하게 안내한다
-      if (first && !serverHasFamilyData(snapshot) && hasLocalData(await readLocalPayload(database))) {
+      // 사용자가 확인하고 고른 '서버 내용으로 다시 맞추기'(forceServer)는 이 보호를 건너뛴다
+      if (first && !options.forceServer && !serverHasFamilyData(snapshot) && hasLocalData(await readLocalPayload(database))) {
         setSyncStatus({ state: 'error', lastSyncedAt: lastSyncedAt(), message: NEEDS_IMPORT_MESSAGE });
         return false;
       }
@@ -112,7 +114,7 @@ export function runSync(target: SyncTarget): Promise<boolean> {
  */
 export function resyncFromServer(target: SyncTarget): Promise<boolean> {
   clearSyncedFamily();
-  return runSync(target);
+  return runSync(target, { forceServer: true });
 }
 
 export function syncErrorMessage(error: unknown): string {

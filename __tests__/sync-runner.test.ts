@@ -1,5 +1,5 @@
 import { setAccount } from '../src/store/accountStore';
-import { hasSyncedFamily, NEEDS_IMPORT_MESSAGE, runSync } from '../src/sync/syncRunner';
+import { hasSyncedFamily, NEEDS_IMPORT_MESSAGE, resyncFromServer, runSync } from '../src/sync/syncRunner';
 import { bumpChildChangeVersion } from '../src/db/childChangeVersion';
 
 const calls: string[] = [];
@@ -100,6 +100,15 @@ test('서버가 비어 있고 폰에 데이터가 있으면 덮지 않고 올리
   expect(calls).not.toContain('replace:false');
   expect(hasSyncedFamily('fam-1')).toBe(false);
   expect(mockStatus).toHaveBeenLastCalledWith(expect.objectContaining({ state: 'error', message: NEEDS_IMPORT_MESSAGE }));
+});
+
+test('직접 고른 서버 내용으로 다시 맞추기는 서버가 비어 있어도 서버 기준으로 바꾼다(올리지 않음)', async () => {
+  await runSync(target);
+  mockServerHasData.mockReturnValue(false);
+  mockHasLocalData.mockReturnValue(true);
+  calls.length = 0;
+  await expect(resyncFromServer(target)).resolves.toBe(true);
+  expect(calls).toEqual(['pending', 'fetch', 'replace:false', 'notify', 'alarms', 'widget']);
 });
 
 test('받아오기에 실패하면 로컬·동기화 기록·알림을 건드리지 않는다', async () => {
