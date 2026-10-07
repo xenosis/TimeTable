@@ -97,8 +97,8 @@ android {
         applicationId 'com.sewoong.kidtimetable'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 131
-        versionName "1.51.2"
+        versionCode 132
+        versionName "1.51.3"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }

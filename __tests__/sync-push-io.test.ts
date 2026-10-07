@@ -52,9 +52,20 @@ test('중간에 실패해도 다시 실행하면 같은 결과로 맞춰지고(�
 });
 
 test('폰 기록이 통째로 비었는데 서버에 기록이 있으면 지우지 않고 멈춘다', async () => {
-  expect(wouldWipeServer({ completions: [], history: [], ledger: [], gems: [] }, { completions: [{}], history: [], ledger: [], gems: [] })).toBe(true);
-  expect(wouldWipeServer({ completions: [], history: [], ledger: [], gems: [] }, { completions: [], history: [], ledger: [], gems: [] })).toBe(false);
+  const emptyLocal = { completions: [], history: [], ledger: [], gems: [] };
+  expect(wouldWipeServer(emptyLocal, { completionDeletes: [1], ledgerDeletes: [] })).toBe(true);
+  expect(wouldWipeServer(emptyLocal, { completionDeletes: [], ledgerDeletes: [] })).toBe(false);
+  // 폰에 기록이 하나라도 있으면 정상 동기화(지우기 포함)
+  expect(wouldWipeServer({ ...emptyLocal, history: [{}] }, { completionDeletes: [1], ledgerDeletes: [2] })).toBe(false);
   const empty = { getAllAsync: async () => [] } as unknown as ReadDb;
   await expect(pushChildRecords(empty, 'fam-1', 'child-uid')).rejects.toThrow('이 폰의 기록이 비어 있어');
   expect(tables.tt_task_completions).toHaveLength(2);
+});
+
+test('폰이 비어 있어도 서버에 받을 수 있음 보석 자격만 있으면 멈추지 않는다(딸 폰이 계산해 지우는 기록)', async () => {
+  tables.tt_task_completions = [];
+  tables.tt_gem_rights = [{ id: 5, earned_date: '2026-10-01', state: 'available' }, { id: 6, earned_date: '2026-09-20', state: 'requested' }];
+  const empty = { getAllAsync: async () => [] } as unknown as ReadDb;
+  await pushChildRecords(empty, 'fam-1', 'child-uid');
+  expect(tables.tt_gem_rights.map((row) => row.state)).toEqual(['requested']);
 });

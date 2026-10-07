@@ -82,13 +82,13 @@ export function planChildPush(localAll: ChildRecords, server: ServerChildRecords
 }
 
 /**
- * 폰의 기록이 통째로 비었는데 서버에는 기록이 있으면(앱 데이터 초기화 등) 서버를 지우지 않고 멈춘다.
- * 정상이라면 '서버 기준 첫 동기화'를 다시 해야 하는 상황이다.
+ * 폰의 기록이 통째로 비었는데 서버의 체크·장부를 지우게 되면(앱 데이터 초기화 등) 지우지 않고 멈춘다.
+ * 정상이라면 '서버 기준 첫 동기화'를 다시 해야 하는 상황이다. '받을 수 있음' 보석 자격은 딸 폰이 연속 기록으로 계산해
+ * 만들고 지우는 것이라 이 보호에서 뺀다(서버에만 있으면 지워지는 것이 설계대로다).
  */
-export function wouldWipeServer(local: ChildRecords, server: ChildRecords): boolean {
+export function wouldWipeServer(local: ChildRecords, plan: Pick<ChildPushPlan, 'completionDeletes' | 'ledgerDeletes'>): boolean {
   const localEmpty = local.completions.length === 0 && local.history.length === 0 && local.ledger.length === 0 && local.gems.length === 0;
-  const serverHas = server.completions.length + server.history.length + server.ledger.length + server.gems.length > 0;
-  return localEmpty && serverHas;
+  return localEmpty && plan.completionDeletes.length + plan.ledgerDeletes.length > 0;
 }
 
 export function isEmptyPlan(plan: ChildPushPlan): boolean {
@@ -121,8 +121,8 @@ function check(result: { error: { message: string } | null }): void {
 export async function pushChildRecords(database: Pick<RewardDatabase, 'getAllAsync'>, familyId: string, childId: string): Promise<number> {
   const local = await readLocalChildRecords(database);
   const server = await readServerChildRecords(familyId);
-  if (wouldWipeServer(local, server)) throw new Error('이 폰의 기록이 비어 있어 서버 기록을 지우지 않았어요. 아빠에게 알려 주세요.');
   const plan = planChildPush(local, server, familyId, childId);
+  if (wouldWipeServer(local, plan)) throw new Error('이 폰의 기록이 비어 있어 서버 기록을 지우지 않았어요. 아빠에게 알려 주세요.');
   if (isEmptyPlan(plan)) return 0;
   const db = getSupabase();
   if (plan.completionDeletes.length) check(await db.from('tt_task_completions').delete().in('id', plan.completionDeletes));
