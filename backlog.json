@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.1",
   "meta": {
-    "updated": "2026-10-06",
+    "updated": "2026-10-07",
     "context_doc": "docs/tasks.md",
     "max_est_min": 45,
     "note": "TimeTable(kidtimetable) 작업 항목 SSOT. 이 프로젝트엔 전용 CLI가 없으므로 이 파일은 직접 편집한다(voice-claude-car의 pnpm backlog와 달리 수동 관리). 단계 구조·근거는 docs/tasks.md·docs/research.md 참고. 상태 갱신 시 status/log/updated_at을 함께 갱신하고, 완료 시 evidence에 확인 근거(파일 경로·명령 결과 등)를 남긴다. needs_info/blocked는 log에 사유를 남길 것."
@@ -5108,7 +5108,7 @@
     },
     {
       "id": "P6.14",
-      "status": "in_progress",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "동기화 2: 완료 체크와 보석 기록 올리기",
@@ -5124,19 +5124,33 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-06T15:17:24.791Z",
-      "updated_at": "2026-10-06T15:17:24.791Z",
+      "updated_at": "2026-10-07T11:30:42.117Z",
       "log": [
         {
           "at": "2026-10-06T15:17:24.791Z",
           "owner": "claude",
           "status": "in_progress",
           "note": "착수: 딸 폰이 주인인 task_completions·task_completion_history·sticker_ledger·gem_rights를 자연 키로 서버와 맞춤(올리기 후 받아오기). 서버 시험 할 일 'SY 체크 시험'(매일, 알림 없음)을 시험용으로 넣어 둠."
+        },
+        {
+          "at": "2026-10-06T15:46:39.009Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현 커밋 43ba18d(v1.51.0)·a5e36fd(v1.51.1): src/sync/pushChildRecords(자연 키 비교, 서버에 있는 할 일만), syncRunner(첫 동기화 뒤 딸 계정만 올리기→받아오기, 올리는 사이 새 체크면 폰 기록 보존), childChangeVersion, syncSoon(앱 안 변경 3초 뒤). Jest(sync-push 6, sync-runner 7), npm run check 통과(393). 딸 폰: 체크·재동기화 유지·취소·오프라인 체크·위젯 체크·서버 삭제 반영(1.51.1에서 외래키 멈춤 수정) 확인, 시험 데이터 정리. 리뷰 예정."
+        },
+        {
+          "at": "2026-10-07T11:30:42.117Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA 31b19ecc) 반영(커밋 46ee548·8c27bdb, v1.51.3): H1 실기기 추가 확인(오프라인 위젯 체크·보석 자격 요청함/줬어요·보석 개수 장부)과 I/O 재시도 테스트, H2 아빠 폰 보석 지급 막기, H3 결정 '딸 폰이 체크·장부의 주인, 아빠가 남긴 체크(done_by=parent)는 지우지 않음'(P6.8·P6.15에서 합칠 규칙 유지), M1 동기화 중 변경 곧 재올리기, M3 보석 요청·지급 트랜잭션 줄, M4 빈 폰 보호(체크·장부 삭제 시에만, 실기기 오탐 수정). M2 '연결하면'=다음 앱 복귀로 해석, 앱 미실행 위젯 체크 올리기는 P6.7. M5 로그인 상태 편집은 P6.15. 시험 데이터는 P6.15 '서버 내용으로 다시 맞추기'로 정리 예정."
         }
-      ]
+      ],
+      "done_at": "2026-10-07",
+      "evidence": "src/sync/pushChildRecords.ts·syncRunner.ts·syncSoon.ts, src/db/rewardQueue.ts·childChangeVersion.ts, 커밋 43ba18d·a5e36fd·46ee548·8c27bdb, docs/device-verification-2026-10-05.md(체크·보석 기록 올리기 두 절) · 검증: npm run check 통과(1.51.3, Jest 396: sync-push 6·sync-push-io 3·sync-runner 7), 딸 폰: 앱 체크·재동기화 유지·취소·오프라인 앱 체크·위젯 체크·오프라인 위젯 체크·서버 삭제 반영·보석 요청함/줬어요·보석 개수 장부, critical-reviewer·backlog-explainer 병렬 리뷰(SHA 31b19ecc)"
     },
     {
       "id": "P6.15",
-      "status": "todo",
+      "status": "in_progress",
       "priority": null,
       "category": "feature",
       "title": "동기화 3: 로그인 상태 편집은 서버에 먼저 저장",
@@ -5150,10 +5164,17 @@
       "done_when": "로그인 상태 관리자 편집이 서버에 저장되고 동기화 뒤에도 유지되며 오프라인 편집은 안내 후 막힘. 로그인하지 않은 로컬 모드는 지금과 같음. Jest, npm run check, 실기기 확인",
       "est_min": null,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-10-06T14:16:33.247Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-07T11:30:44.211Z",
+      "updated_at": "2026-10-07T11:30:44.211Z",
+      "log": [
+        {
+          "at": "2026-10-07T11:30:44.211Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "착수: 로그인 상태 관리자 편집을 서버에 먼저 저장 후 받아오기, 오프라인이면 안내. 함께: '서버 내용으로 이 폰 다시 맞추기'(확인 후 동기화 표시 초기화·서버 기준 교체), 로그아웃 시 동기화 표시 초기화. 끝나면 P6.14 시험 데이터 정리."
+        }
+      ]
     },
     {
       "id": "P6.7",
