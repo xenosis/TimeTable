@@ -13,6 +13,8 @@ import { userErrorMessage } from '../utils/userErrorMessage';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
 import { emptyTimetableDraft, TimetableItemForm, type TimetableDraft } from './TimetableItemForm';
 import { runAdminEdit } from '../sync/adminEditGate';
+import { useKeyboardInset } from '../hooks/useKeyboardInset';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const toDraft = (item: EditableTimetableItem): TimetableDraft => ({
   id: item.id, weekdays: [item.weekday], title: item.title, periodNo: item.periodNo ?? null, startTime: item.startTime ?? '', endTime: item.endTime ?? '', category: item.category,
@@ -20,6 +22,8 @@ const toDraft = (item: EditableTimetableItem): TimetableDraft => ({
 });
 
 export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormState }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly onChanged: () => Promise<void>; readonly setId: TimetableSetId; readonly onFormState?: (state: AdminFormState) => void }) {
+  const keyboardInset = useKeyboardInset();
+  const insets = useSafeAreaInsets();
   const [periods, setPeriods] = useState<readonly Period[]>([]);
   const [items, setItems] = useState<readonly EditableTimetableItem[]>([]);
   // 목록 필터(보는 요일)와 폼의 반복 요일은 서로 다른 상태다. 필터를 바꿔도 폼 값은 변하지 않는다.
@@ -95,10 +99,10 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
     })}
     <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.textMuted }]}>{message}</Text>
     <Modal visible={formOpen} animationType="slide" onRequestClose={requestClose}>
-      <View style={[styles.modal, { backgroundColor: colors.background }]}>
+      <View style={[styles.modal, { backgroundColor: colors.background, paddingLeft: adminSpacing.md + insets.left, paddingRight: adminSpacing.md + insets.right }]}>
         <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{draft.id ? '항목 수정' : '항목 추가'}</Text>
         {message !== '' && <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.text, fontWeight: '700' }]}>{message}</Text>}
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.modalBody, { paddingBottom: styles.modalBody.paddingBottom + Math.max(keyboardInset, insets.bottom) }]}>
           <TimetableItemForm draft={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} periods={periods} theme={theme} saving={saving} onSave={() => void save()} onCancel={requestClose} onRemove={() => void remove()} />
         </ScrollView>
       </View>

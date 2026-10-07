@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useHeaderHeight } from 'expo-router/react-navigation';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { adminFontSize, adminSpacing } from '../src/theme/admin';
 import { borderRadius, touchTarget } from '../src/theme';
@@ -30,6 +31,8 @@ import { CLEAN_FORM_STATE, DEFAULT_ADMIN_SECTION, decideSectionSwitch, type Admi
 
 export default function ManageScreen() {
   const headerHeight = useHeaderHeight();
+  // 화면이 시스템 탐색 막대 아래까지 그려지므로(edge-to-edge) 마지막 영역과 가로 화면 오른쪽 끝이 가려지지 않게 여백을 더한다(P9.7)
+  const insets = useSafeAreaInsets();
   const { theme } = useActiveTheme();
   const { colors, categories: categoryPalette } = theme;
   const [section, setSection] = useState<AdminSectionKey>(DEFAULT_ADMIN_SECTION);
@@ -84,7 +87,7 @@ export default function ManageScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={headerHeight} style={styles.keyboardContainer}>
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background, paddingBottom: adminSpacing.md + insets.bottom, paddingLeft: adminSpacing.md + insets.left, paddingRight: adminSpacing.md + insets.right }]}>
       <PermissionGuide theme={theme} collapseWhenReady />
       <PinGate theme={theme}>
         <AdminSectionMenu selected={section} onSelect={selectSection} theme={theme} />
@@ -92,7 +95,7 @@ export default function ManageScreen() {
         {section === 'timetable' && <>
           {timetableSet && <TimetableSetPanel theme={theme} activeSet={timetableSet} refreshKey={scheduleRefresh} onApplied={applyTimetableSet} onRenamed={setTimetableSet} confirmDiscard={confirmDiscard} onBusyChange={reportSetBusy} />}
           {timetableSet && <TimetableEditor key={timetableSet.id} refreshKey={scheduleRefresh} theme={theme} setId={timetableSet.id} onChanged={refreshAfterScheduleChange} onFormState={reportFormState} />}
-          <AdminCollapsible title="교시 시간" theme={theme}><PeriodSettings onSaved={refreshAfterScheduleChange} /></AdminCollapsible>
+          <AdminCollapsible title="교시 시간" theme={theme}><PeriodSettings theme={theme} onSaved={refreshAfterScheduleChange} /></AdminCollapsible>
           {timetableSet && <AdminCollapsible title="요일 시간표 복사" theme={theme}><WeekdayCopy theme={theme} setId={timetableSet.id} onCopied={refreshAfterScheduleChange} /></AdminCollapsible>}
         </>}
         {section === 'tasks' && <TaskEditor theme={theme} onChanged={refreshAfterTaskChange} onFormState={reportFormState} />}

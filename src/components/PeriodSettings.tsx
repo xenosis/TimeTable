@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getPeriods, savePeriods, type Period } from '../db/periodRepository';
-import { borderRadius } from '../theme';
+import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { formatTimeInput } from '../utils/timeInput';
 import { runAdminEdit } from '../sync/adminEditGate';
@@ -11,7 +11,8 @@ import { userErrorMessage } from '../utils/userErrorMessage';
 
 const initialPeriods: readonly Period[] = [];
 
-export function PeriodSettings({ onSaved }: { readonly onSaved?: () => Promise<void> }) {
+export function PeriodSettings({ onSaved, theme }: { readonly onSaved?: () => Promise<void>; readonly theme: ThemeDefinition }) {
+  const { colors } = theme;
   const [periods, setPeriods] = useState<readonly Period[]>(initialPeriods);
   const [savedPeriodCount, setSavedPeriodCount] = useState(0);
   const [message, setMessage] = useState('교시 시간을 불러오는 중이에요.');
@@ -60,26 +61,26 @@ export function PeriodSettings({ onSaved }: { readonly onSaved?: () => Promise<v
   };
 
   return <View style={styles.container}>
-    <Text accessibilityRole="header" style={styles.heading}>교시 시간</Text>
-    <Text style={styles.description}>숫자 네 자리만 입력해요. 0900 → 09:00</Text>
+    {/* 제목은 감싸는 접기 영역(교시 시간)이 보여 준다(P9.7: 같은 제목 두 번 표시 제거) */}
+    <Text style={[styles.description, { color: colors.textMuted }]}>숫자 네 자리만 입력해요. 0900 → 09:00</Text>
     {periods.map((period, index) => <View key={period.periodNo} style={styles.row}>
       <Text style={styles.label}>{period.periodNo}교시</Text>
       <TextInput accessibilityLabel={`${period.periodNo}교시 시작 시간`} editable={!saving} value={period.startTime} onChangeText={(value) => update(index, 'startTime', formatTimeInput(value))} placeholder="0900" keyboardType="number-pad" maxLength={5} style={styles.input} />
       <Text style={styles.wave}>~</Text>
       <TextInput accessibilityLabel={`${period.periodNo}교시 종료 시간`} editable={!saving} value={period.endTime} onChangeText={(value) => update(index, 'endTime', formatTimeInput(value))} placeholder="0940" keyboardType="number-pad" maxLength={5} style={styles.input} />
     </View>)}
-    <Pressable accessibilityRole="button" disabled={loading || saving || loadFailed} onPress={add} style={[styles.secondary, (loading || saving || loadFailed) && styles.disabled]}><Text style={styles.secondaryText}>교시 추가</Text></Pressable>
-    {periods.length > savedPeriodCount && <Pressable accessibilityRole="button" disabled={saving} onPress={removeLast} style={[styles.secondary, saving && styles.disabled]}><Text style={styles.secondaryText}>마지막 추가 교시 지우기</Text></Pressable>}
-    {loadFailed && <Pressable accessibilityRole="button" onPress={retryLoad} style={styles.secondary}><Text style={styles.secondaryText}>교시 시간 다시 불러오기</Text></Pressable>}
-    <Pressable accessibilityRole="button" disabled={saving || loading || loadFailed} onPress={() => void save()} style={[styles.save, (saving || loading || loadFailed) && styles.disabled]}><Text style={styles.saveText}>{saving ? '저장 중...' : '교시 시간 저장'}</Text></Pressable>
-    <Text accessibilityLiveRegion="polite" style={styles.message}>{message}</Text>
+    <Pressable accessibilityRole="button" disabled={loading || saving || loadFailed} onPress={add} style={[styles.secondary, { borderColor: colors.primary }, (loading || saving || loadFailed) && styles.disabled]}><Text style={[styles.secondaryText, { color: colors.primary }]}>교시 추가</Text></Pressable>
+    {periods.length > savedPeriodCount && <Pressable accessibilityRole="button" disabled={saving} onPress={removeLast} style={[styles.secondary, { borderColor: colors.primary }, saving && styles.disabled]}><Text style={[styles.secondaryText, { color: colors.primary }]}>마지막 추가 교시 지우기</Text></Pressable>}
+    {loadFailed && <Pressable accessibilityRole="button" onPress={retryLoad} style={[styles.secondary, { borderColor: colors.primary }]}><Text style={[styles.secondaryText, { color: colors.primary }]}>교시 시간 다시 불러오기</Text></Pressable>}
+    <Pressable accessibilityRole="button" disabled={saving || loading || loadFailed} onPress={() => void save()} style={[styles.save, { backgroundColor: colors.primary }, (saving || loading || loadFailed) && styles.disabled]}><Text style={[styles.saveText, { color: colors.onPrimary }]}>{saving ? '저장 중...' : '교시 시간 저장'}</Text></Pressable>
+    <Text accessibilityLiveRegion="polite" style={[styles.message, { color: colors.text }]}>{message}</Text>
   </View>;
 }
 
 const styles = StyleSheet.create({
-  container: { gap: adminSpacing.xs, width: '100%' }, heading: { fontSize: adminFontSize.title, fontWeight: '700' }, description: { fontSize: adminFontSize.label, color: '#475569' },
+  container: { gap: adminSpacing.xs, width: '100%' }, description: { fontSize: adminFontSize.label },
   row: { alignItems: 'center', flexDirection: 'row', gap: adminSpacing.xs }, label: { fontSize: adminFontSize.label, fontWeight: '700', minWidth: 52 },
   input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.label, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.xs, flex: 1 }, wave: { fontSize: adminFontSize.body },
-  secondary: { alignItems: 'center', borderColor: '#4F46E5', borderRadius: borderRadius.md, borderWidth: 2, justifyContent: 'center', minHeight: adminTouchTarget }, secondaryText: { color: '#4F46E5', fontSize: adminFontSize.label, fontWeight: '700' },
-  save: { alignItems: 'center', backgroundColor: '#4F46E5', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: adminTouchTarget }, disabled: { opacity: 0.6 }, saveText: { color: '#FFFFFF', fontSize: adminFontSize.body, fontWeight: '700' }, message: { fontSize: adminFontSize.label, textAlign: 'center' },
+  secondary: { alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 2, justifyContent: 'center', minHeight: adminTouchTarget }, secondaryText: { fontSize: adminFontSize.label, fontWeight: '700' },
+  save: { alignItems: 'center', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: adminTouchTarget }, disabled: { opacity: 0.6 }, saveText: { fontSize: adminFontSize.body, fontWeight: '700' }, message: { fontSize: adminFontSize.label, textAlign: 'center' },
 });
