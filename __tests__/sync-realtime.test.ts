@@ -40,15 +40,26 @@ test('연달아 온 변경은 2초 모아 한 번만 동기화한다', () => {
   expect(onChange).toHaveBeenCalledTimes(1);
 });
 
-test('처음 연결에는 동기화하지 않고(시작 동기화가 이미 돔), 다시 이어지면 놓친 변경을 받으려고 한 번 맞춘다', () => {
+test('처음 연결에는 동기화하지 않고, 채널이 오류로 끝나면 5초 뒤 새 채널로 다시 구독해 이어지면 한 번 맞춘다', () => {
   const onChange = jest.fn();
   subscribeFamilyChanges('fam-1', onChange);
   mockStatusCallback('SUBSCRIBED');
   jest.advanceTimersByTime(3000);
   expect(onChange).not.toHaveBeenCalled();
   mockStatusCallback('CHANNEL_ERROR');
+  expect(mockRemove).toHaveBeenCalledTimes(1); // 고장 난 채널을 정리한다
+  const before = mockOn.mock.calls.length;
+  jest.advanceTimersByTime(5000);
+  expect(mockOn.mock.calls.length).toBe(before + realtimeTables.length); // 새 채널로 다시 구독
   mockStatusCallback('SUBSCRIBED');
   jest.advanceTimersByTime(2000);
+  expect(onChange).toHaveBeenCalledTimes(1);
+});
+
+test('신호가 2초보다 짧은 간격으로 계속 와도 첫 신호 뒤 5초 안에는 한 번 맞춘다', () => {
+  const onChange = jest.fn();
+  subscribeFamilyChanges('fam-1', onChange);
+  for (let i = 0; i < 6; i += 1) { mockHandlers[0](); jest.advanceTimersByTime(1000); }
   expect(onChange).toHaveBeenCalledTimes(1);
 });
 

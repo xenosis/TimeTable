@@ -89,10 +89,12 @@ test('올리기에 실패하면 받아오지 않고 폰 데이터를 그대로 �
   expect(calls).toEqual(['pending', 'push']);
 });
 
-test('같은 가족 동기화가 진행 중이면 한 번만 실행된다', async () => {
-  const [a, b] = [runSync(target), runSync(target)];
-  await Promise.all([a, b]);
-  expect(calls.filter((call) => call === 'fetch')).toHaveLength(1);
+test('같은 가족 동기화가 도는 중에 온 요청은 합쳐 기다리고, 끝난 뒤 한 번만 더 맞춘다(그사이 새 변경을 놓치지 않게)', async () => {
+  const [a, b, c] = [runSync(target), runSync(target), runSync(target)];
+  await Promise.all([a, b, c]);
+  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(calls.filter((call) => call === 'fetch')).toHaveLength(2);
 });
 
 test('서버가 비어 있고 폰에 데이터가 있으면 덮지 않고 올리기를 안내한다', async () => {

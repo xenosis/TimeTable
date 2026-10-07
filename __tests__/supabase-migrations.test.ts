@@ -59,7 +59,12 @@ describe('supabase 마이그레이션', () => {
   });
 
   it('Realtime 게시는 가족 데이터 테이블만 넣고 기기 기록은 빼며, 삭제도 거를 수 있게 replica identity full을 켠다(P6.7)', () => {
-    for (const table of ['tt_tasks', 'tt_timetable_items', 'tt_task_completions', 'tt_gem_rights']) expect(realtime).toContain("'" + table + "'");
+    // 서버 게시 목록과 앱이 듣는 목록이 같아야 한다(어긋나면 그 테이블 변경을 조용히 놓친다)
+    const published = [...(realtime.match(/foreach t in array array\[([^\]]*)\]/)?.[1] ?? '').matchAll(/'(tt_\w+)'/g)].map((m) => m[1]).sort();
+    const appSource = readFileSync('src/sync/realtimeSync.ts', 'utf8');
+    const appTables = [...(appSource.match(/export const realtimeTables = \[([\s\S]*?)\] as const/)?.[1] ?? '').matchAll(/'(tt_\w+)'/g)].map((m) => m[1]).sort();
+    expect(appTables.length).toBe(11);
+    expect(published).toEqual(appTables);
     expect(realtime).not.toMatch(/'tt_devices'|'tt_families'|'tt_family_members'/);
     expect(realtime).toContain('replica identity full');
     expect(realtime).toContain('alter publication supabase_realtime add table');

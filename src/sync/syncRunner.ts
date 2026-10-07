@@ -57,7 +57,7 @@ function appVersion(): string | null {
   return version ?? null;
 }
 
-let running: { readonly familyId: string; readonly promise: Promise<boolean> } | null = null;
+let running: { readonly familyId: string; readonly promise: Promise<boolean>; again: boolean } | null = null;
 
 /**
  * 서버에서 받아와 로컬을 바꾸고, 알림 재예약·위젯 갱신·화면 다시 읽기·마지막 동기화 기록까지 한다.
@@ -66,14 +66,21 @@ let running: { readonly familyId: string; readonly promise: Promise<boolean> } |
  */
 export function runSync(target: SyncTarget, options: { readonly forceServer?: boolean } = {}): Promise<boolean> {
   if (running) {
-    // 직접 고른 '서버 내용으로 다시 맞추기'는 진행 중인 동기화가 끝난 뒤 따로 실행한다
-    if (running.familyId === target.familyId && !options.forceServer) return running.promise;
+    // 같은 가족 동기화가 도는 중에 온 요청(Realtime 신호 등)은 이미 받아 온 내용보다 새 변경일 수 있어, 끝난 뒤 한 번 더 맞춘다(P6.7 리뷰 H1)
+    if (running.familyId === target.familyId && !options.forceServer) { running.again = true; return running.promise; }
+    // 직접 고른 '서버 내용으로 다시 맞추기'와 다른 가족 요청은 진행 중인 동기화가 끝난 뒤 따로 실행한다
     return running.promise.then(() => runSync(target, options));
   }
   // 관리자 편집(서버에 먼저 저장)과 겹치지 않게 같은 줄에서 실행한다(P6.15 리뷰 H3)
-  const promise = withSyncLock(() => syncOnce(target, options)).finally(() => { running = null; });
-  running = { familyId: target.familyId, promise };
-  return promise;
+  const entry: { familyId: string; promise: Promise<boolean>; again: boolean } = { familyId: target.familyId, promise: Promise.resolve(false), again: false };
+  entry.promise = withSyncLock(() => syncOnce(target, options)).finally(() => {
+    running = null;
+    // 도는 사이 요청이 왔으면 한 번만 더 맞춘다(그때의 로그인 가족이 같을 때)
+    const current = syncTarget(getAccount());
+    if (entry.again && current?.familyId === target.familyId) void runSync(current);
+  });
+  running = entry;
+  return entry.promise;
 }
 
 /**
