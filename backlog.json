@@ -5213,7 +5213,7 @@
     },
     {
       "id": "P6.7",
-      "status": "todo",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "Realtime + 앱 복귀 동기화",
@@ -5227,14 +5227,35 @@
       "done_when": "앱이 켜진 상태에서 서버 변경이 즉시 반영됨",
       "est_min": 30,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-07T13:09:41.631Z",
+      "updated_at": "2026-10-07T14:11:54.153Z",
+      "log": [
+        {
+          "at": "2026-10-07T13:09:41.631Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "착수: tt_ 가족 데이터 테이블 Realtime 게시+replica identity full(tt_devices 제외), 앱에서 가족 필터 구독→2초 모아 동기화, 재연결 시 동기화. 앱 복귀 동기화는 P6.13에서 이미 연결됨."
+        },
+        {
+          "at": "2026-10-07T13:22:27.885Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현 커밋 1b177d3(v1.53.0): supabase/migrations/20261007000100_tt_realtime.sql(운영 적용), src/sync/realtimeSync.ts, SyncLifecycle 구독 연결(앱 복귀 동기화는 P6.13). Jest(sync-realtime 4, 마이그레이션 정적 1), npm run check 통과(411). 딸 폰: 켜 둔 화면에서 서버 넣기·지우기 각 3초 뒤 반영. 리뷰 예정."
+        },
+        {
+          "at": "2026-10-07T14:11:54.153Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "리뷰(H1·M1·M2·L1·L3·M4) 반영 후 1.53.1 실기기에서 재연결 실패 발견→1.53.2에서 라이브러리 자동 재참여로 수정, 1.54.0에서 평소·재연결 모두 4초 반영 확인"
+        }
+      ],
+      "done_at": "2026-10-07",
+      "evidence": "커밋 1b177d3·b5402db·5c809d9, 서버 20261007000100_tt_realtime.sql 적용, docs/device-verification-2026-10-05.md 'Realtime 리뷰 반영·재연결 확인' · 검증: npm run check 통과(Jest 420, 1.54.0), 딸 폰 1.54.0: 서버 변경 4초 뒤 표시, 비행기 모드 on/off 뒤에도 4초. 결정: 자기 변경 신호로 한 번 더 맞추는 것 허용, 백그라운드에서도 채널 유지, 즉시≈3~4초"
     },
     {
       "id": "P6.8",
-      "status": "todo",
+      "status": "in_progress",
       "priority": null,
       "category": "feature",
       "title": "아빠 화면",
@@ -5248,10 +5269,17 @@
       "done_when": "아빠 화면에서 편집·현황·동기화 시각이 모두 표시됨",
       "est_min": 45,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-07T13:56:59.382Z",
+      "updated_at": "2026-10-07T13:56:59.382Z",
+      "log": [
+        {
+          "at": "2026-10-07T13:56:59.382Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "착수: 아빠 화면에 딸 오늘 할 일 현황·보석(아빠 폰 로컬 DB, 서버 동기화본)·딸 폰 마지막 동기화(tt_devices) 표시, 편집은 관리자 설정(서버 먼저 저장) 연결. 아빠 폰에서 딸 알림·알람 예약 막기(역할 캐시로 백그라운드도). 코드 작성·단위 테스트 통과, 1.54.0 빌드·검사 예정"
+        }
+      ]
     },
     {
       "id": "P6.9",
