@@ -1,7 +1,12 @@
-import { childSyncLine, stickerLine, taskProgressLine } from '../src/components/parentOverview';
+import { childSyncLine, loadParentOverview, stickerLine, taskProgressLine } from '../src/components/parentOverview';
 import { fetchChildDeviceStatus } from '../src/server/childDeviceStatus';
 
 jest.mock('../src/db/database', () => ({ getDatabase: jest.fn() }));
+jest.mock('../src/sync/syncMarkers', () => ({ hasSyncedFamily: () => false }));
+
+test('현재 가족과 아직 동기화하지 않은 로컬 데이터는 딸 현황으로 읽지 않는다', async () => {
+  await expect(loadParentOverview('different-family')).resolves.toBeNull();
+});
 
 type Result = { data: unknown; error: unknown };
 const mockResults: Result[] = [];
@@ -64,10 +69,10 @@ test('딸 폰 마지막 동기화 시각을 앱 버전과 함께 보이고, 기�
   expect(childSyncLine({ state: 'loading' }, null, now)).toBe('딸 폰 기록을 불러오는 중이에요.');
 });
 
-test('이 폰에서 마지막으로 고친 뒤 딸 폰이 맞췄으면 반영 완료, 아니면 아직 반영 전이라고 알린다', () => {
+test('폰 시각 비교로 반영 성공을 단정하지 않고 동기화와 편집 시각을 함께 표시한다', () => {
   const now = new Date(2026, 9, 7, 15, 0);
   const device = { lastSyncedAt: new Date(2026, 9, 7, 14, 5).toISOString(), appVersion: null };
-  expect(childSyncLine({ state: 'ready', device }, new Date(2026, 9, 7, 14, 0).toISOString(), now)).toBe('딸 폰 반영 완료 (오늘 14:05)');
+  expect(childSyncLine({ state: 'ready', device }, new Date(2026, 9, 7, 14, 0).toISOString(), now)).toBe('딸 폰이 마지막으로 맞춘 때: 오늘 14:05\n이 폰의 최근 편집: 오늘 14:00. 딸 폰에서 앱을 열어 내용을 확인해 주세요.');
   expect(childSyncLine({ state: 'ready', device }, new Date(2026, 9, 7, 14, 30).toISOString(), now))
-    .toBe('딸 폰이 마지막으로 맞춘 때: 오늘 14:05\n오늘 14:30에 고친 내용은 아직 딸 폰에 반영 전이에요. 딸 폰에서 앱을 열면 반영돼요.');
+    .toBe('딸 폰이 마지막으로 맞춘 때: 오늘 14:05\n이 폰의 최근 편집: 오늘 14:30. 딸 폰에서 앱을 열어 내용을 확인해 주세요.');
 });

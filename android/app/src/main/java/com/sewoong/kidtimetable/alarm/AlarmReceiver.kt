@@ -8,6 +8,7 @@ import android.content.Intent
  * AlarmSoundService so they keep running even if Android only shows a heads-up banner. */
 class AlarmReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
+    if (RollingAlarmScheduler.childAlarmsSuppressed(context)) return
     val scheduleId = intent.getStringExtra("scheduleId") ?: "unknown"
     val title = intent.getStringExtra("title") ?: "할 일"
     val memo = intent.getStringExtra("memo") ?: ""

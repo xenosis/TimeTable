@@ -18,11 +18,26 @@ object RollingAlarmScheduler {
   private const val CURRENT_ENTRIES = "current_entries"
   private const val PENDING_ENTRIES = "pending_entries"
   @Volatile private var testInterruptionStage: String? = null
+  /** 아빠 기기의 차단은 로그아웃·재부팅 후에도 유지한다. */
+  fun childAlarmsSuppressed(context: Context): Boolean =
+    context.getSharedPreferences("device-alarm-policy", Context.MODE_PRIVATE).getBoolean("suppressed", false)
+
+  @Synchronized fun setChildAlarmsSuppressed(context: Context, suppressed: Boolean) {
+    if (!context.getSharedPreferences("device-alarm-policy", Context.MODE_PRIVATE).edit().putBoolean("suppressed", suppressed).commit()) {
+      throw IllegalStateException("기기 알림 설정을 저장하지 못했어요")
+    }
+    if (suppressed) {
+      context.stopService(Intent(context, AlarmSoundService::class.java))
+      val failures = listOf("timetable", "tasks").mapNotNull { owner -> runCatching { clear(context, owner) }.exceptionOrNull() }
+      failures.firstOrNull()?.let { throw it }
+    }
+  }
 
   /** Debug-only test receiver uses this to prove pending-generation recovery without exposing a release feature. */
   internal fun setTestInterruptionStage(stage: String?) { testInterruptionStage = stage }
 
   @Synchronized fun replace(context: Context, entries: List<Entry>, owner: String = "timetable") {
+    if (childAlarmsSuppressed(context)) { clear(context, owner); return }
     // JS builds a future window, but an entry can cross its trigger time before this native boundary runs.
     val now = System.currentTimeMillis()
     val freshEntries = entries.filter { it.triggerAt > now }
@@ -67,6 +82,7 @@ object RollingAlarmScheduler {
     failures.firstOrNull()?.let { (_, error) -> throw error }
   }
   private fun restoreOwnerAfterBoot(context: Context, owner: String) {
+    if (childAlarmsSuppressed(context)) { clear(context, owner); return }
     val preferences = context.getSharedPreferences("$PREFS-$owner", Context.MODE_PRIVATE)
     val saved = if (preferences.contains(PENDING_ENTRIES)) entriesFrom(preferences, PENDING_ENTRIES) else entriesFrom(preferences, CURRENT_ENTRIES)
     replace(context, saved.filter { it.triggerAt > System.currentTimeMillis() }, owner)
@@ -100,6 +116,7 @@ object RollingAlarmScheduler {
   }
 
   fun postGeneralNotification(context: Context, id: String, title: String, memo: String = "") {
+    if (childAlarmsSuppressed(context)) return
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     TimeTableNotificationChannels.ensure(context)
     manager.notify(id, 0, NotificationCompat.Builder(context, GENERAL_CHANNEL_ID)

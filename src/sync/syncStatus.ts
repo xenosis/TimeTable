@@ -6,15 +6,17 @@ export type SyncStatus =
   | { readonly state: 'syncing' }
   | { readonly state: 'error'; readonly lastSyncedAt?: string | null; readonly message: string };
 
-let status: SyncStatus = { state: 'idle' };
+export type FamilySyncStatus = SyncStatus & { readonly familyId?: string };
+
+let status: FamilySyncStatus = { state: 'idle' };
 const listeners = new Set<() => void>();
 
-export function setSyncStatus(next: SyncStatus): void {
+export function setSyncStatus(next: FamilySyncStatus): void {
   status = next;
   listeners.forEach((listener) => listener());
 }
 
-export function useSyncStatus(): SyncStatus {
+export function useSyncStatus(): FamilySyncStatus {
   return useSyncExternalStore(
     (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; },
     () => status,

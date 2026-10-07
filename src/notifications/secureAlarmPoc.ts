@@ -1,10 +1,11 @@
 import { NativeModules, PermissionsAndroid, Platform } from 'react-native';
 
-import { suppressChildAlarms } from './parentDeviceAlarms';
+import { confirmedChildAlarmPolicy } from './parentDeviceAlarms';
 
 const TEST_DELAY_MS = 15_000;
 
 type SecureAlarmModule = {
+  setChildAlarmsSuppressed(suppressed: boolean): Promise<void>;
   initializeChannels(): Promise<void>;
   canUseFullScreenIntent(): Promise<boolean>;
   openFullScreenIntentSettings(): Promise<void>;
@@ -21,6 +22,13 @@ function getModule(): SecureAlarmModule {
 }
 
 export type AndroidPermissionStatus = Awaited<ReturnType<SecureAlarmModule['getPermissionStatus']>>;
+/** DB 조회 없이 기기 용도를 네이티브에 저장하고 아빠 폰의 기존 예약을 제거한다. */
+export async function syncDeviceAlarmPolicy(): Promise<void> {
+  requireAndroid();
+  const policy = confirmedChildAlarmPolicy();
+  if (policy === null) throw new Error('기기 역할을 확인하지 못했어요. 기존 알람 설정을 유지해요.');
+  await getModule().setChildAlarmsSuppressed(policy);
+}
 export async function initializeNotificationChannels(): Promise<void> { requireAndroid(); await getModule().initializeChannels(); }
 export async function getAndroidPermissionStatus(): Promise<AndroidPermissionStatus> { requireAndroid(); return getModule().getPermissionStatus(); }
 export async function openAndroidPermissionSettings(kind: 'notifications' | 'exactAlarms' | 'fullScreen' | 'battery'): Promise<void> { requireAndroid(); await getModule().openPermissionSettings(kind); }
@@ -33,7 +41,9 @@ export async function requestAndroidNotificationPermission(): Promise<boolean> {
 /** 아빠 폰이면 예약할 목록을 비워 이미 걸린 딸 알림·알람도 함께 지운다(P6.8, parentDeviceAlarms.ts). */
 export async function replaceAndroidRollingSchedule(entries: readonly { id: string; title: string; memo?: string; triggerAt: number; mode: 'notify' | 'alarm' }[], owner: 'timetable' | 'tasks' = 'timetable'): Promise<number> {
   requireAndroid();
-  return getModule().replaceRollingSchedule(suppressChildAlarms() ? [] : entries, owner);
+  const policy = confirmedChildAlarmPolicy();
+  if (policy === null) throw new Error('기기 역할을 확인하지 못했어요. 기존 알람 예약을 유지해요.');
+  return getModule().replaceRollingSchedule(policy ? [] : entries, owner);
 }
 
 function requireAndroid(): void {

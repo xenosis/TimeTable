@@ -1,6 +1,6 @@
 import { getSupabase } from './supabaseClient';
 import { SUPABASE_URL } from './supabaseConfig';
-import { ACCOUNT_CACHE_KEY } from './accountCacheKey';
+import { ACCOUNT_CACHE_KEY, DEVICE_ROLE_KEY } from './accountCacheKey';
 import { clearSyncedFamily } from '../sync/syncMarkers';
 
 export type FamilyRole = 'parent' | 'child';
@@ -60,6 +60,7 @@ function readCache(userId: string): Membership | null {
 
 function writeCache(account: CachedAccount): void {
   globalThis.localStorage?.setItem(CACHE_KEY, JSON.stringify(account));
+  if (account.membership) globalThis.localStorage?.setItem(DEVICE_ROLE_KEY, account.membership.role);
 }
 
 /** 로그인한 계정의 가족·역할을 서버에서 읽는다. 인터넷이 없으면 마지막으로 확인한 역할을 쓴다. */
@@ -103,6 +104,9 @@ export async function signIn(email: string, password: string): Promise<AccountSt
  * 오프라인에서 토큰이 만료돼 라이브러리가 세션을 지우지 못하면(오류 반환) 저장된 로그인 정보를 직접 지워, 다음에 켤 때 다시 로그인되지 않게 한다.
  */
 export async function signOut(): Promise<AccountState> {
+  // 이전 버전에서 저장한 계정도 로그아웃하기 전에 기기 용도를 남긴다.
+  const role = readCachedAccount()?.membership?.role;
+  if (role) globalThis.localStorage?.setItem(DEVICE_ROLE_KEY, role);
   const { error } = await getSupabase().auth.signOut({ scope: 'local' });
   if (error) globalThis.localStorage?.removeItem(AUTH_STORAGE_KEY);
   globalThis.localStorage?.removeItem(CACHE_KEY);

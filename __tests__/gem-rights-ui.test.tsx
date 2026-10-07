@@ -4,10 +4,15 @@ import { act, create, type ReactTestInstance } from 'react-test-renderer';
 import { GemRequestsPanel } from '../src/components/GemRequestsPanel';
 import { GemRightsCard } from '../src/components/GemRightsCard';
 import { defaultTheme } from '../src/theme';
+import { setAccount } from '../src/store/accountStore';
+import { notifyWidgetChecksApplied } from '../src/widgets/widgetChecksSignal';
 
 const mockSummary = jest.fn();
 const mockRequest = jest.fn();
 const mockGiven = jest.fn();
+jest.mock('../src/server/parentGemGiven', () => ({ markParentGemsGiven: jest.fn(), pendingParentGemCount: () => 0 }));
+jest.mock('../src/server/parentGemRecovery', () => ({ loadParentGemRecovery: jest.fn(), confirmParentGemRecovery: jest.fn() }));
+jest.mock('../src/sync/syncMarkers', () => ({ hasSyncedFamily: () => true }));
 jest.mock('../src/db/database', () => ({ getDatabase: async () => ({}) }));
 jest.mock('../src/db/gemRightRepository', () => ({
   getGemRightSummary: (...args: unknown[]) => mockSummary(...args),
@@ -21,13 +26,40 @@ const press = (root: ReactTestInstance, label: string) => {
   const target = root.findAll((node) => typeof node.props.onPress === 'function' && node.props.accessibilityLabel === label)[0];
   return act(async () => { target.props.onPress(); });
 };
+const mountedTrees: ReturnType<typeof create>[] = [];
 async function render(element: React.ReactElement) {
   let tree!: ReturnType<typeof create>;
   await act(async () => { tree = create(element); });
+  mountedTrees.push(tree);
   return tree;
 }
 
-beforeEach(() => { mockSummary.mockReset(); mockRequest.mockReset(); mockGiven.mockReset(); });
+beforeEach(() => { setAccount({ kind: 'local' }); mockSummary.mockReset(); mockRequest.mockReset(); mockGiven.mockReset(); });
+afterEach(async () => {
+  await act(async () => { for (const tree of mountedTrees.splice(0)) tree.unmount(); });
+  setAccount({ kind: 'local' });
+});
+
+test('아빠 보석 패널은 동기화 완료 신호를 받으면 새 요청을 보여준다', async () => {
+  setAccount({ kind: 'signedIn', email: 'dad@example.invalid', membership: { role: 'parent', familyId: 'fam-a' }, offline: false });
+  mockSummary.mockResolvedValue(summary());
+  const tree = await render(<GemRequestsPanel theme={defaultTheme} />);
+  expect(texts(tree.root)).toContain('지금 요청한 보석은 없어요');
+  mockSummary.mockResolvedValue(summary({ requested: 2 }));
+  await act(async () => { notifyWidgetChecksApplied(); });
+  expect(texts(tree.root)).toContain('요청 2개');
+  await act(async () => tree.unmount());
+});
+
+test('지급 개수를 직접 입력한 뒤 동기화가 와도 입력을 유지한다', async () => {
+  mockSummary.mockResolvedValue(summary({ requested: 3 }));
+  const tree = await render(<GemRequestsPanel theme={defaultTheme} />);
+  await act(async () => tree.root.findByProps({ accessibilityLabel: '준 보석 개수' }).props.onChangeText('1'));
+  mockSummary.mockResolvedValue(summary({ requested: 4 }));
+  await act(async () => notifyWidgetChecksApplied());
+  expect(tree.root.findByProps({ accessibilityLabel: '준 보석 개수' }).props.value).toBe('1');
+  expect(texts(tree.root)).toContain('요청 4개');
+});
 
 describe('딸 화면: 보석 받기 카드', () => {
   it('연속이 없으면 시작 안내를, 진행 중이면 남은 일수를 보여주고 요청 버튼은 없다', async () => {

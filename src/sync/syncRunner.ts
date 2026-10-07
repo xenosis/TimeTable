@@ -4,7 +4,7 @@ import { refreshAllRollingOwners } from '../notifications/rollingOwners';
 import type { AccountState } from '../server/account';
 import { hasLocalData, readLocalPayload } from '../server/localImport';
 import { getSupabase } from '../server/supabaseClient';
-import { getAccount } from '../store/accountStore';
+import { accountUserActions, getAccount } from '../store/accountStore';
 import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { applyPendingWidgetChecksNow, requestWidgetRefresh } from '../widgets/widgetRefresh';
 import { fetchLocalSnapshot, NETWORK_ERROR, replaceLocalWithSnapshot, serverHasFamilyData } from './pullSnapshot';
@@ -57,7 +57,12 @@ function appVersion(): string | null {
   return version ?? null;
 }
 
-let running: { readonly familyId: string; readonly promise: Promise<boolean>; again: boolean } | null = null;
+let running: { readonly familyId: string; readonly role: string; readonly generation: number; readonly promise: Promise<boolean>; again: boolean } | null = null;
+
+function sameAccount(target: SyncTarget, generation: number): boolean {
+  const current = syncTarget(getAccount());
+  return accountUserActions() === generation && current?.familyId === target.familyId && current.role === target.role;
+}
 
 /**
  * 서버에서 받아와 로컬을 바꾸고, 알림 재예약·위젯 갱신·화면 다시 읽기·마지막 동기화 기록까지 한다.
@@ -65,15 +70,17 @@ let running: { readonly familyId: string; readonly promise: Promise<boolean>; ag
  * 인터넷이 없거나 실패하면 로컬은 그대로이고 false를 돌려준다.
  */
 export function runSync(target: SyncTarget, options: { readonly forceServer?: boolean } = {}): Promise<boolean> {
+  const generation = accountUserActions();
+  if (!sameAccount(target, generation)) return Promise.resolve(false);
   if (running) {
     // 같은 가족 동기화가 도는 중에 온 요청(Realtime 신호 등)은 이미 받아 온 내용보다 새 변경일 수 있어, 끝난 뒤 한 번 더 맞춘다(P6.7 리뷰 H1)
-    if (running.familyId === target.familyId && !options.forceServer) { running.again = true; return running.promise; }
+    if (running.familyId === target.familyId && running.role === target.role && running.generation === generation && !options.forceServer) { running.again = true; return running.promise; }
     // 직접 고른 '서버 내용으로 다시 맞추기'와 다른 가족 요청은 진행 중인 동기화가 끝난 뒤 따로 실행한다
-    return running.promise.then(() => runSync(target, options));
+    return running.promise.then(() => sameAccount(target, generation) ? runSync(target, options) : false);
   }
   // 관리자 편집(서버에 먼저 저장)과 겹치지 않게 같은 줄에서 실행한다(P6.15 리뷰 H3)
-  const entry: { familyId: string; promise: Promise<boolean>; again: boolean } = { familyId: target.familyId, promise: Promise.resolve(false), again: false };
-  entry.promise = withSyncLock(() => syncOnce(target, options)).finally(() => {
+  const entry = { familyId: target.familyId, role: target.role, generation, promise: Promise.resolve(false), again: false };
+  entry.promise = withSyncLock(() => syncOnce(target, options, generation)).finally(() => {
     running = null;
     // 도는 사이 요청이 왔으면 한 번만 더 맞춘다(그때의 로그인 가족이 같을 때)
     const current = syncTarget(getAccount());
@@ -101,38 +108,48 @@ async function ensureServerTimetableSet(familyId: string, snapshot: LocalSnapsho
   return true;
 }
 
-async function syncOnce(target: SyncTarget, options: { readonly forceServer?: boolean }): Promise<boolean> {
-  setSyncStatus({ state: 'syncing' });
+async function syncOnce(target: SyncTarget, options: { readonly forceServer?: boolean }, generation: number): Promise<boolean> {
+  setSyncStatus({ familyId: target.familyId, state: 'syncing' });
   try {
     const database = await getDatabase();
+    if (!sameAccount(target, generation)) return false;
     // 직접 고른 '서버 내용으로 다시 맞추기'는 첫 동기화처럼 서버 기준으로 통째로 바꾼다(올리지 않음). 표시는 성공한 뒤에만 다시 남긴다
     const first = options.forceServer === true || !hasSyncedFamily(target.familyId);
     // 위젯에서 누른 체크를 먼저 로컬에 기록한다
     await applyPendingWidgetChecksNow(database).catch(() => 0);
     // 딸 폰은 첫 동기화 뒤부터 체크·보석 기록을 서버에 먼저 올린다(P6.14). 올리기 시작 시점의 기록 변경 횟수를 기억해 둔다
     const versionAtPush = childChangeVersion();
-    if (!first && target.role === 'child') await pushChildRecords(database, target.familyId, await currentUserId());
+    if (!sameAccount(target, generation)) return false;
+    if (!first && target.role === 'child') {
+      const userId = await currentUserId();
+      if (!sameAccount(target, generation)) return false;
+      await pushChildRecords(database, target.familyId, userId);
+    }
     let snapshot = await fetchLocalSnapshot(target.familyId);
+    if (!sameAccount(target, generation)) { requestSyncSoon(); return false; }
     // 서버가 비어 있는데 이 폰에 데이터가 있으면 덮지 않는다. P6.5 '서버로 올리기'를 먼저 하게 안내한다(직접 고른 다시 맞추기는 건너뜀)
     if (first && !options.forceServer && !serverHasFamilyData(snapshot) && hasLocalData(await readLocalPayload(database))) {
-      setSyncStatus({ state: 'error', lastSyncedAt: lastSyncedAt(), message: NEEDS_IMPORT_MESSAGE });
+      setSyncStatus({ familyId: target.familyId, state: 'error', lastSyncedAt: lastSyncedAt(), message: NEEDS_IMPORT_MESSAGE });
       return false;
     }
     if (await ensureServerTimetableSet(target.familyId, snapshot)) snapshot = await fetchLocalSnapshot(target.familyId);
     // 받아오는 사이 로그아웃하거나 다른 가족으로 바꿨으면 로컬을 바꾸지 않는다
-    if (syncTarget(getAccount())?.familyId !== target.familyId) { setSyncStatus({ state: 'idle', lastSyncedAt: lastSyncedAt() }); return false; }
+    if (!sameAccount(target, generation)) { requestSyncSoon(); return false; }
     // 올린 뒤에는 서버 내용이 기준이다(아빠가 '줬어요'로 바꾼 보석 등도 내려온다). 다만 그 사이 폰에서 새 체크가 생겼으면 폰 기록을 지키고 다음에 올린다
-    await replaceLocalWithSnapshot(database, snapshot, () => !first && target.role === 'child' && childChangeVersion() !== versionAtPush);
+    await replaceLocalWithSnapshot(database, snapshot, () => {
+      if (!sameAccount(target, generation)) throw new Error('로그인 계정이 바뀌어 이전 동기화를 취소했어요.');
+      return !first && target.role === 'child' && childChangeVersion() !== versionAtPush;
+    });
     const at = new Date().toISOString();
     markSynced(target.familyId, at);
     notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 데이터를 다시 읽는다
     await Promise.allSettled([refreshAllRollingOwners(), requestWidgetRefresh(), recordDeviceSync(target.familyId, at)]);
-    setSyncStatus({ state: 'idle', lastSyncedAt: at });
+    setSyncStatus({ familyId: target.familyId, state: 'idle', lastSyncedAt: at });
     // 올린 뒤 생긴 체크·보석 변경은 폰에 지켜졌으니 곧 다시 올린다(다음 앱 복귀까지 기다리지 않게)
     if (target.role === 'child' && childChangeVersion() !== versionAtPush) requestSyncSoon();
     return true;
   } catch (error) {
-    setSyncStatus({ state: 'error', lastSyncedAt: lastSyncedAt(), message: syncErrorMessage(error) });
+    setSyncStatus({ familyId: target.familyId, state: 'error', lastSyncedAt: lastSyncedAt(), message: syncErrorMessage(error) });
     return false;
   }
 }

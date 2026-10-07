@@ -22,7 +22,7 @@ export function ParentHome({ theme }: { readonly theme: ThemeDefinition }) {
     {familyId ? <ParentStatusCard theme={theme} familyId={familyId} /> : null}
     <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
       <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>시간표·할 일 고치기</Text>
-      <Text style={[styles.body, { color: colors.textMuted }]}>여기서 고친 내용은 서버에 바로 저장되고, 딸 폰이 켜져 있으면 몇 초 안에 반영돼요. 이 폰에서는 딸 알림·알람이 울리지 않아요.</Text>
+      <Text style={[styles.body, { color: colors.textMuted }]}>여기서 고친 내용은 서버에 바로 저장돼요. 딸 폰에서 앱이 실행 중이고 인터넷에 연결돼 있으면 자동으로 반영돼요. 이 폰에서는 딸 알림·알람이 울리지 않아요.</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="관리자 설정 열기" onPress={() => router.push('/manage')} style={({ pressed }) => [styles.button, { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}>
         <Text style={[styles.buttonText, { color: colors.onPrimary }]}>시간표·할 일 편집 열기</Text>
       </Pressable>

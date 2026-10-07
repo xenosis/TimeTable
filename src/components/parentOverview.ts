@@ -4,6 +4,7 @@ import { getTodayTasks, type TodayTask } from '../db/taskRepository';
 import type { ChildDeviceStatus } from '../server/childDeviceStatus';
 import { formatSyncTime } from '../sync/syncStatus';
 import { toLocalDateStr } from '../utils/date';
+import { hasSyncedFamily } from '../sync/syncMarkers';
 
 export type ParentOverview = { readonly tasks: readonly TodayTask[]; readonly stickers: StickerSummary };
 
@@ -11,7 +12,8 @@ export type ParentOverview = { readonly tasks: readonly TodayTask[]; readonly st
  * 아빠 화면의 딸 오늘 할 일·보석 현황(P6.8). 아빠 폰도 로그인하면 서버 내용을 그대로 받아 두므로(P6.13) 이 폰의 DB를 읽는다.
  * 딸이 체크하면 딸 폰이 서버에 올리고, Realtime 신호로 아빠 폰이 다시 받아 온 뒤 화면이 이 값을 새로 읽는다.
  */
-export async function loadParentOverview(now = new Date()): Promise<ParentOverview> {
+export async function loadParentOverview(familyId: string, now = new Date()): Promise<ParentOverview | null> {
+  if (!hasSyncedFamily(familyId)) return null;
   const database = await getDatabase();
   const tasks = await getTodayTasks(database, toLocalDateStr(now), now.getDay());
   return { tasks, stickers: await getStickerSummary(database) };
@@ -34,8 +36,7 @@ export function stickerLine(stickers: StickerSummary): string {
 export type Remote = { readonly state: 'loading' } | { readonly state: 'ready'; readonly device: ChildDeviceStatus | null } | { readonly state: 'error'; readonly message: string };
 
 /**
- * 딸 폰 마지막 동기화 한 줄(서버 기기 기록 조회 결과). 이 폰에서 마지막으로 편집을 저장한 시각(lastEditAt)이 있으면
- * 딸 폰이 그 뒤에 맞췄는지로 '반영 완료'/'아직 반영 전'을 덧붙인다(research.md 6절).
+ * 마지막 동기화와 편집 시각을 표시한다. 폰 시각 비교만으로 실제 반영 성공을 단정하지 않는다.
  */
 export function childSyncLine(remote: Remote, lastEditAt: string | null = null, now = new Date()): string {
   if (remote.state === 'loading') return '딸 폰 기록을 불러오는 중이에요.';
@@ -45,7 +46,5 @@ export function childSyncLine(remote: Remote, lastEditAt: string | null = null, 
   const line = `딸 폰이 마지막으로 맞춘 때: ${formatSyncTime(remote.device.lastSyncedAt, now)}${version}`;
   const editTime = lastEditAt ? new Date(lastEditAt).getTime() : NaN;
   if (Number.isNaN(editTime)) return line;
-  return new Date(remote.device.lastSyncedAt).getTime() >= editTime
-    ? `딸 폰 반영 완료 (${formatSyncTime(remote.device.lastSyncedAt, now)})${version}`
-    : `${line}\n${formatSyncTime(lastEditAt, now)}에 고친 내용은 아직 딸 폰에 반영 전이에요. 딸 폰에서 앱을 열면 반영돼요.`;
+  return `${line}\n이 폰의 최근 편집: ${formatSyncTime(lastEditAt, now)}. 딸 폰에서 앱을 열어 내용을 확인해 주세요.`;
 }

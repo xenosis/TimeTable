@@ -132,7 +132,7 @@ export async function runAdminEdit<T>(action: () => Promise<T>): Promise<T> {
       await revertParentTables(database, before);
       throw new Error(editErrorMessage(failure));
     }
-    markAdminEdit(new Date().toISOString());
+    markAdminEdit(target.familyId, new Date().toISOString());
     return value;
   });
   requestSyncSoon(); // 서버 내용으로 다시 맞추고(다른 기기 변경 포함) 알림·위젯을 갱신한다

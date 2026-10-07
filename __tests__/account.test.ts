@@ -55,6 +55,14 @@ test('저장된 로그인이 없으면 로컬 모드', async () => {
   expect(mockFrom).not.toHaveBeenCalled();
 });
 
+test('아빠가 로그아웃해도 기기 용도를 유지해 딸 알람이 되살아나지 않는다', async () => {
+  memory.set('tt.account.membership', JSON.stringify({ userId: dad.id, email: dad.email, membership: { role: 'parent', familyId: 'f1' } }));
+  mockSignOut.mockResolvedValue({ error: null });
+  await signOut();
+  expect(memory.get('tt.device.role')).toBe('parent');
+  expect(memory.has('tt.account.membership')).toBe(false);
+});
+
 test('로그인하면 서버에서 역할을 읽고, 인터넷이 없을 때는 마지막으로 확인한 역할을 쓴다', async () => {
   mockSignInWithPassword.mockResolvedValue({ data: { user: dad }, error: null });
   mockMaybeSingle.mockResolvedValueOnce({ data: { role: 'parent', family_id: 'f1' }, error: null });
@@ -63,6 +71,7 @@ test('로그인하면 서버에서 역할을 읽고, 인터넷이 없을 때는 
   expect(mockEq).toHaveBeenCalledWith('user_id', 'user-dad');
   expect(signed).toEqual({ kind: 'signedIn', email: 'dad@example.com', membership: { role: 'parent', familyId: 'f1' }, offline: false });
   expect(isParentDevice(signed)).toBe(true);
+  expect(memory.get('tt.device.role')).toBe('parent');
 
   // 앱을 다시 켰는데 인터넷이 없다
   mockGetSession.mockResolvedValue({ data: { session: { user: dad } } });

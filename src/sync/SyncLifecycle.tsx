@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { refreshAllRollingOwners } from '../notifications/rollingOwners';
+import { syncDeviceAlarmPolicy } from '../notifications/secureAlarmPoc';
+import { suppressChildAlarms } from '../notifications/parentDeviceAlarms';
 import { getAccount, isParentDevice, useAccount } from '../store/accountStore';
 import { runSync, syncTarget } from './syncRunner';
 import { registerSyncSoonRunner } from './syncSoon';
@@ -19,13 +21,25 @@ export function SyncLifecycle(): null {
   const familyId = target?.familyId ?? null;
   const role = target?.role ?? null;
   const parentDevice = isParentDevice(account);
-  const previousParent = useRef<boolean | null>(null);
-
-  // 아빠 계정으로 로그인하거나 로그아웃해 이 폰의 역할이 바뀌면 알림을 다시 예약한다(아빠 폰은 딸 알람을 지우고, 로그아웃하면 되살림, P6.8)
+  // 기기 용도를 네이티브에도 저장한다. 아빠 폰은 DB 오류·로그아웃·재부팅 후에도 딸 예약을 복구하지 않는다.
   useEffect(() => {
-    if (account.kind === 'checking') return;
-    if (previousParent.current !== null && previousParent.current !== parentDevice) void refreshAllRollingOwners().catch(() => undefined);
-    previousParent.current = parentDevice;
+    let disposed = false;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const apply = async () => {
+      try {
+        await syncDeviceAlarmPolicy();
+      } catch (error) {
+        console.warn('TimeTable: 기기 알림 설정을 적용하지 못했어요.', error);
+        if (!disposed) retry = setTimeout(() => void apply(), 5000);
+        return;
+      }
+      if (!disposed && !suppressChildAlarms()) await refreshAllRollingOwners().catch((error) => console.warn('TimeTable: 딸 알림을 다시 예약하지 못했어요.', error));
+    };
+    void apply();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') { clearTimeout(retry); void apply(); }
+    });
+    return () => { disposed = true; clearTimeout(retry); subscription.remove(); };
   }, [account.kind, parentDevice]);
 
   useEffect(() => {
