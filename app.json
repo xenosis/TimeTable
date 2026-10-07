@@ -3,13 +3,13 @@
     "name": "TimeTable",
     "slug": "kidtimetable",
     "scheme": "kidtimetable",
-    "version": "1.52.1",
+    "version": "1.52.2",
     "orientation": "default",
     "icon": "./assets/timetable-icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.sewoong.kidtimetable",
-      "versionCode": 134,
+      "versionCode": 135,
       "permissions": [
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM",

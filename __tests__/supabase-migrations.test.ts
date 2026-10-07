@@ -17,13 +17,14 @@ const schema = read('_tt_schema.sql');
 const rls = read('_tt_rls.sql');
 const gemImport = read('_tt_gem_rights_import.sql');
 const importGuard = read('_tt_import_guard.sql');
+const familyEdit = read('_tt_apply_family_edit.sql');
 
 const createdTables = [...schema.matchAll(/create table public\.(tt_\w+)/g)].map((match) => match[1]);
 const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`).join(', ');
 
 describe('supabase 마이그레이션', () => {
   it('파일 이름이 시간순으로 스키마 → 보안 규칙 → 보석 자격·이전 함수 순서로 적용되게 정렬된다', () => {
-    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql']);
+    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql']);
   });
 
   it('보석 자격 테이블도 RLS·권한·anon 회수가 다른 가족 테이블과 같다(P6.5)', () => {
@@ -43,6 +44,17 @@ describe('supabase 마이그레이션', () => {
     expect(gemImport).toContain('revoke execute on function public.tt_import_local(uuid, jsonb) from public, anon;');
     expect(gemImport).toContain('grant execute on function public.tt_import_local(uuid, jsonb) to authenticated;');
     expect(gemImport).toContain("raise exception 'TT_IMPORT: 서버에 이미 이 가족의 데이터가 있습니다'");
+  });
+
+  it('편집 저장 함수는 호출자 권한(RLS)으로 한 트랜잭션에 저장하고, 덮어쓰기·되살리기·완료 이력 할 일 지우기를 거부한다(P6.15)', () => {
+    expect(familyEdit).toMatch(/create function public\.tt_apply_family_edit\(p_family uuid, p_edit jsonb\) returns void\r?\nlanguage plpgsql\r?\nsecurity invoker\r?\nset search_path = ''/);
+    expect(familyEdit).not.toMatch(/security definer/);
+    expect(familyEdit).toContain('revoke execute on function public.tt_apply_family_edit(uuid, jsonb) from public, anon;');
+    expect(familyEdit).toContain('grant execute on function public.tt_apply_family_edit(uuid, jsonb) to authenticated;');
+    expect(familyEdit).toContain('exception when unique_violation then');
+    expect(familyEdit).toContain("raise exception 'TT_EDIT: 다른 기기에서 지운 항목이에요");
+    expect(familyEdit).toContain('tt_task_completion_history');
+    expect(familyEdit).toContain('pg_advisory_xact_lock');
   });
 
   it('이전 함수 보완: 호출한 딸 계정만 이전하고 같은 가족 동시 호출은 잠금으로 하나씩 처리한다', () => {

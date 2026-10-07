@@ -10,7 +10,8 @@ const mockHasLocalData = jest.fn();
 const mockStatus = jest.fn();
 
 jest.mock('../src/db/database', () => ({ getDatabase: async () => ({}) }));
-jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => ({ auth: { getUser: async () => ({ data: { user: null } }), getSession: async () => ({ data: { session: { user: { id: 'child-uid' } } } }) } }) }));
+const mockRpc = jest.fn();
+jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => ({ rpc: (...args: unknown[]) => mockRpc(...args), auth: { getUser: async () => ({ data: { user: null } }), getSession: async () => ({ data: { session: { user: { id: 'child-uid' } } } }) } }) }));
 const mockPush = jest.fn();
 jest.mock('../src/sync/pushChildRecords', () => ({ pushChildRecords: (...args: unknown[]) => { calls.push('push'); return mockPush(...args); } }));
 jest.mock('../src/widgets/widgetRefresh', () => ({
@@ -47,7 +48,8 @@ beforeEach(() => {
   calls.length = 0;
   memory.clear();
   jest.clearAllMocks();
-  mockFetch.mockResolvedValue({});
+  mockFetch.mockResolvedValue({ timetable_sets: [{ id: 1, name: '채아' }] });
+  mockRpc.mockResolvedValue({ error: null });
   mockReplace.mockResolvedValue(undefined);
   mockPush.mockResolvedValue(0);
   mockServerHasData.mockReturnValue(true);
@@ -111,6 +113,25 @@ test('직접 고른 서버 내용으로 다시 맞추기는 서버가 비어 있
   expect(calls).toEqual(['pending', 'fetch', 'replace:false', 'notify', 'alarms', 'widget']);
 });
 
+test('서버 가족에 시간표 세트가 없으면 서버에 기본 세트 평소를 만든 뒤 다시 받아온다', async () => {
+  mockFetch.mockResolvedValueOnce({ timetable_sets: [] }).mockResolvedValueOnce({ timetable_sets: [{ id: 1_000_000_001, name: '평소' }] });
+  await expect(runSync(target)).resolves.toBe(true);
+  expect(mockRpc).toHaveBeenCalledWith('tt_apply_family_edit', expect.objectContaining({ p_family: 'fam-1', p_edit: expect.objectContaining({ inserts: { tt_timetable_sets: [expect.objectContaining({ name: '평소' })] } }) }));
+  expect(calls.filter((call) => call === 'fetch')).toHaveLength(2);
+});
+
+test('편집과 동기화는 같은 잠금을 써서 겹치지 않는다', async () => {
+  const { withSyncLock } = jest.requireActual('../src/sync/syncLock') as typeof import('../src/sync/syncLock');
+  let releaseEdit: () => void = () => undefined;
+  const edit = withSyncLock(() => new Promise<void>((resolve) => { calls.push('edit-start'); releaseEdit = () => { calls.push('edit-end'); resolve(); }; }));
+  const sync = runSync(target);
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(calls).toEqual(['edit-start']); // 편집이 끝나기 전에는 동기화가 시작되지 않는다
+  releaseEdit();
+  await Promise.all([edit, sync]);
+  expect(calls.slice(0, 3)).toEqual(['edit-start', 'edit-end', 'pending']);
+});
+
 test('받아오기에 실패하면 로컬·동기화 기록·알림을 건드리지 않는다', async () => {
   mockFetch.mockRejectedValue(new Error('Network request failed'));
   await expect(runSync(target)).resolves.toBe(false);
@@ -120,7 +141,7 @@ test('받아오기에 실패하면 로컬·동기화 기록·알림을 건드리
 });
 
 test('받아오는 사이 다른 가족으로 바뀌면 로컬을 바꾸지 않는다', async () => {
-  mockFetch.mockImplementation(async () => { signedIn('fam-2'); return {}; });
+  mockFetch.mockImplementation(async () => { signedIn('fam-2'); return { timetable_sets: [{ id: 1 }] }; });
   await expect(runSync(target)).resolves.toBe(false);
   expect(calls.some((call) => call.startsWith('replace'))).toBe(false);
 });

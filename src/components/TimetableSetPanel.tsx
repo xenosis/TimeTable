@@ -74,8 +74,9 @@ export function TimetableSetPanel({ theme, activeSet, refreshKey, onApplied, onR
     setWorking(true);
     try {
       await runAdminEdit(async () => setActiveTimetableSet(await getDatabase(), set.id));
-    } catch {
-      setMessage('시간표를 바꾸지 못했어요.');
+    } catch (error) {
+      // 로그인한 폰에서 인터넷이 없으면 '인터넷 연결이 필요해요' 같은 한글 이유를 그대로 보여 준다(P6.15)
+      setMessage(userErrorMessage(error, '시간표를 바꾸지 못했어요.'));
       setWorking(false);
       return;
     }

@@ -7,6 +7,7 @@ import { borderRadius } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { formatTimeInput } from '../utils/timeInput';
 import { runAdminEdit } from '../sync/adminEditGate';
+import { userErrorMessage } from '../utils/userErrorMessage';
 
 const initialPeriods: readonly Period[] = [];
 
@@ -51,7 +52,7 @@ export function PeriodSettings({ onSaved }: { readonly onSaved?: () => Promise<v
       if (error instanceof Error && error.message === 'period times must be valid and ordered') {
         setMessage('시작과 끝 시간을 HH:MM으로 입력해 주세요. 끝 시간은 시작 시간보다 늦어야 해요.');
       } else {
-        setMessage('교시 시간을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+        setMessage(userErrorMessage(error, '교시 시간을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'));
       }
     } finally {
       setSaving(false);

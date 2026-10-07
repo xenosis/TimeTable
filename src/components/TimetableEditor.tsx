@@ -75,7 +75,7 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
     if (!draft.id || saving) return;
     setSaving(true);
     try { await runAdminEdit(async () => deleteTimetableItem(await getDatabase(), draft.id!, setId)); await finish('시간표 항목을 지우고 알림 예약도 새로 만들었어요.', '항목은 지웠지만 알림 예약을 다시 만들지 못했어요.'); }
-    catch { setMessage('항목을 지우지 못했어요.'); } finally { setSaving(false); }
+    catch (error) { setMessage(userErrorMessage(error, '항목을 지우지 못했어요.')); } finally { setSaving(false); }
   };
 
   return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
