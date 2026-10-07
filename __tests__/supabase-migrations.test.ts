@@ -25,7 +25,7 @@ const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`
 
 describe('supabase 마이그레이션', () => {
   it('파일 이름이 시간순으로 스키마 → 보안 규칙 → 보석 자격·이전 함수 순서로 적용되게 정렬된다', () => {
-    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql', 'tt_realtime.sql']);
+    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql', 'tt_realtime.sql', 'tt_mark_gems_given.sql']);
   });
 
   it('보석 자격 테이블도 RLS·권한·anon 회수가 다른 가족 테이블과 같다(P6.5)', () => {
