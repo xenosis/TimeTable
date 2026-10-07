@@ -5045,7 +5045,7 @@
     },
     {
       "id": "P6.6",
-      "status": "todo",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "동기화: 서버 → SQLite → 알림 재예약 → 위젯 갱신",
@@ -5059,10 +5059,31 @@
       "done_when": "온/오프라인 전환 시 데이터 정합성이 유지됨",
       "est_min": 45,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-07T13:08:35.483Z",
+      "updated_at": "2026-10-07T13:08:39.457Z",
+      "log": [
+        {
+          "at": "2026-10-07T13:08:35.483Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "하위 P6.13(받아오기)·P6.14(체크·보석 올리기)·P6.15(편집 서버 저장) 모두 done. 부모 완료 처리 착수."
+        },
+        {
+          "at": "2026-10-07T13:08:37.484Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "온/오프라인 전환 정합성: 하위 작업 실기기 확인으로 충족(오프라인 캐시 유지·오프라인 체크 대기 후 올리기·오프라인 편집 차단·다시 맞추기)."
+        },
+        {
+          "at": "2026-10-07T13:08:39.457Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "하위 P6.13·P6.14·P6.15 done(각각 병렬 리뷰·검사·실기기 확인). done_when '온/오프라인 전환 시 데이터 정합성 유지'는 하위 작업 실기기 확인으로 충족."
+        }
+      ],
+      "done_at": "2026-10-07",
+      "evidence": "하위 작업 P6.13·P6.14·P6.15 done, src/sync/*, supabase/migrations/20261006000000·20261006000100·20261007000000, docs/device-verification-2026-10-05.md(동기화 절들) · 검증: npm run check 통과(1.52.2, Jest 406), 서버 검증 편집 10·이전 17·RLS 59, 딸 폰 온/오프라인 전환 확인(받아오기·체크 올리기·편집 저장·다시 맞추기)"
     },
     {
       "id": "P6.13",
@@ -5150,7 +5171,7 @@
     },
     {
       "id": "P6.15",
-      "status": "in_progress",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "동기화 3: 로그인 상태 편집은 서버에 먼저 저장",
@@ -5166,15 +5187,29 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-07T11:30:44.211Z",
-      "updated_at": "2026-10-07T11:30:44.211Z",
+      "updated_at": "2026-10-07T13:08:17.317Z",
       "log": [
         {
           "at": "2026-10-07T11:30:44.211Z",
           "owner": "claude",
           "status": "in_progress",
           "note": "착수: 로그인 상태 관리자 편집을 서버에 먼저 저장 후 받아오기, 오프라인이면 안내. 함께: '서버 내용으로 이 폰 다시 맞추기'(확인 후 동기화 표시 초기화·서버 기준 교체), 로그아웃 시 동기화 표시 초기화. 끝나면 P6.14 시험 데이터 정리."
+        },
+        {
+          "at": "2026-10-07T12:06:29.818Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현 커밋 003d00c(v1.52.0)·79b5878(v1.52.1): src/sync/adminEdit.ts(편집 전후 가족 데이터 테이블 비교→서버 upsert/delete, 로컬 id 그대로, 실패 시 로컬 되돌림), adminEditGate.ts(화면 입구, SyncLifecycle 등록), 7개 편집 화면 15곳 연결, syncMarkers.ts(로그아웃 시 동기화 표시 초기화), SyncPanel '서버 내용으로 이 폰 다시 맞추기'(확인 후 서버 기준 강제 교체). Jest(sync-admin-edit 5, sync-runner 8), npm run check 통과(402). 딸 폰: 편집 서버 저장·오프라인 편집 되돌림·다시 맞추기로 양쪽 정리 확인. 리뷰 예정."
+        },
+        {
+          "at": "2026-10-07T13:08:17.317Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "critical-reviewer(SHA 001af6ae) 반영(커밋 d29009e, v1.52.2): H1 서버 함수 tt_apply_family_edit로 한 트랜잭션 저장, H2 실패 시 가족 데이터만 되돌리고 체크·보석 기록 보존, H3 편집·동기화 공용 잠금(syncLock), H4 새 행 덮어쓰기 거부(같은 id면 실패·다시 맞추기 안내), M5 서버에 세트 없으면 기본 세트 생성, M6 맞추기 전 편집 막기·다시 맞추기는 표시를 미리 지우지 않음, M7 로그아웃 확인 문구, M8 편집 화면 인터넷 안내, M9 지워진 행 되살리기·완료 이력 할 일 지우기 서버 거부, M10·M12 테스트·실기기 범위 보강, M11 가족 데이터 테이블만 읽기. 남은 결정(P6.8 때): 여러 기기 동시 편집 시 id 충돌은 거부 후 다시 맞추기로 처리."
         }
-      ]
+      ],
+      "done_at": "2026-10-07",
+      "evidence": "supabase/migrations/20261007000000_tt_apply_family_edit.sql(운영 적용), src/sync/{adminEdit,adminEditGate,syncLock,syncMarkers,syncRunner}.ts, 편집 화면 7개, src/components/{SyncPanel,AccountPanel}.tsx, 커밋 003d00c·79b5878·d29009e, docs/device-verification-2026-10-05.md(로그인 상태 편집 두 절) · 검증: npm run check 통과(1.52.2, Jest 406: sync-admin-edit 6·sync-runner 10), 서버 검증 편집 10·이전 17·RLS 59, 딸 폰: 항목 추가/수정/삭제·세트 만들기/이름/적용/지우기·오프라인 적용 차단·할 일 추가/삭제·보상 목표·교시·로그아웃 확인·다시 맞추기 뒤 유지·정리, critical-reviewer·backlog-explainer 병렬 리뷰(SHA 001af6ae)"
     },
     {
       "id": "P6.7",
