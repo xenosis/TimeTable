@@ -13,7 +13,6 @@ import { userErrorMessage } from '../utils/userErrorMessage';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
 import { emptyTimetableDraft, TimetableItemForm, type TimetableDraft } from './TimetableItemForm';
 import { runAdminEdit } from '../sync/adminEditGate';
-import { useKeyboardInset } from '../hooks/useKeyboardInset';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const toDraft = (item: EditableTimetableItem): TimetableDraft => ({
@@ -22,7 +21,6 @@ const toDraft = (item: EditableTimetableItem): TimetableDraft => ({
 });
 
 export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormState }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly onChanged: () => Promise<void>; readonly setId: TimetableSetId; readonly onFormState?: (state: AdminFormState) => void }) {
-  const keyboardInset = useKeyboardInset();
   const insets = useSafeAreaInsets();
   const [periods, setPeriods] = useState<readonly Period[]>([]);
   const [items, setItems] = useState<readonly EditableTimetableItem[]>([]);
@@ -100,10 +98,15 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
     <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.textMuted }]}>{message}</Text>
     <Modal visible={formOpen} animationType="slide" onRequestClose={requestClose}>
       <View style={[styles.modal, { backgroundColor: colors.background, paddingLeft: adminSpacing.md + insets.left, paddingRight: adminSpacing.md + insets.right }]}>
-        <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{draft.id ? '항목 수정' : '항목 추가'}</Text>
+        {/* Android 모달은 별도 창이라 키보드가 열려도 창이 줄지 않고 키보드 이벤트도 오지 않는다. 저장·취소를 맨 위에 두어 항상 보이게 한다(P9.7) */}
+        <View style={styles.titleRow}>
+          <Text accessibilityRole="header" style={[styles.heading, styles.modalTitle, { color: colors.text }]}>{draft.id ? '항목 수정' : '항목 추가'}</Text>
+          <Pressable accessibilityRole="button" disabled={saving} onPress={requestClose} style={[styles.headerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.addText, { color: colors.text }]}>취소</Text></Pressable>
+          <Pressable accessibilityRole="button" disabled={saving} onPress={() => void save()} style={[styles.headerButton, { backgroundColor: colors.primary, borderColor: colors.primary, opacity: saving ? 0.5 : 1 }]}><Text style={[styles.addText, { color: colors.onPrimary }]}>{saving ? '저장 중' : draft.id ? '수정 저장' : '추가'}</Text></Pressable>
+        </View>
         {message !== '' && <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.text, fontWeight: '700' }]}>{message}</Text>}
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.modalBody, { paddingBottom: styles.modalBody.paddingBottom + Math.max(keyboardInset, insets.bottom) }]}>
-          <TimetableItemForm draft={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} periods={periods} theme={theme} saving={saving} onSave={() => void save()} onCancel={requestClose} onRemove={() => void remove()} />
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.modalBody, { paddingBottom: styles.modalBody.paddingBottom + insets.bottom }]}>
+          <TimetableItemForm draft={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} periods={periods} theme={theme} saving={saving} onRemove={() => void remove()} />
         </ScrollView>
       </View>
     </Modal>
@@ -112,7 +115,7 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
 
 const styles = StyleSheet.create({
   card: { borderRadius: borderRadius.lg, borderWidth: 2, gap: adminSpacing.sm, padding: adminSpacing.md, width: '100%' },
-  titleRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  titleRow: { alignItems: 'center', flexDirection: 'row', gap: adminSpacing.xs, justifyContent: 'space-between' },
   heading: { fontSize: adminFontSize.title, fontWeight: '700' },
   add: { alignItems: 'center', borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.md },
   addText: { fontSize: adminFontSize.body, fontWeight: '700' },
@@ -122,4 +125,6 @@ const styles = StyleSheet.create({
   hint: { fontSize: adminFontSize.label },
   modal: { flex: 1, gap: adminSpacing.sm, padding: adminSpacing.md, paddingTop: adminSpacing.md * 2 },
   modalBody: { paddingBottom: adminSpacing.md * 2 },
+  modalTitle: { flex: 1 },
+  headerButton: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 1, justifyContent: 'center', minHeight: adminTouchTarget, minWidth: 64, paddingHorizontal: adminSpacing.sm },
 });

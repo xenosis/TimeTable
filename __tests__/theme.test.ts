@@ -21,7 +21,7 @@ const legacyPalette = [
 ];
 const cloudColors = {
   background: '#F0F9FF', surface: '#FFFFFF', primary: '#075985', onPrimary: '#FFFFFF', secondary: '#0E7490',
-  text: '#172554', textMuted: '#475569', border: '#BAE6FD', success: '#22C55E', warning: '#F59E0B', danger: '#EF4444',
+  text: '#172554', textMuted: '#475569', border: '#BAE6FD', success: '#22C55E', warning: '#F59E0B', danger: '#B91C1C',
 };
 const cloudDecorations = {
   cardBackground: '#FFFFFF', cardBorder: '#BAE6FD', accentShape: 'heart', stickerShape: 'heart', stickerAccent: '#075985',
@@ -66,6 +66,10 @@ describe('theme registry', () => {
         [theme.colors.primary, theme.colors.background],
         [theme.colors.text, theme.decorations.cardBackground],
         [theme.colors.textMuted, theme.decorations.cardBackground],
+        // 삭제·그만두기 버튼(흰 글자)과 '지우기'·글자 수 초과 글자(P7.5)
+        [theme.colors.onPrimary, theme.colors.danger],
+        [theme.colors.danger, theme.colors.background],
+        [theme.colors.danger, theme.colors.surface],
         ...theme.categories.map((category) => [category.textColor, category.backgroundColor]),
       ];
       for (const [foreground, background] of pairs) {

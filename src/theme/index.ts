@@ -116,7 +116,8 @@ const daylightTheme = {
   border: '#E2E8F0',
   success: '#22C55E',
   warning: '#F59E0B',
-  danger: '#EF4444',
+  // 삭제·그만두기 버튼의 흰 글자와 '지우기'·글자 수 초과 글자에 쓰여 4.5:1 이상이 되는 진한 빨강을 쓴다(P7.5, 이전 #EF4444는 3.8:1)
+  danger: '#B91C1C',
   },
   categories: daylightCategories,
   icons: daylightIcons,
@@ -170,6 +171,9 @@ export function assertValidTheme(theme: ThemeDefinition): ThemeDefinition {
     [theme.colors.textMuted, theme.decorations.cardBackground],
     [theme.decorations.stickerAccent, theme.decorations.cardBackground],
     [theme.colors.text, theme.colors.success],
+    [theme.colors.onPrimary, theme.colors.danger],
+    [theme.colors.danger, theme.colors.background],
+    [theme.colors.danger, theme.colors.surface],
     ...theme.categories.map((category) => [category.textColor, category.backgroundColor] as const),
   ];
   if (requiredContrastPairs.some(([foreground, background]) => contrastRatio(foreground, background) < 4.5)) {

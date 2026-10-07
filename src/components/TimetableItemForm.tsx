@@ -21,9 +21,9 @@ const categoryLabels: Record<TimetableCategory, string> = { school: '학교', ac
 const alertLabels = { none: '없음', notify: '알림', alarm: '알람' } as const;
 
 /** 시간표 항목 하나를 입력하는 폼(모달 안에서 쓴다). 색·아이콘은 현재 값만 보이고, 눌렀을 때 한 줄 가로 목록에서 고른다. */
-export function TimetableItemForm({ draft, onChange, periods, theme, saving, onSave, onCancel, onRemove }: {
+export function TimetableItemForm({ draft, onChange, periods, theme, saving, onRemove }: {
   readonly draft: TimetableDraft; readonly onChange: (patch: Partial<TimetableDraft>) => void; readonly periods: readonly Period[]; readonly theme: ThemeDefinition;
-  readonly saving: boolean; readonly onSave: () => void; readonly onCancel: () => void; readonly onRemove: () => void;
+  readonly saving: boolean; readonly onRemove: () => void;
 }) {
   const { colors } = theme;
   const [picker, setPicker] = useState<'color' | 'icon' | null>(null);
@@ -84,11 +84,8 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onS
       <Text style={[styles.hint, { color: colors.textMuted }]}>알림: 상단에 알려 줘요. 알람: 소리가 나고 잠금 화면에도 보여요. 바탕화면 위젯에는 학교 일정이 나오지 않아요. 학원·방과후는 학원, 돌봄교실은 돌봄으로 골라 주세요.</Text>
     </AdminCollapsible>
 
-    <View style={styles.inline}>
-      {action(draft.id ? '수정 저장' : '추가', onSave, colors.primary, colors.onPrimary)}
-      {action('취소', onCancel, colors.surface, colors.text)}
-      {draft.id != null && action('삭제', onRemove, colors.danger, colors.onPrimary)}
-    </View>
+    {/* 저장·취소는 모달 맨 위 제목 줄에 있다(키보드가 열려도 가리지 않게, P9.7). 삭제만 맨 아래에 둔다 */}
+    {draft.id != null && <View style={styles.inline}>{action('삭제', onRemove, colors.danger, colors.onPrimary)}</View>}
   </View>;
 }
 
