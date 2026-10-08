@@ -6,6 +6,7 @@ import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { useAccount } from '../store/accountStore';
 import { accountSummary } from './AccountPanel';
 import { ParentStatusCard } from './ParentStatusCard';
+import { ParentWeeklyReportCard } from './ParentWeeklyReportCard';
 
 /**
  * 아빠 계정으로 로그인한 기기의 첫 화면(P6.8). 딸 화면(오늘·시간표·보석) 대신 보인다.
@@ -20,6 +21,7 @@ export function ParentHome({ theme }: { readonly theme: ThemeDefinition }) {
     <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>아빠 화면</Text>
     <Text style={[styles.caption, { color: colors.textMuted }]}>{accountSummary(account)}</Text>
     {familyId ? <ParentStatusCard theme={theme} familyId={familyId} /> : null}
+    {familyId ? <ParentWeeklyReportCard theme={theme} familyId={familyId} /> : null}
     <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
       <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>시간표·할 일 고치기</Text>
       <Text style={[styles.body, { color: colors.textMuted }]}>여기서 고친 내용은 서버에 바로 저장돼요. 딸 폰에서 앱이 실행 중이고 인터넷에 연결돼 있으면 자동으로 반영돼요. 이 폰에서는 딸 알림·알람이 울리지 않아요.</Text>
