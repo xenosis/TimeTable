@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   hint: { fontSize: adminFontSize.label },
   text: { fontSize: adminFontSize.body, fontWeight: '700' },
   inline: { alignItems: 'center', flexDirection: 'row', gap: adminSpacing.xs },
-  input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, flex: 1, fontSize: adminFontSize.body, minHeight: adminTouchTarget, minWidth: 96, paddingHorizontal: adminSpacing.sm },
+  input: { borderColor: '#64748B', borderRadius: borderRadius.sm, borderWidth: 1, flex: 1, fontSize: adminFontSize.body, minHeight: adminTouchTarget, minWidth: 96, paddingHorizontal: adminSpacing.sm },
   choice: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 2, justifyContent: 'center', minHeight: adminTouchTarget, minWidth: adminTouchTarget, paddingHorizontal: adminSpacing.sm },
   summary: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.xs },
   swatch: { alignItems: 'center', borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: adminTouchTarget, minWidth: 64, paddingHorizontal: adminSpacing.sm },

@@ -174,6 +174,10 @@ export function assertValidTheme(theme: ThemeDefinition): ThemeDefinition {
     [theme.colors.onPrimary, theme.colors.danger],
     [theme.colors.danger, theme.colors.background],
     [theme.colors.danger, theme.colors.surface],
+    // 보상 목표 버튼(흰 글자/보조색)·주간표 강조 글자·캐릭터 머리 카드 글자(P7.5 리뷰: 실제로 쓰는 쌍)
+    [theme.colors.onPrimary, theme.colors.secondary],
+    [theme.colors.primary, theme.colors.surface],
+    ...(theme.character ? [[theme.colors.text, theme.character.softColor] as const, [theme.colors.textMuted, theme.character.softColor] as const] : []),
     ...theme.categories.map((category) => [category.textColor, category.backgroundColor] as const),
   ];
   if (requiredContrastPairs.some(([foreground, background]) => contrastRatio(foreground, background) < 4.5)) {

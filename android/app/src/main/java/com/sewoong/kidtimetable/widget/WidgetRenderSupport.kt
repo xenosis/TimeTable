@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 
 /** 일정·할 일 위젯이 함께 쓰는 그리기 도우미. */
@@ -13,10 +12,16 @@ object WidgetRenderSupport {
   const val DEFAULT_TEXT = 0xFF1E293B.toInt()
   const val DEFAULT_MUTED = 0xFF64748B.toInt()
 
-  /** "#RRGGBB" 같은 문자열을 색으로 바꾼다. 비어 있거나 깨진 값이면 fallback을 쓴다. */
-  fun color(value: String?, fallback: Int): Int = try {
-    if (value.isNullOrBlank()) fallback else Color.parseColor(value)
-  } catch (_: IllegalArgumentException) { fallback }
+  /**
+   * "#RRGGBB"·"#AARRGGBB" 문자열을 색으로 바꾼다. 비어 있거나 깨진 값이면 fallback을 쓴다.
+   * 안드로이드 Color 없이 직접 읽어 JVM 단위 테스트로 확인할 수 있게 한다(P7.5 리뷰).
+   */
+  fun color(value: String?, fallback: Int): Int {
+    val hex = value?.trim()?.removePrefix("#") ?: return fallback
+    if ((hex.length != 6 && hex.length != 8) || !hex.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' }) return fallback
+    val parsed = hex.toLong(16).toInt()
+    return if (hex.length == 6) parsed or 0xFF000000.toInt() else parsed
+  }
 
   fun withAlpha(color: Int, alpha: Int): Int = (alpha.coerceIn(0, 255) shl 24) or (color and 0x00FFFFFF)
 

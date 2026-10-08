@@ -70,7 +70,7 @@ export function accountSummary(account: AccountState): string {
 const styles = StyleSheet.create({
   container: { gap: adminSpacing.xs, width: '100%' },
   status: { fontSize: adminFontSize.body, fontWeight: '600' },
-  input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.body, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.xs },
+  input: { borderColor: '#64748B', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.body, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.xs },
   button: { alignItems: 'center', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: adminTouchTarget },
   outline: { borderWidth: 1 },
   buttonText: { fontSize: adminFontSize.body, fontWeight: '700' },

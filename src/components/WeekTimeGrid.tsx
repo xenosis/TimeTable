@@ -141,7 +141,8 @@ const styles = StyleSheet.create({
   timeLabel: { fontWeight: '700', textAlign: 'center' },
   dayColumn: { borderLeftWidth: StyleSheet.hairlineWidth, flex: 1, position: 'relative' },
   cell: { alignItems: 'center', borderRadius: 4, justifyContent: 'center', overflow: 'hidden', padding: 2, position: 'absolute' },
-  cellKind: { fontWeight: '600', opacity: 0.85, textAlign: 'center' },
+  // 흐리게(투명도) 그리면 과목 색 위 글자 대비가 4.5:1 아래로 떨어져 불투명하게 둔다(P7.5 리뷰)
+  cellKind: { fontWeight: '600', textAlign: 'center' },
   cellTitle: { fontWeight: '700', textAlign: 'center' },
   cellExtras: { textAlign: 'center' },
   unplaced: { gap: spacing.xs, marginTop: spacing.md },

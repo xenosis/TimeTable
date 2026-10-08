@@ -37,7 +37,8 @@ private class TaskListFactory(private val context: Context) : RemoteViewsService
     val muted = WidgetRenderSupport.color(theme?.textMuted, WidgetRenderSupport.DEFAULT_MUTED)
     val primary = WidgetRenderSupport.color(theme?.primary, text)
     // 끝낸 일은 체크 표시와 흐린 글자·취소선으로, 아직 못 한 일은 빈 상자와 진한 글자로 보여준다
-    val color = if (row.completed) WidgetRenderSupport.withAlpha(muted, 0xAA) else text
+    // 끝낸 할 일은 흐린 글자색과 취소선·체크로 구분한다. 투명하게 하면 배경 대비가 4.5:1 아래로 떨어진다(P7.5 리뷰)
+    val color = if (row.completed) muted else text
     return RemoteViews(context.packageName, R.layout.task_widget_item).apply {
       setTextViewText(R.id.task_item_box, if (row.completed) "☑" else "☐")
       setTextColor(R.id.task_item_box, if (row.completed) color else primary)

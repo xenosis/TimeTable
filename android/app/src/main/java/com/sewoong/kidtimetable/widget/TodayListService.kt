@@ -35,7 +35,8 @@ private class TodayListFactory(private val context: Context) : RemoteViewsServic
     val muted = WidgetRenderSupport.color(theme?.textMuted, WidgetRenderSupport.DEFAULT_MUTED)
     val marker = WidgetRenderSupport.color(row.markerColor, WidgetRenderSupport.DEFAULT_MUTED)
     val past = row.state == RowState.PAST
-    val rowText = if (past) WidgetRenderSupport.withAlpha(muted, 0xAA) else text
+    // 지난 일정은 흐린 글자색으로만 구분한다(투명도를 더하면 대비가 4.5:1 아래, P7.5 리뷰)
+    val rowText = if (past) muted else text
     return RemoteViews(context.packageName, R.layout.today_widget_item).apply {
       // 진행 중인 일정은 과목 색을 옅게 깐 배경으로 강조하고, 끝난 일정은 글자와 표식을 흐리게 한다
       setInt(R.id.widget_item_row, "setBackgroundColor", if (row.state == RowState.CURRENT) WidgetRenderSupport.withAlpha(marker, 0x40) else 0)

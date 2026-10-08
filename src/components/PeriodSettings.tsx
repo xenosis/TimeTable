@@ -80,7 +80,7 @@ export function PeriodSettings({ onSaved, theme }: { readonly onSaved?: () => Pr
 const styles = StyleSheet.create({
   container: { gap: adminSpacing.xs, width: '100%' }, description: { fontSize: adminFontSize.label },
   row: { alignItems: 'center', flexDirection: 'row', gap: adminSpacing.xs }, label: { fontSize: adminFontSize.label, fontWeight: '700', minWidth: 52 },
-  input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.label, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.xs, flex: 1 }, wave: { fontSize: adminFontSize.body },
+  input: { borderColor: '#64748B', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.label, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.xs, flex: 1 }, wave: { fontSize: adminFontSize.body },
   secondary: { alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 2, justifyContent: 'center', minHeight: adminTouchTarget }, secondaryText: { fontSize: adminFontSize.label, fontWeight: '700' },
   save: { alignItems: 'center', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: adminTouchTarget }, disabled: { opacity: 0.6 }, saveText: { fontSize: adminFontSize.body, fontWeight: '700' }, message: { fontSize: adminFontSize.label, textAlign: 'center' },
 });

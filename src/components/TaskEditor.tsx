@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   // 폼 안쪽 여백·테두리를 두지 않아 카드 안 폭을 요일 7칸(342dp)에 최대한 쓴다
   form: { borderTopWidth: 1, gap: adminSpacing.sm, paddingTop: adminSpacing.sm },
   label: { fontSize: adminFontSize.label },
-  input: { borderColor: '#94A3B8', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.body, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.sm },
+  input: { borderColor: '#64748B', borderRadius: borderRadius.sm, borderWidth: 1, fontSize: adminFontSize.body, minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.sm },
   inline: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: adminSpacing.xs },
   choice: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 2, flexGrow: 1, justifyContent: 'center', minHeight: adminTouchTarget, minWidth: 64 },
   action: { alignItems: 'center', borderRadius: borderRadius.sm, justifyContent: 'center', minHeight: adminTouchTarget, paddingHorizontal: adminSpacing.md },
