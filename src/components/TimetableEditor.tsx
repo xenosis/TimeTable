@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
 import { getPeriods, type Period } from '../db/periodRepository';
@@ -13,7 +13,6 @@ import { userErrorMessage } from '../utils/userErrorMessage';
 import { AdminWeekdayPicker } from './AdminWeekdayPicker';
 import { emptyTimetableDraft, TimetableItemForm, type TimetableDraft } from './TimetableItemForm';
 import { runAdminEdit } from '../sync/adminEditGate';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const toDraft = (item: EditableTimetableItem): TimetableDraft => ({
   id: item.id, weekdays: [item.weekday], title: item.title, periodNo: item.periodNo ?? null, startTime: item.startTime ?? '', endTime: item.endTime ?? '', category: item.category,
@@ -21,7 +20,6 @@ const toDraft = (item: EditableTimetableItem): TimetableDraft => ({
 });
 
 export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormState }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly onChanged: () => Promise<void>; readonly setId: TimetableSetId; readonly onFormState?: (state: AdminFormState) => void }) {
-  const insets = useSafeAreaInsets();
   const [periods, setPeriods] = useState<readonly Period[]>([]);
   const [items, setItems] = useState<readonly EditableTimetableItem[]>([]);
   // 목록 필터(보는 요일)와 폼의 반복 요일은 서로 다른 상태다. 필터를 바꿔도 폼 값은 변하지 않는다.
@@ -51,6 +49,12 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
     if (!dirty) { closeNow(); return; }
     Alert.alert('작성 중인 내용이 있어요', '닫으면 저장하지 않은 내용이 사라져요.', [{ text: '계속 편집', style: 'cancel' }, { text: '버리고 닫기', style: 'destructive', onPress: closeNow }]);
   };
+  // 편집 폼은 관리자 화면 안에서 열리므로(키보드 처리 공유) 휴대폰 뒤로 가기는 화면을 떠나지 않고 폼 닫기로 쓴다
+  useEffect(() => {
+    if (!formOpen) return undefined;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { requestClose(); return true; });
+    return () => subscription.remove();
+  });
 
   const memoLength = Array.from(draft.memo.trim()).length;
   const input = () => ({ title: draft.title, periodNo: draft.periodNo, startTime: draft.periodNo == null ? draft.startTime : null, endTime: draft.periodNo == null ? draft.endTime : null, category: draft.category, colorKey: draft.colorKey, iconKey: draft.iconKey, alertMode: draft.alertMode, alertBeforeMin: Number(draft.alertBeforeMin), memo: draft.memo, setId });
@@ -73,12 +77,36 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
     } catch (error) { setMessage(`저장하지 못했어요: ${userErrorMessage(error, '잠시 뒤 다시 시도해 주세요.')}`); }
     finally { setSaving(false); }
   };
+  // 삭제는 되돌릴 수 없어 한 번 더 묻는다(P9.7 리뷰: 아래 버튼을 실수로 누르는 경우)
+  const confirmRemove = () => {
+    if (!draft.id || saving) return;
+    Alert.alert('이 항목을 지울까요?', `${draft.title.trim() || '이 항목'}을(를) 시간표에서 지워요. 되돌릴 수 없어요.`, [{ text: '취소', style: 'cancel' }, { text: '지우기', style: 'destructive', onPress: () => void remove() }]);
+  };
   const remove = async () => {
     if (!draft.id || saving) return;
     setSaving(true);
     try { await runAdminEdit(async () => deleteTimetableItem(await getDatabase(), draft.id!, setId)); await finish('시간표 항목을 지우고 알림 예약도 새로 만들었어요.', '항목은 지웠지만 알림 예약을 다시 만들지 못했어요.'); }
     catch (error) { setMessage(userErrorMessage(error, '항목을 지우지 못했어요.')); } finally { setSaving(false); }
   };
+
+  const actionButtons = <>
+    <Pressable accessibilityRole="button" accessibilityState={{ disabled: saving }} disabled={saving} onPress={requestClose} style={[styles.headerButton, { backgroundColor: colors.surface, borderColor: colors.border, opacity: saving ? 0.5 : 1 }]}><Text style={[styles.addText, { color: colors.text }]}>취소</Text></Pressable>
+    <Pressable accessibilityRole="button" accessibilityState={{ disabled: saving, busy: saving }} disabled={saving} onPress={() => void save()} style={[styles.headerButton, { backgroundColor: colors.primary, borderColor: colors.primary, opacity: saving ? 0.5 : 1 }]}><Text style={[styles.addText, { color: colors.onPrimary }]}>{saving ? '저장 중' : draft.id ? '수정 저장' : '추가'}</Text></Pressable>
+  </>;
+
+  // 편집 폼은 목록 자리에서 열린다. 별도 창(Modal)은 Android에서 키보드에 맞춰 줄지 않아 아래 입력칸이 가려졌다(P9.7 리뷰 M1).
+  // 관리자 화면의 KeyboardAvoidingView 안에 있어야 할 일 폼처럼 아래 칸도 키보드 위로 스크롤된다
+  if (formOpen) {
+    return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
+      <View style={styles.titleRow}>
+        <Text accessibilityRole="header" style={[styles.heading, styles.formTitle, { color: colors.text }]}>{draft.id ? '항목 수정' : '항목 추가'}</Text>
+        {actionButtons}
+      </View>
+      {message !== '' && <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.text, fontWeight: '700' }]}>{message}</Text>}
+      <TimetableItemForm draft={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} periods={periods} theme={theme} saving={saving} onRemove={confirmRemove} />
+      <View style={styles.bottomActions}>{actionButtons}</View>
+    </View>;
+  }
 
   return <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
     <View style={styles.titleRow}>
@@ -96,20 +124,6 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
       </Pressable>;
     })}
     <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.textMuted }]}>{message}</Text>
-    <Modal visible={formOpen} animationType="slide" onRequestClose={requestClose}>
-      <View style={[styles.modal, { backgroundColor: colors.background, paddingLeft: adminSpacing.md + insets.left, paddingRight: adminSpacing.md + insets.right }]}>
-        {/* Android 모달은 별도 창이라 키보드가 열려도 창이 줄지 않고 키보드 이벤트도 오지 않는다. 저장·취소를 맨 위에 두어 항상 보이게 한다(P9.7) */}
-        <View style={styles.titleRow}>
-          <Text accessibilityRole="header" style={[styles.heading, styles.modalTitle, { color: colors.text }]}>{draft.id ? '항목 수정' : '항목 추가'}</Text>
-          <Pressable accessibilityRole="button" disabled={saving} onPress={requestClose} style={[styles.headerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.addText, { color: colors.text }]}>취소</Text></Pressable>
-          <Pressable accessibilityRole="button" disabled={saving} onPress={() => void save()} style={[styles.headerButton, { backgroundColor: colors.primary, borderColor: colors.primary, opacity: saving ? 0.5 : 1 }]}><Text style={[styles.addText, { color: colors.onPrimary }]}>{saving ? '저장 중' : draft.id ? '수정 저장' : '추가'}</Text></Pressable>
-        </View>
-        {message !== '' && <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.text, fontWeight: '700' }]}>{message}</Text>}
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.modalBody, { paddingBottom: styles.modalBody.paddingBottom + insets.bottom }]}>
-          <TimetableItemForm draft={draft} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} periods={periods} theme={theme} saving={saving} onRemove={() => void remove()} />
-        </ScrollView>
-      </View>
-    </Modal>
   </View>;
 }
 
@@ -123,8 +137,7 @@ const styles = StyleSheet.create({
   time: { fontSize: adminFontSize.label, fontWeight: '700', minWidth: 44 },
   rowTitle: { flex: 1, fontSize: adminFontSize.body, fontWeight: '700' },
   hint: { fontSize: adminFontSize.label },
-  modal: { flex: 1, gap: adminSpacing.sm, padding: adminSpacing.md, paddingTop: adminSpacing.md * 2 },
-  modalBody: { paddingBottom: adminSpacing.md * 2 },
-  modalTitle: { flex: 1 },
+  formTitle: { flex: 1 },
+  bottomActions: { flexDirection: 'row', gap: adminSpacing.xs, justifyContent: 'flex-end' },
   headerButton: { alignItems: 'center', borderRadius: borderRadius.sm, borderWidth: 1, justifyContent: 'center', minHeight: adminTouchTarget, minWidth: 64, paddingHorizontal: adminSpacing.sm },
 });

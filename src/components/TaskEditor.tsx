@@ -65,7 +65,12 @@ export function TaskEditor({ theme, onChanged, onFormState }: { readonly theme: 
     const input = { title: draft.title, repeatWeekdays: draft.weekdays, taskDate: draft.date, effectiveFrom: draft.effectiveFrom, remindTime: draft.remindTime, alertMode: draft.alertMode };
     return draft.id ? updateTask(database, draft.id, input) : createTask(database, input);
   }, '할 일을 저장했고 알림 예약도 새로 만들었어요.', '할 일은 저장했지만 알림 예약에 실패했어요. 알림 준비 권한을 확인한 뒤 다시 저장해 주세요.', '할 일을 저장하지 못했어요.');
-  const remove = () => { if (draft.id) void run((database) => deleteTask(database, draft.id!), '할 일을 지웠어요.', '할 일은 지웠지만 알림 예약을 다시 만들지 못했어요.', '할 일을 지우지 못했어요.'); };
+  const removeNow = () => { if (draft.id) void run((database) => deleteTask(database, draft.id!), '할 일을 지웠어요.', '할 일은 지웠지만 알림 예약을 다시 만들지 못했어요.', '할 일을 지우지 못했어요.'); };
+  // 삭제는 되돌릴 수 없어 한 번 더 묻는다(시간표 항목과 같은 규칙, P9.7 리뷰)
+  const remove = () => {
+    if (!draft.id) return;
+    Alert.alert('이 할 일을 지울까요?', `${draft.title.trim() || '이 할 일'}을(를) 목록에서 지워요. 되돌릴 수 없어요.`, [{ text: '취소', style: 'cancel' }, { text: '지우기', style: 'destructive', onPress: removeNow }]);
+  };
   const endToday = (task: EndableTask) => run((database) => endRecurringTask(database, task.id, today()), `${task.title}을(를) 오늘까지만 하고 그만두기로 했어요. 내일부터 목록에서 빠져요.`, '그만두기는 저장했지만 알림 예약을 다시 만들지 못했어요.', '그만두기를 저장하지 못했어요.');
 
   const button = (label: string, onPress: () => void, background: string, textColor: string) => (
