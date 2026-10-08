@@ -8,7 +8,8 @@ param(
 if ($Release -and $OfflineTest) { throw 'Release와 OfflineTest는 함께 지정할 수 없습니다.' }
 
 $root = Split-Path $PSScriptRoot -Parent
-$app = Get-Content "$root\app.json" -Raw | ConvertFrom-Json
+# app.json에 한글 앱 이름이 있어 PowerShell 5.1 기본 인코딩으로 읽으면 깨진다. UTF-8로 읽는다
+$app = Get-Content "$root\app.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 $javaHome = if ($env:TIMETABLE_JAVA_HOME) { $env:TIMETABLE_JAVA_HOME } else { Join-Path ${env:ProgramFiles} 'Android\Android Studio\jbr' }
 if (-not (Test-Path (Join-Path $javaHome 'bin\java.exe'))) { throw "JDK 21을 찾을 수 없습니다: $javaHome" }
 $usesReleaseVariant = $Release -or $OfflineTest
