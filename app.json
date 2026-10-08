@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "TimeTable",
+    "name": "채아시간표",
     "slug": "kidtimetable",
     "scheme": "kidtimetable",
-    "version": "1.55.7",
+    "version": "1.56.0",
     "orientation": "default",
     "icon": "./assets/timetable-icon.png",
     "userInterfaceStyle": "light",
     "android": {
-      "package": "com.sewoong.kidtimetable",
-      "versionCode": 153,
+      "package": "com.chaea.timetable",
+      "versionCode": 154,
       "permissions": [
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM",

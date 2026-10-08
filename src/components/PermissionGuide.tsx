@@ -51,7 +51,7 @@ export function PermissionGuide({ theme, hideWhenReady = false, collapseWhenRead
         if (shouldOpenNotificationSettings(granted, nextStatus.notifications)) await openAndroidPermissionSettings(key);
       } else await openAndroidPermissionSettings(key);
       refresh();
-    } catch { setActionError('설정을 열지 못했어요. 휴대폰 설정에서 TimeTable 권한을 확인해 주세요.'); }
+    } catch { setActionError('설정을 열지 못했어요. 휴대폰 설정에서 채아시간표 권한을 확인해 주세요.'); }
     finally { setOpening(null); }
   };
 

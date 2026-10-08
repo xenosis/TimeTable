@@ -92,13 +92,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.sewoong.kidtimetable'
+    namespace 'com.chaea.timetable'
     defaultConfig {
-        applicationId 'com.sewoong.kidtimetable'
+        applicationId 'com.chaea.timetable'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 153
-        versionName "1.55.7"
+        versionCode 154
+        versionName "1.56.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }

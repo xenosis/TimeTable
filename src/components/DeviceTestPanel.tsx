@@ -35,7 +35,7 @@ export function DeviceTestPanel({ theme }: { readonly theme: ThemeDefinition }) 
     setIsScheduling(true);
     try {
       const result = delayMs === undefined ? await scheduleNotificationPoc() : await scheduleNotificationPoc(delayMs);
-      if (result.kind === 'permission-denied') { setStatus('알림 권한이 필요해요. 설정에서 TimeTable 알림을 허용한 뒤 다시 눌러 주세요.'); return; }
+      if (result.kind === 'permission-denied') { setStatus('알림 권한이 필요해요. 설정에서 채아시간표 알림을 허용한 뒤 다시 눌러 주세요.'); return; }
       setStatus(doneMessage(result.notificationId));
     } catch (error) { setStatus(`${failMessage}: ${errorText(error)}`); }
     finally { setIsScheduling(false); }

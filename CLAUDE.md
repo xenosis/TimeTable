@@ -1,7 +1,7 @@
 ## 프로젝트 개요
 - 초등학교 2학년 딸을 위한 시간표 · 할 일 관리 앱
 - 플랫폼: Android (React Native + Expo)
-- 패키지: com.sewoong.kidtimetable
+- 패키지: com.chaea.timetable (앱 이름 "채아시간표", 2026-10-09 com.sewoong.kidtimetable에서 변경)
 - 사용자: 딸(체크·보기), 아빠(관리자 — 원격 수정 + 딸 폰 PIN 수정)
 - 자세한 조사 내용·설계: `docs/research.md` / 작업 목록: `docs/tasks.md`
 
