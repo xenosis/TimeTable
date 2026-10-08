@@ -4,7 +4,7 @@ import { createTask, endRecurringTask, setTaskCompleted } from '../src/db/taskRe
 import { createTimetableItem } from '../src/db/timetableRepository';
 import { createTimetableSet, getActiveTimetableSet, setActiveTimetableSet } from '../src/db/timetableSetRepository';
 import type { TimetableItemInput } from '../src/db/types';
-import { defaultTheme as daylightTheme } from '../src/theme';
+import { defaultTheme as daylightTheme, themes } from '../src/theme';
 import { buildWidgetData, WIDGET_DAYS, WIDGET_MAX_BYTES } from '../src/widgets/widgetDataV2';
 import { openTestDatabase } from '../test-utils/sqliteTestDatabase';
 
@@ -62,6 +62,20 @@ describe('buildWidgetData: 위젯 v2 데이터', () => {
     const [entry] = (await buildWidgetData(database, daylightTheme, WEDNESDAY)).days[0].schedule;
     const math = daylightTheme.categories.find((category) => category.key === 'math')!;
     expect(entry).toMatchObject({ startTime: '09:00', endTime: '10:00', backgroundColor: math.backgroundColor, textColor: math.textColor });
+  });
+
+  it('지원하는 모든 테마에서 위젯 색은 그 테마의 화면 색이고, 과목 색은 그 테마의 같은 의미 색이다(P7.5)', async () => {
+    const database = await freshDatabase();
+    const regular = (await getActiveTimetableSet(database)).id;
+    await createTimetableItem(database, item(regular, '수학', 3));
+    expect(themes.length).toBeGreaterThanOrEqual(2);
+    for (const theme of themes) {
+      const data = await buildWidgetData(database, theme, WEDNESDAY);
+      const { background, surface, text, textMuted, primary, onPrimary, border } = theme.colors;
+      expect(data.theme).toEqual({ background, surface, text, textMuted, primary, onPrimary, border });
+      const math = theme.categories.find((category) => category.key === 'math')!;
+      expect(data.days[0].schedule[0]).toMatchObject({ backgroundColor: math.backgroundColor, textColor: math.textColor });
+    }
   });
 
   it('할 일: 반복 요일·특정 날짜·종료일·완료 여부를 날짜별로 반영한다', async () => {
