@@ -79,7 +79,7 @@
 5. 홈 화면으로 나가되 최근 앱 목록에서 강제 종료하지 말고, Android가 백그라운드 작업을 실행할 수 있도록 20분 이상 둔다. Android가 절전 상태에 따라 더 늦게 실행할 수 있다.
 6. 다시 앱을 열고 **PIN을 다시 입력**한 뒤 알림 시간을 아직 오지 않은 시각으로 바꿔 저장한다.
 
-> 백그라운드 재예약 트리거 자체는 `adb shell cmd jobscheduler run -f com.sewoong.kidtimetable <작업 번호>`(작업 번호는 `dumpsys jobscheduler`의 `androidx.work...SystemJobService`)로 바로 실행해 볼 수 있다. 실행 직후 `dumpsys alarm`의 예약 설정 이력 시각이 갱신되는지 본다. 앱 복귀·백그라운드는 저장 없이도 예약이 유지되는지를 보고, 저장 단계(4·6)는 데이터 변경 트리거를 별도로 확인한다.
+> 백그라운드 재예약 트리거 자체는 `adb shell cmd jobscheduler run -f com.chaea.timetable <작업 번호>`(작업 번호는 `dumpsys jobscheduler`의 `androidx.work...SystemJobService`)로 바로 실행해 볼 수 있다. 실행 직후 `dumpsys alarm`의 예약 설정 이력 시각이 갱신되는지 본다. 앱 복귀·백그라운드는 저장 없이도 예약이 유지되는지를 보고, 저장 단계(4·6)는 데이터 변경 트리거를 별도로 확인한다.
 
 **통과:** 3~6단계 뒤에는 예전 제목이나 예전 시각의 중복 알림이 없고, 마지막으로 저장한 제목·시각의 알림만 한 번 도착한다. 앱 복귀나 백그라운드 대기 뒤에도 저장한 시간표가 사라지지 않아야 한다.
 

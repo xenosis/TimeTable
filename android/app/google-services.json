@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "353166620831",
+    "project_id": "routineplanner-e9bbd",
+    "storage_bucket": "routineplanner-e9bbd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353166620831:android:202b64eb016179e6fb4aaa",
+        "android_client_info": {
+          "package_name": "com.chaea.timetable"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUxyc4Iu_7l-LiVQ6nuhFs-0Yg7zdddy0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353166620831:android:aabfc89573873b52fb4aaa",
+        "android_client_info": {
+          "package_name": "com.sewoong.routineplanner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUxyc4Iu_7l-LiVQ6nuhFs-0Yg7zdddy0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

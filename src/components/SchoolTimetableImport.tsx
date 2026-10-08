@@ -7,6 +7,8 @@ import type { TimetableSetId } from '../db/types';
 import { fetchClassTimetable, searchElementarySchools, type SchoolInfo } from '../neis/neisClient';
 import { buildWeekPlan, missingPeriods, replaceSchoolItems, schoolWeekDates, type WeekdayPlan } from '../neis/neisImport';
 import { loadSchoolProfile, saveSchoolProfile, type SchoolProfile } from '../neis/schoolProfile';
+import { loadAutoRefreshState, refreshSchoolTimetableIfDue, type AutoRefreshState } from '../neis/schoolAutoRefresh';
+import { formatSyncTime } from '../sync/syncStatus';
 import { runAdminEdit } from '../sync/adminEditGate';
 import { borderRadius, type ThemeDefinition } from '../theme';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
@@ -32,10 +34,12 @@ export function SchoolTimetableImport({ theme, setId, onImported }: { readonly t
   const [missing, setMissing] = useState<readonly number[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [auto, setAuto] = useState<AutoRefreshState | null>(null);
 
   useEffect(() => {
     let active = true;
     void loadSchoolProfile().then((saved) => { if (active) { setProfile(saved); setEditing(saved === null); } }).catch(() => { if (active) { setProfile(null); setEditing(true); } });
+    void loadAutoRefreshState().then((state) => { if (active) setAuto(state); });
     return () => { active = false; };
   }, []);
 
@@ -65,9 +69,16 @@ export function SchoolTimetableImport({ theme, setId, onImported }: { readonly t
     setPlan(next); setMissing(missingPeriods(next, periods.map((period) => period.periodNo)));
     if (next.every((day) => day.entries.length === 0)) setMessage('이 주에는 나이스에 들어 있는 시간표가 없어요.');
   });
+  // 자동 갱신(P8.7)을 지금 바로 확인한다. 바뀌었으면 화면·알림을 다시 읽는다
+  const checkNow = () => run(async () => {
+    const state = await refreshSchoolTimetableIfDue(new Date(), true);
+    if (!state) { setMessage('이 폰에서는 자동 갱신을 하지 않아요(아빠 폰이거나 아직 서버와 맞추기 전).'); return; }
+    setAuto(state);
+    if (state.result === 'updated') await onImported().catch(() => undefined);
+  });
   const apply = () => {
     if (!plan) return;
-    Alert.alert('학교 시간표를 바꿀까요?', '과목이 있는 요일의 \'학교\' 일정을 불러온 시간표로 바꿔요. 학원·돌봄 일정과 비어 있는 요일은 그대로예요.', [
+    Alert.alert('학교 시간표를 바꿀까요?', '과목이 있는 요일의 \'학교\' 일정을 불러온 시간표로 바꾸고, 이 주의 시간표가 매주 반복돼요. 학교 일정에 넣어 둔 알림·메모는 초기화돼요. 학원·돌봄 일정과 비어 있는 요일은 그대로예요.', [
       { text: '취소', style: 'cancel' },
       { text: '바꾸기', onPress: () => void run(async () => {
         const created = await runAdminEdit(async () => replaceSchoolItems(await getDatabase(), setId, plan));
@@ -96,6 +107,8 @@ export function SchoolTimetableImport({ theme, setId, onImported }: { readonly t
       <View style={styles.row}><View style={styles.flex}>{input(grade, setGrade, '학년 (1~6)', true)}</View><View style={styles.flex}>{input(classNo, setClassNo, '반', true)}</View></View>
       {button('학교·학년·반 저장', () => void saveProfile())}
     </View>}
+    {profile && !editing && <Text accessibilityLiveRegion="polite" style={[styles.hint, { color: colors.textMuted }]}>{auto ? `자동 갱신: ${formatSyncTime(auto.checkedAt)} 확인 — ${auto.message}` : '자동 갱신: 앱을 켤 때마다(6시간 간격) 이번 주 시간표를 확인해 바뀌면 학교 일정만 바꿔요.'}</Text>}
+    {profile && !editing && <View style={styles.row}>{button('지금 나이스 확인', () => void checkNow())}</View>}
     {profile && !editing && <View style={styles.row}>{button('이번 주 불러오기', () => void load(false), false)}{button('다음 주 불러오기', () => void load(true), false)}</View>}
     {plan && <View style={[styles.preview, { borderColor: colors.border }]}>
       {plan.map((day) => <Text key={day.date} style={[styles.item, { color: day.entries.length ? colors.text : colors.textMuted }]}>{dayLine(day)}</Text>)}

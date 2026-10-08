@@ -12,7 +12,7 @@ Android는 데이터 메시지를 받은 뒤 현재 딸 가족과 기기 역할�
 
 ## 필요한 설정
 
-1. Firebase에 앱의 실제 Android 패키지명으로 앱을 등록한다. 현재 패키지는 `com.sewoong.kidtimetable`이며, 사용자가 결정한 변경 목표는 `com.chaea.timetable`이다. P7의 이름 변경 순서를 임의로 앞당기지 않았다. Firebase에 등록한 패키지명은 나중에 바꿀 수 없으므로 변경 후에는 새 Android 등록이 필요하다.
+1. Firebase에 앱의 실제 Android 패키지명으로 앱을 등록한다. 현재 패키지는 `com.chaea.timetable`이며, 사용자가 결정한 변경 목표는 `com.chaea.timetable`이다. P7의 이름 변경 순서를 임의로 앞당기지 않았다. Firebase에 등록한 패키지명은 나중에 바꿀 수 없으므로 변경 후에는 새 Android 등록이 필요하다.
 2. 해당 앱의 `google-services.json`을 `android/app/google-services.json`에 둔다. 다른 앱의 등록 파일을 복사하지 않는다. 파일이 있으면 Gradle이 Google services 플러그인을 적용한다. Expo 설정에도 `android.googleServicesFile` 경로를 기록한다.
 3. Expo 프로젝트의 실제 ID를 `app.json`의 `expo.extra.eas.projectId`에 기록하고 해당 프로젝트에 FCM v1 자격 증명을 등록한다. 서비스 계정 비공개 키는 앱이나 Git에 넣지 않는다.
 4. 서버 함수 배포는 별도 승인 후 실행한다. `supabase/config.toml`의 `verify_jwt = true`와 함수 내부 사용자·가족 검증을 유지한다. Expo 프로젝트가 액세스 토큰 보호를 사용하면 서버 함수의 `EXPO_ACCESS_TOKEN` 비밀값도 설정한다.

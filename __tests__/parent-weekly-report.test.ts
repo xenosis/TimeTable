@@ -53,3 +53,12 @@ test('주별 보석 한 줄은 이번 주를 따로 표시한다', () => {
   expect(gemWeekLine(week, true)).toBe('이번 주(10/5~): 작은 보석 +3 · 큰 보석 -1 → 작은 9개 · 큰 0개');
   expect(gemWeekLine({ ...week, gemChange: 0 }, false)).toBe('10/5 주: 작은 보석 0 · 큰 보석 -1 → 작은 9개 · 큰 0개');
 });
+
+test('한국 시간 새벽(UTC로는 전날)에 생긴 장부 기록은 한국 날짜의 주에 들어간다', () => {
+  // 실행 환경의 시간대와 무관하게, 2026-10-05(월) 01:30 한국 시간 = 2026-10-04 16:30 UTC
+  const mondayEarlyKst = '2026-10-04 16:30:00';
+  const weeks = buildGemWeeks([row(2, 'gem', mondayEarlyKst)], THURSDAY);
+  const localDay = new Date('2026-10-04T16:30:00Z');
+  const expectedWeek = localDay.getDay() === 0 ? '2026-09-28' : '2026-10-05'; // 한국(UTC+9)에서는 월요일이라 이번 주
+  expect(weeks.find((week) => week.gemChange === 2)?.weekStart).toBe(expectedWeek);
+});

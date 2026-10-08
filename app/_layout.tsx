@@ -6,10 +6,11 @@ import { RollingRefreshLifecycle } from '../src/notifications/RollingRefreshLife
 import { AccountLifecycle } from '../src/server/AccountLifecycle';
 import { SyncLifecycle } from '../src/sync/SyncLifecycle';
 import { PushLifecycle } from '../src/push/PushLifecycle';
+import { SchoolAutoRefreshLifecycle } from '../src/neis/SchoolAutoRefreshLifecycle';
 import { ThemeProvider, useActiveTheme } from '../src/theme/provider';
 
 export default function RootLayout() {
-  return <ThemeProvider><RollingRefreshLifecycle /><AccountLifecycle /><SyncLifecycle /><PushLifecycle /><ThemedRootLayout /></ThemeProvider>;
+  return <ThemeProvider><RollingRefreshLifecycle /><AccountLifecycle /><SyncLifecycle /><PushLifecycle /><SchoolAutoRefreshLifecycle /><ThemedRootLayout /></ThemeProvider>;
 }
 
 function ThemedRootLayout() {

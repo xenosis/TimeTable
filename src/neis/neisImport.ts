@@ -49,15 +49,25 @@ export function missingPeriods(plan: readonly WeekdayPlan[], definedPeriods: rea
  * 과목이 있는 요일만 그 요일의 '학교' 일정을 나이스 시간표로 바꾼다. 학원·돌봄·생활 일정과 빈 요일(공휴일)은 그대로 둔다.
  * 로그인한 폰에서는 호출하는 쪽이 runAdminEdit로 감싸 서버에 먼저 저장한다.
  */
-export async function replaceSchoolItems(database: Pick<TimetableDatabase, 'runAsync'>, setId: TimetableSetId, plan: readonly WeekdayPlan[]): Promise<number> {
+export async function replaceSchoolItems(database: Pick<TimetableDatabase, 'execAsync' | 'runAsync'>, setId: TimetableSetId, plan: readonly WeekdayPlan[], options: { readonly clearEmptyDays?: boolean } = {}): Promise<number> {
+  // 자동 갱신(P8.7)에서는 그 주에 수업이 있는데 비어 있는 요일을 휴일로 보고 그날 학교 일정을 비운다(다음 주 확인 때 다시 채워진다)
+  const clearEmpty = options.clearEmptyDays === true && plan.some((day) => day.entries.length > 0);
   let created = 0;
-  for (const day of plan) {
-    if (day.entries.length === 0) continue;
-    await database.runAsync("DELETE FROM timetable_items WHERE family_id = 'local-family' AND set_id = ? AND weekday = ? AND category = 'school'", setId, day.weekday);
-    for (const entry of day.entries) {
-      await createTimetableItem(database, { weekday: day.weekday, periodNo: entry.period, title: entry.subject, category: 'school', ...subjectStyle(entry.subject), alertMode: 'none', setId });
-      created += 1;
+  // 중간에 실패하면 앞 요일만 바뀐 채 남지 않도록 한 번에 저장하거나 모두 되돌린다(P8.1 리뷰)
+  await database.execAsync('BEGIN IMMEDIATE');
+  try {
+    for (const day of plan) {
+      if (day.entries.length === 0 && !clearEmpty) continue;
+      await database.runAsync("DELETE FROM timetable_items WHERE family_id = 'local-family' AND set_id = ? AND weekday = ? AND category = 'school'", setId, day.weekday);
+      for (const entry of day.entries) {
+        await createTimetableItem(database, { weekday: day.weekday, periodNo: entry.period, title: entry.subject, category: 'school', ...subjectStyle(entry.subject), alertMode: 'none', setId });
+        created += 1;
+      }
     }
+    await database.execAsync('COMMIT');
+  } catch (error) {
+    await database.execAsync('ROLLBACK').catch(() => undefined);
+    throw error;
   }
   return created;
 }

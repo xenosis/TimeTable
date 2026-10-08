@@ -1,15 +1,15 @@
 {
   "expo": {
     "name": "채아시간표",
-    "slug": "kidtimetable",
+    "slug": "chaea-timetable",
     "scheme": "kidtimetable",
-    "version": "1.58.0",
+    "version": "1.59.0",
     "orientation": "default",
     "icon": "./assets/timetable-icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.chaea.timetable",
-      "versionCode": 156,
+      "versionCode": 157,
       "permissions": [
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM",
@@ -44,6 +44,13 @@
       ],
       "expo-secure-store",
       "expo-background-task"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cd36ce3d-a09b-41c0-9ddb-64a1f25b72ed"
+      }
+    },
+    "owner": "xenosis"
   }
 }

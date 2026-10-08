@@ -17,7 +17,7 @@
 - 딸: 실기기(갤럭시 A24, `SM-A245N`, Android 16)
 - 아빠: 안드로이드폰 — 원격 수정은 이후 단계(Supabase 연동) 예정
 - 배포: APK 직접 설치 (앱스토어 미사용)
-- 패키지명: `com.sewoong.kidtimetable`
+- 패키지명: `com.chaea.timetable`
 - 앱 표시 이름: TimeTable
 
 ## 기술 스택

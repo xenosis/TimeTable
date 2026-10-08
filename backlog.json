@@ -6180,6 +6180,34 @@
       "evidence": "src/components/TimetableSetPanel.tsx·TimetableSetRow.tsx·TimetableSetCreate.tsx, app/manage.tsx. 에뮬레이터 API36에서 복사 생성(항목 22개 복사), 빈 시간표 생성, 삭제 확인 문구와 실제 삭제, 적용 중 삭제 차단, 중복 이름 오류(실제 expo-sqlite), 이름 바꾸기 폼 표시, '평소' 적용 후 시간표 탭 제목·주간표 반영 확인. 확인 절차 ①~④는 실제 SQLite 테스트로 검증(__tests__/timetable-sets.test.ts 14개) · 검증: npm run check 통과(agent-instructions, code-length, lint, typecheck, test, build). 이름 바꾸기 저장 동작과 한글 이름 조합 입력은 직접 확인하지 못함(에뮬레이터 한글 키보드가 adb 영문 입력을 자모로 바꿈). 딸 폰 실기기에서는 확인하지 않음"
     },
     {
+      "id": "P8.7",
+      "status": "in_progress",
+      "priority": null,
+      "category": "feature",
+      "title": "학교 시간표 자동 갱신",
+      "summary": "사용자 요청 2026-10-09: 학교 시간표는 매주 바뀌니 저장해 둔 학교·학년·반으로 앱이 스스로 이번 주(주말에는 다음 주) 나이스 시간표를 확인해 바뀌었으면 시간표에 자동 반영한다. 학교 일정(category school)만 바꾸고 정규 수업 뒤 학원·돌봄 일정은 건드리지 않는다. 매주 사람이 가져오기를 누르지 않아도 된다.",
+      "where": "src/neis/",
+      "parent": "P8",
+      "deps": [
+        "P8.1"
+      ],
+      "doc": null,
+      "done_when": "앱 실행·복귀(와 백그라운드 작업) 때 정해진 간격으로 나이스를 확인해 바뀐 주의 학교 일정만 자동 교체하고 학원·돌봄 일정은 유지됨. 같은 내용이면 다시 쓰지 않음. 공휴일·빈 주·교시 시간 누락·네트워크 실패를 안전하게 처리. 아빠 폰은 자동 갱신하지 않음. 관리자 화면에 마지막 자동 갱신 상태 표시. 테스트·전체 검사·리뷰·딸 폰 확인 근거 기록",
+      "est_min": 45,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-10-08T17:30:41.366Z",
+      "updated_at": "2026-10-08T17:30:41.366Z",
+      "log": [
+        {
+          "at": "2026-10-08T17:30:41.366Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "착수: 자동 갱신 모듈(src/neis) 설계 — 앱 시작·복귀 시 6시간 간격, 이번 주(주말엔 다음 주) 확인, 내용 같으면 쓰지 않음, 딸 폰(아이 역할·로컬)만"
+        }
+      ]
+    },
+    {
       "id": "P9",
       "status": "done",
       "priority": "P1",

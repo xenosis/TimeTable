@@ -34,8 +34,8 @@ P3.4는 **시간표(timetable) owner의 실제 데이터 흐름**과 **owner에 
 5. **[공통 메커니즘, 두 owner]** 미래 시간표 항목과 미완료 할 일(알림 방식 지정)을 하나씩 만든 뒤 앱을 강제 종료하고 다시 연다. **이 경로는 네이티브 pending 세대 복구가 아니라 JS가 시작 시 DB에서 다시 계산해 새 세대로 교체하는 것이다(정상 동작).** `dumpsys alarm`에 두 owner 각각 DB 기준 미래 예약만 남는지 확인한다.
 6. **[공통 메커니즘, 두 owner]** 별도의 미래 항목(시간표 1개, 할 일 1개)으로 기기를 재부팅한다. **이 경로는 앱 프로세스 없이 네이티브가 저장해 둔 pending/current 세대를 그대로 복구하는 것이다.** 부팅 완료 뒤 `dumpsys alarm`에 각 owner의 미래 예약만 다시 등록되는지 확인한다.
 7. **[공통 메커니즘, 두 owner, debug APK]** 아래처럼 owner별로 직접 중단을 주입한다(explicit broadcast):
-   - `adb shell am broadcast -n com.sewoong.kidtimetable/.alarm.RollingScheduleTestReceiver --es stage after_pending --es owner timetable`
-   - `adb shell am broadcast -n com.sewoong.kidtimetable/.alarm.RollingScheduleTestReceiver --es stage after_pending --es owner tasks`
+   - `adb shell am broadcast -n com.chaea.timetable/.alarm.RollingScheduleTestReceiver --es stage after_pending --es owner timetable`
+   - `adb shell am broadcast -n com.chaea.timetable/.alarm.RollingScheduleTestReceiver --es stage after_pending --es owner tasks`
    - `stage`를 `after_first_schedule`로 바꿔 등록 도중 중단도 각 owner에 대해 반복한다.
    - 주입한 테스트 알람은 주입 시각 +20분(첫 예약, 알림)과 +21분(두 번째, 알람)이다. **주입 뒤 20분 안에 기기를 재부팅하고 첫 잠금 해제까지 마친다.**
    - 복구는 앱 프로세스 재시작이 아니라 **재부팅(`WidgetBootReceiver`)** 으로만 일어난다(앱을 다시 열면 JS가 DB로 새 세대를 계산해 pending을 덮어쓰므로 pending 복구를 볼 수 없다). 앱을 열지 않은 채 `dumpsys alarm`으로 두 owner 각각 마지막 pending 세대의 미래 예약만 다시 등록됐는지 확인한다. `after_first_schedule`는 중단 직후 대기 알람이 0건이고(첫 예약은 catch가 취소), 재부팅 뒤 첫·두 번째 예약이 모두 복구되어야 한다.
