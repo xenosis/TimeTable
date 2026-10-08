@@ -10,7 +10,7 @@ export type CellLines = {
   readonly first: string;
   /** 이름. 줄바꿈 없이 한 줄로 그린다(길면 글자를 줄여 맞추고, 그래도 길면 …로 자른다) */
   readonly title: string;
-  /** 마지막 줄: 과목 아이콘·메모·알림 표시. 줄이 모자라면 비어 있고 첫 줄에 붙는다 */
+  /** 마지막 줄: 메모·알림 표시(과목 아이콘 글자는 뜻을 알기 어려워 넣지 않는다). 줄이 모자라면 비어 있고 첫 줄에 붙는다 */
   readonly extras: string;
 };
 
@@ -26,13 +26,13 @@ export function linesThatFit(heightDp: number, fontSize: number): 1 | 2 | 3 {
  * 이름은 어느 경우에도 한 줄이라 길어도 줄바꿈으로 칸을 넘치지 않는다.
  */
 export function buildCellLines(input: {
-  readonly category: TimetableCategory; readonly title: string; readonly glyph: string;
+  readonly category: TimetableCategory; readonly title: string;
   readonly hasMemo: boolean; readonly hasAlert: boolean; readonly heightDp: number; readonly fontSize: number;
 }): CellLines {
   const lineCount = linesThatFit(input.heightDp, input.fontSize);
   const marks = [input.hasMemo ? '📝' : '', input.hasAlert ? '🔔' : ''].filter(Boolean);
   const label = categoryText[input.category];
-  if (lineCount === 3) return { lineCount, first: label, title: input.title, extras: [input.glyph, ...marks].filter(Boolean).join(' ') };
+  if (lineCount === 3) return { lineCount, first: label, title: input.title, extras: marks.join(' ') };
   if (lineCount === 2) return { lineCount, first: [label, ...marks].join(' '), title: input.title, extras: '' };
   return { lineCount, first: '', title: input.title, extras: '' };
 }

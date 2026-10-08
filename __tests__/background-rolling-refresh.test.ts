@@ -11,10 +11,12 @@ const mockTaskManager = {
   isTaskRegisteredAsync: jest.fn(),
 };
 const mockRefreshAllRollingOwners = jest.fn();
+const mockRefreshSchool = jest.fn(async () => null);
 
 jest.mock('expo-background-task', () => mockBackgroundTask);
 jest.mock('expo-task-manager', () => mockTaskManager);
 jest.mock('../src/notifications/rollingOwners', () => ({ refreshAllRollingOwners: mockRefreshAllRollingOwners }));
+jest.mock('../src/neis/schoolAutoRefresh', () => ({ refreshSchoolTimetableIfDue: mockRefreshSchool }));
 
 describe('background rolling refresh', () => {
   beforeEach(() => {
@@ -32,6 +34,16 @@ describe('background rolling refresh', () => {
   };
 
   it('defines a global task that refreshes notifications and reports success', async () => {
+    load();
+    const executor = mockTaskManager.defineTask.mock.calls[0][1] as () => Promise<number>;
+
+    await expect(executor()).resolves.toBe(mockBackgroundTask.BackgroundTaskResult.Success);
+    expect(mockRefreshAllRollingOwners).toHaveBeenCalledTimes(1);
+    expect(mockRefreshSchool).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps refreshing notifications when the school timetable check fails', async () => {
+    mockRefreshSchool.mockRejectedValueOnce(new Error('neis down'));
     load();
     const executor = mockTaskManager.defineTask.mock.calls[0][1] as () => Promise<number>;
 

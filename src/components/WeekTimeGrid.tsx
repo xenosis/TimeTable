@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import type { TimetableItem } from '../db/timetableRepository';
-import { resolveThemeColor, resolveThemeIcon, spacing, type ThemeDefinition } from '../theme';
+import { resolveThemeColor, spacing, type ThemeDefinition } from '../theme';
 import { buildCellLines, categoryText } from '../utils/cellText';
 import { DIMMED_BACKGROUND_LIGHTEN, DIMMED_TEXT_LIGHTEN, lightenColor, scheduleStatus } from '../utils/scheduleClock';
 import { buildWeekGrid, cellRect, fitRowHeights, formatMinutes, rowHeights, rowOffsets, type GridDay } from '../utils/timetableGrid';
@@ -94,7 +94,6 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
           {cells.filter((cell) => cell.day === day).map((cell) => {
             const rect = cellRect(cell, heights);
             const category = resolveThemeColor(theme, cell.item.colorKey);
-            const icon = resolveThemeIcon(theme, cell.item.iconKey);
             // 시작·종료 시각은 왼쪽 시간 칼럼에서만 읽는다(일정 칸에는 시간 문자열을 남기지 않는다). range는 화면 읽기용 라벨에만 쓴다
             const current = nowMinutes != null && day === today && scheduleStatus(cell.item.startTime, cell.item.endTime, nowMinutes) === 'current';
             const highlighted = current || nowMinutes == null; // 현재 시각 정보가 없으면 예전처럼 모두 원래 색
@@ -102,7 +101,7 @@ export function WeekTimeGrid({ theme, days, today, onSelectDay, showHeader = tru
             // 진행 중이 아닌 칸은 배경과 글자를 모두 연하게 한다(글자는 읽을 수 있는 대비를 유지)
             const textColor = highlighted ? category.textColor : lightenColor(theme.colors.text, DIMMED_TEXT_LIGHTEN);
             // 칸 높이에 맞춰 구분 / 이름 / 기타 순서로 줄을 나눈다. 이름은 항상 한 줄이라 길면 글자를 줄여 맞춘다
-            const lines = buildCellLines({ category: cell.item.category, title: cell.item.title, glyph: icon.glyph, hasMemo: !!cell.item.memo, hasAlert: (cell.item as { alertMode?: string }).alertMode != null && (cell.item as { alertMode?: string }).alertMode !== 'none', heightDp: rect.height, fontSize: size.title });
+            const lines = buildCellLines({ category: cell.item.category, title: cell.item.title, hasMemo: !!cell.item.memo, hasAlert: (cell.item as { alertMode?: string }).alertMode != null && (cell.item as { alertMode?: string }).alertMode !== 'none', heightDp: rect.height, fontSize: size.title });
             // 칸은 누르는 곳이 아니라 보는 곳이다: 스크롤하다 실수로 화면이 바뀌지 않게 이동은 요일 글자에서만 한다
             return <View
               key={cell.item.id}

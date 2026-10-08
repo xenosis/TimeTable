@@ -12,3 +12,8 @@ export function registerAdminEditRunner(next: Runner | null): void {
 export function runAdminEdit<T>(action: () => Promise<T>): Promise<T> {
   return runner ? runner(action) : action();
 }
+
+/** '서버에 먼저 저장' 구현이 등록돼 있는가. 화면 없이 깨어난 백그라운드 실행에서는 false다. */
+export function isAdminEditRunnerRegistered(): boolean {
+  return runner !== null;
+}

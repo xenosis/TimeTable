@@ -88,4 +88,25 @@ describe('학교 일정 바꾸기', () => {
     const items = await getEditableTimetableItems(database, setId);
     expect(items.map((item) => `${item.weekday}:${item.title}:${item.category}`).sort()).toEqual(['2:국어:school', '2:즐거운생활:school', '2:피아노:academy', '5:금요 수학:school']);
   });
+
+  it('같은 교시·과목의 알림·메모는 옮기고, 시간으로 넣은 학교 일정은 두고, clearDates의 빈 요일만 비운다', async () => {
+    const database = openTestDatabase();
+    await migrateDatabase(database);
+    const setId = (await getActiveTimetableSet(database)).id;
+    await savePeriods(database, [{ periodNo: 1, startTime: '09:00', endTime: '09:40' }, { periodNo: 2, startTime: '09:50', endTime: '10:30' }]);
+    await createTimetableItem(database, { weekday: 2, periodNo: 1, title: '국어', category: 'school', colorKey: 'korean', iconKey: 'text', alertMode: 'notify', alertBeforeMin: 5, memo: '받아쓰기', setId });
+    await createTimetableItem(database, { weekday: 2, periodNo: 2, title: '수학', category: 'school', colorKey: 'math', iconKey: 'number', memo: '바뀜', setId });
+    await createTimetableItem(database, { weekday: 2, startTime: '14:00', endTime: '14:40', title: '현장학습', category: 'school', colorKey: 'other', iconKey: 'other', setId });
+    await createTimetableItem(database, { weekday: 4, periodNo: 1, title: '목요 국어', category: 'school', colorKey: 'korean', iconKey: 'text', setId });
+    await createTimetableItem(database, { weekday: 5, periodNo: 1, title: '금요 수학', category: 'school', colorKey: 'math', iconKey: 'number', setId });
+    await replaceSchoolItems(database, setId, [
+      { date: '20261013', weekday: 2, entries: [{ period: 1, subject: '국어' }, { period: 2, subject: '즐거운생활' }] },
+      { date: '20261015', weekday: 4, entries: [] },
+      { date: '20261016', weekday: 5, entries: [] },
+    ], { clearDates: new Set(['20261016']) });
+    const items = await getEditableTimetableItems(database, setId);
+    expect(items.map((item) => `${item.weekday}:${item.title}:${item.alertMode}:${item.alertBeforeMin}:${item.memo}`).sort()).toEqual([
+      '2:국어:notify:5:받아쓰기', '2:즐거운생활:none:0:', '2:현장학습:none:0:', '4:목요 국어:none:0:',
+    ]);
+  });
 });

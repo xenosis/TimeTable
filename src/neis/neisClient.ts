@@ -53,3 +53,9 @@ export async function fetchClassTimetable(school: Pick<SchoolInfo, 'officeCode' 
   return rows.map((row) => ({ date: text(row.ALL_TI_YMD), classNo: text(row.CLASS_NM), period: Number(row.PERIO), subject: text(row.ITRT_CNTNT) }))
     .filter((row) => /^\d{8}$/.test(row.date) && Number.isInteger(row.period) && row.period > 0);
 }
+
+/** 학사일정에서 수업이 없는 날(공휴일·휴업일, YYYYMMDD)을 읽는다. 시간표가 빈 요일이 정말 쉬는 날인지 가리는 데 쓴다. */
+export async function fetchSchoolHolidays(school: Pick<SchoolInfo, 'officeCode' | 'schoolCode'>, from: string, to: string, fetcher: Fetcher = fetch): Promise<Set<string>> {
+  const rows = await request('SchoolSchedule', { ATPT_OFCDC_SC_CODE: school.officeCode, SD_SCHUL_CODE: school.schoolCode, AA_FROM_YMD: from, AA_TO_YMD: to }, fetcher);
+  return new Set(rows.filter((row) => ['공휴일', '휴업일'].includes(text(row.SBTR_DD_SC_NM))).map((row) => text(row.AA_YMD)).filter((date) => /^\d{8}$/.test(date)));
+}

@@ -16,8 +16,10 @@ jest.mock('expo-sqlite/kv-store', () => ({ __esModule: true, default: {
 let mockDatabase: TimetableDatabase;
 jest.mock('../src/db/database', () => ({ getDatabase: async () => mockDatabase }));
 const mockFetch = jest.fn();
-jest.mock('../src/neis/neisClient', () => ({ fetchClassTimetable: (...args: unknown[]) => mockFetch(...args) }));
-jest.mock('../src/sync/adminEditGate', () => ({ runAdminEdit: (action: () => Promise<unknown>) => action() }));
+const mockHolidays = jest.fn();
+jest.mock('../src/neis/neisClient', () => ({ fetchClassTimetable: (...args: unknown[]) => mockFetch(...args), fetchSchoolHolidays: (...args: unknown[]) => mockHolidays(...args) }));
+let mockRunnerRegistered = true;
+jest.mock('../src/sync/adminEditGate', () => ({ runAdminEdit: (action: () => Promise<unknown>) => action(), isAdminEditRunnerRegistered: () => mockRunnerRegistered }));
 jest.mock('../src/sync/syncMarkers', () => ({ hasSyncedFamily: () => true }));
 jest.mock('../src/notifications/rollingOwners', () => ({ refreshAllRollingOwners: jest.fn(async () => undefined) }));
 jest.mock('../src/widgets/widgetChecksSignal', () => ({ notifyWidgetChecksApplied: jest.fn() }));
@@ -35,6 +37,9 @@ beforeEach(async () => {
   mockStore.clear();
   mockStore.set('timetable.school-profile', JSON.stringify({ officeCode: 'J10', schoolCode: '7591095', schoolName: '빛가온초등학교', grade: 2, classNo: '6' }));
   mockFetch.mockReset();
+  mockHolidays.mockReset();
+  mockHolidays.mockResolvedValue(new Set(['20261009']));
+  mockRunnerRegistered = true;
   setAccount({ kind: 'local' });
   mockDatabase = openTestDatabase();
   await migrateDatabase(mockDatabase);
@@ -104,6 +109,34 @@ test('아빠 폰과 계정 확인 전, 학교 설정이 없으면 자동 갱신�
   mockStore.delete('timetable.school-profile');
   expect(await refreshSchoolTimetableIfDue(THURSDAY, true)).toBeNull();
   expect(mockFetch).not.toHaveBeenCalled();
+});
+
+test('빈 요일이 학사일정의 쉬는 날이 아니거나 학사일정을 못 읽으면 그 요일 학교 일정은 그대로 둔다', async () => {
+  await createTimetableItem(mockDatabase, { weekday: 3, periodNo: 1, title: '옛 수요일', category: 'school', colorKey: 'other', iconKey: 'other', setId });
+  mockFetch.mockResolvedValue(week({ '20261007': [] }));
+  await refreshSchoolTimetableIfDue(THURSDAY);
+  expect((await schoolTitles()).filter((title) => title.startsWith('3:'))).toEqual(['3:1:옛 수요일']);
+  mockHolidays.mockRejectedValue(new Error('학사일정 실패'));
+  mockFetch.mockResolvedValue(week({ '20261007': [], '20261009': [] }));
+  await refreshSchoolTimetableIfDue(THURSDAY, true);
+  expect((await schoolTitles()).filter((title) => title.startsWith('3:') || title.startsWith('5:'))).toEqual(['3:1:옛 수요일', '5:1:바른생활']);
+});
+
+test('같은 주라도 실패했으면 30분 뒤 다시 확인한다', async () => {
+  mockFetch.mockRejectedValueOnce(new Error('나이스에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'));
+  expect((await refreshSchoolTimetableIfDue(THURSDAY))?.result).toBe('error');
+  mockFetch.mockResolvedValue(week());
+  expect((await refreshSchoolTimetableIfDue(new Date(THURSDAY.getTime() + 10 * 60 * 1000)))?.result).toBe('error');
+  expect((await refreshSchoolTimetableIfDue(new Date(THURSDAY.getTime() + 31 * 60 * 1000)))?.result).toBe('updated');
+});
+
+test('딸 계정이어도 서버에 먼저 저장하는 편집 경로가 없으면(화면 없는 백그라운드 실행) 하지 않는다', async () => {
+  mockFetch.mockResolvedValue(week());
+  setAccount({ kind: 'signedIn', email: 'kid@x', membership: { role: 'child', familyId: 'f' }, offline: false });
+  mockRunnerRegistered = false;
+  expect(await refreshSchoolTimetableIfDue(THURSDAY, true)).toBeNull();
+  mockRunnerRegistered = true;
+  expect((await refreshSchoolTimetableIfDue(THURSDAY, true))?.result).toBe('updated');
 });
 
 test('비교용 문자열은 교시 순서와 무관하게 같다', () => {

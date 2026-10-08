@@ -1,6 +1,6 @@
 import { buildCellLines, categoryText, linesThatFit } from '../src/utils/cellText';
 
-const base = { category: 'academy', title: '리틀 포레스트', glyph: '학', hasMemo: false, hasAlert: false, fontSize: 11 } as const;
+const base = { category: 'academy', title: '리틀 포레스트', hasMemo: false, hasAlert: false, fontSize: 11 } as const;
 
 describe('일정 칸 글자 배치', () => {
   it('구분 이름이 학교·학원·돌봄·생활이다', () => {
@@ -15,9 +15,9 @@ describe('일정 칸 글자 배치', () => {
     expect(linesThatFit(52, 18)).toBe(2); // 글자가 커지면 같은 높이에 덜 들어간다
   });
 
-  it('3줄이면 구분 / 이름 / 기타(아이콘·메모·알림)로 나눈다', () => {
-    expect(buildCellLines({ ...base, heightDp: 60, hasMemo: true, hasAlert: true })).toEqual({ lineCount: 3, first: '학원', title: '리틀 포레스트', extras: '학 📝 🔔' });
-    expect(buildCellLines({ ...base, category: 'school', title: '수업', glyph: '가', heightDp: 60 })).toEqual({ lineCount: 3, first: '학교', title: '수업', extras: '가' });
+  it('3줄이면 구분 / 이름 / 메모·알림 표시로 나누고, 과목 아이콘 글자는 넣지 않는다', () => {
+    expect(buildCellLines({ ...base, heightDp: 60, hasMemo: true, hasAlert: true })).toEqual({ lineCount: 3, first: '학원', title: '리틀 포레스트', extras: '📝 🔔' });
+    expect(buildCellLines({ ...base, category: 'school', title: '수업', heightDp: 60 })).toEqual({ lineCount: 3, first: '학교', title: '수업', extras: '' });
   });
 
   it('2줄이면 구분과 이름만 남기고 메모·알림 표시는 구분 줄에 붙인다', () => {
