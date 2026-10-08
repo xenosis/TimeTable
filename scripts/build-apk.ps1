@@ -1,4 +1,4 @@
-param(
+﻿param(
   [switch]$Release,
   [switch]$OfflineTest,
   [ValidateSet('Device', 'Emulator')]

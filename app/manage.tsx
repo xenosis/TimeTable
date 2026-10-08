@@ -17,6 +17,7 @@ import { PeriodSettings } from '../src/components/PeriodSettings';
 import { TimetableSetPanel } from '../src/components/TimetableSetPanel';
 import { TimetableEditor } from '../src/components/TimetableEditor';
 import { WeekdayCopy } from '../src/components/WeekdayCopy';
+import { SchoolTimetableImport } from '../src/components/SchoolTimetableImport';
 import { PinGate } from '../src/components/PinGate';
 import { initializeNotificationChannels } from '../src/notifications/secureAlarmPoc';
 import { useActiveTheme } from '../src/theme/provider';
@@ -115,6 +116,7 @@ export default function ManageScreen() {
           {timetableSet && <TimetableEditor key={timetableSet.id} refreshKey={scheduleRefresh} theme={theme} setId={timetableSet.id} onChanged={refreshAfterScheduleChange} onFormState={reportFormState} onOpenChange={setTimetableFormOpen} />}
           {!timetableFormOpen && <AdminCollapsible title="교시 시간" theme={theme}><PeriodSettings theme={theme} onSaved={refreshAfterScheduleChange} /></AdminCollapsible>}
           {timetableSet && !timetableFormOpen && <AdminCollapsible title="요일 시간표 복사" theme={theme}><WeekdayCopy theme={theme} setId={timetableSet.id} onCopied={refreshAfterScheduleChange} /></AdminCollapsible>}
+          {timetableSet && !timetableFormOpen && <AdminCollapsible title="학교 시간표 가져오기 (나이스)" theme={theme}><SchoolTimetableImport theme={theme} setId={timetableSet.id} onImported={refreshAfterScheduleChange} /></AdminCollapsible>}
         </>}
         {section === 'tasks' && <TaskEditor theme={theme} onChanged={refreshAfterTaskChange} onFormState={reportFormState} />}
         {section === 'rewards' && <>

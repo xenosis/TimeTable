@@ -5899,7 +5899,7 @@
     },
     {
       "id": "P8.1",
-      "status": "needs_info",
+      "status": "in_progress",
       "priority": "P3",
       "category": "feature",
       "title": "NEIS 초등학교 시간표 가져오기",
@@ -5911,15 +5911,21 @@
       "done_when": "NEIS API로 시간표를 가져와 timetable_items에 반영",
       "est_min": 45,
       "gate": null,
-      "owner": "codex",
-      "claimed_at": null,
-      "updated_at": "2026-09-18T11:05:51.799Z",
+      "owner": "claude",
+      "claimed_at": "2026-10-08T16:56:25.056Z",
+      "updated_at": "2026-10-08T16:56:25.056Z",
       "log": [
         {
           "at": "2026-09-18T11:05:51.799Z",
           "owner": "codex",
           "status": "needs_info",
           "note": "NEIS elsTimetable 실제 반영에는 사용자 발급 인증키와 대상 학교의 교육청 코드·학교 코드, 학년도·학기가 필요하다. 임의 값으로 API 호출·시간표 반영을 하지 않으며, 값 제공 뒤 실제 데이터 존재 여부와 반영을 검증한다."
+        },
+        {
+          "at": "2026-10-08T16:56:25.056Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 제공 2026-10-09: 나이스 인증키(저장소 밖 .env의 EXPO_PUBLIC_NEIS_API_KEY), 딸 학교 경기 빛가온초등학교(J10/7591095) 2학년 6반. 인증키로 2학년 반별 비교 — 같은 날도 반마다 과목 순서가 달라 반 선택이 필요함을 확인. 사용자 요청: 설정에서 학년(·반)을 정해 자동으로 가져오기. 구현: 관리자→시간표 '학교 시간표 가져오기(나이스)' — 학교 이름 검색·학년·반 저장(이 폰), 이번 주/다음 주 미리보기, 확인 후 과목 있는 요일의 '학교' 일정만 교체(학원·돌봄·빈 요일 유지), 교시 시간 없으면 안내. 테스트 7건 통과"
         }
       ]
     },
