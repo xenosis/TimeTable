@@ -6144,7 +6144,7 @@
     },
     {
       "id": "P9",
-      "status": "todo",
+      "status": "done",
       "priority": "P1",
       "category": "feature",
       "title": "관리자 화면 컴팩트화",
@@ -6161,10 +6161,31 @@
       "done_when": "P9.1~P9.7 모두 완료. 관리자 기본 화면의 불필요한 줄바꿈과 긴 전체 목록을 해소하고, PIN·데이터·알림·위젯·아이 화면 회귀 및 화면 확인 근거를 갖춤.",
       "est_min": null,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-10-04T01:33:42.270Z",
-      "log": []
+      "owner": "claude",
+      "claimed_at": "2026-10-08T13:21:31.630Z",
+      "updated_at": "2026-10-08T13:21:34.284Z",
+      "log": [
+        {
+          "at": "2026-10-08T13:21:31.630Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "하위 P9.1~P9.7 모두 done, 선행 P2.8·P2.6·P4.3·P8.6 done 확인 — 묶음 완료 판정 착수"
+        },
+        {
+          "at": "2026-10-08T13:21:32.944Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "묶음 완료 조건 대조: 하위 7개 done, P9.7 회귀·화면 확인 근거와 리뷰 반영 기록 확인"
+        },
+        {
+          "at": "2026-10-08T13:21:34.284Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "관리자 화면 컴팩트화 묶음 완료: 하위 작업 7개 done, P9.7에서 밀도·입력·PIN·데이터·알림·위젯·아이 화면 회귀와 화면 확인 근거 기록(가로·확대 글자는 사용자 결정으로 제외)"
+        }
+      ],
+      "done_at": "2026-10-08",
+      "evidence": "P9.1~P9.7 done 기록, P9.7 근거 docs/device-verification-2026-10-08.md·docs/backlog/P9.7.md, 커밋 35d38bb · 검증: npm run check 1.55.7 통과, 딸 폰 SM-A245N 1.55.7 실기기 확인(P9.7), 병렬 리뷰 반영"
     },
     {
       "id": "P9.1",
@@ -6452,7 +6473,7 @@
     },
     {
       "id": "P9.7",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P1",
       "category": "feature",
       "title": "관리자 화면 밀도와 입력·기능 회귀 검증",
@@ -6470,7 +6491,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-04T08:35:37.966Z",
-      "updated_at": "2026-10-08T12:42:20.922Z",
+      "updated_at": "2026-10-08T13:20:50.240Z",
       "log": [
         {
           "at": "2026-10-04T08:35:37.966Z",
@@ -6501,8 +6522,22 @@
           "owner": "claude",
           "status": "in_progress",
           "note": "사용자 결정 2026-10-08: ① 가로 모드는 주간 시간표만 의미 있어 관리자·시간표 편집 등 다른 화면의 가로 확인은 하지 않음 ② 확대 글자(1.3배 포함) 확인은 완전히 제외 — done_when의 '확대 글자 조작 가능'은 적용하지 않음. docs/admin-compact-plan.md 확인 기준에 반영. 리뷰 H1~H3·M1·M2 보완 진행: 시간표 항목 편집을 관리자 화면 안 폼으로(키보드에 아래 칸 가림 해결), 항목·할 일 삭제 확인 창, 앱 화면으로 세트 CRUD·일요일 알림 저장·할 일 삭제 실행, 권한 안내 상태 테스트 추가"
+        },
+        {
+          "at": "2026-10-08T13:20:48.930Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "재검토(H-A·M-A·M-B·M-C·L-A·L-B·문서 H-B) 반영 완료 1.55.7(35d38bb), 딸 폰에서 ← 화살표·영역 이동 버림 확인, 폼 열린 동안 보조 영역 숨김, 할 일 삭제 확인 창 확인. 병렬 리뷰 2회 실행·반영"
+        },
+        {
+          "at": "2026-10-08T13:20:50.240Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "done_when 대조 완료. 사용자 결정(2026-10-08): 가로 확인은 아이 화면 주간 시간표만, 확대 글자(1.3배 포함) 확인은 완전 제외 — done_when의 '확대 글자 조작 가능'은 이 결정으로 적용하지 않음(docs/admin-compact-plan.md 79행). 계획 54행의 시간표 폼 형태는 키보드 문제로 목록 자리 폼으로 변경(계획 문서 반영). 비교 캡처는 딸 폰 화면이라 저장소 밖 .tmp/p97에 두고 관찰 결과를 문서에 기록"
         }
-      ]
+      ],
+      "done_at": "2026-10-08",
+      "evidence": "커밋 49340c3·a10f777·052e5b6·b93b783·35d38bb(1.55.2~1.55.7), docs/device-verification-2026-10-08.md P9.7 관련 5개 절, docs/backlog/P9.7.md, 캡처 .tmp/p97/*.png · 검증: npm run check 1.55.7 전체 통과(Jest·Kotlin·Android build·push-tests), 딸 폰 SM-A245N 1.55.4~1.55.7 실기기: 360/393dp 세로 밀도(요일 한 줄·하루 4개·세트 행 48dp·간격 60dp·긴 이름), 키보드 입력·저장·취소(편집 폼·할 일·세트 이름·교시·보상), PIN 재잠금, 세트 CRUD·분리·적용 유지, 항목·할 일 CRUD와 삭제 확인, 반복 종료, 일요일 매핑·알람 예약, 위젯 갱신, 권한 안내 상태(조회 실패는 단위 테스트), 기기 테스트·진단 영역, 화면 이탈·영역 이동 버림 확인. critical-reviewer 2회·backlog-explainer 2회 실행 후 지적 반영"
     },
     {
       "id": "P10",
