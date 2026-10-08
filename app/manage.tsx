@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -44,6 +45,22 @@ export default function ManageScreen() {
   const setBusy = useRef(false);
   const reportSetBusy = useCallback((busy: boolean) => { setBusy.current = busy; }, []);
   const reportFormState = useCallback((state: AdminFormState) => { formState.current = state; }, []);
+  // 시간표 항목 폼이 열려 있는 동안에는 교시·요일 복사를 숨긴다(열린 폼의 항목·교시가 바뀌어 저장이 어긋나지 않게, P9.7 리뷰 M-A)
+  const [timetableFormOpen, setTimetableFormOpen] = useState(false);
+  const navigation = useNavigation();
+
+  // 헤더 뒤로 가기 화살표·휴대폰 뒤로 가기로 관리자 화면을 떠날 때도 저장하지 않은 입력을 조용히 버리지 않는다(P9.7 리뷰 H-A)
+  useEffect(() => navigation.addListener('beforeRemove', (event) => {
+    const form = formState.current;
+    const busy = form.saving || setBusy.current;
+    if (!form.dirty && !busy) return;
+    event.preventDefault();
+    if (busy) { setStatus('저장하는 중이에요. 끝난 뒤에 나갈 수 있어요.'); return; }
+    Alert.alert('작성 중인 내용이 있어요', '나가면 저장하지 않은 내용이 사라져요.', [
+      { text: '계속 편집', style: 'cancel' },
+      { text: '버리고 나가기', style: 'destructive', onPress: () => { formState.current = CLEAN_FORM_STATE; navigation.dispatch(event.data.action); } },
+    ]);
+  }), [navigation]);
 
   useEffect(() => {
     void getDatabase().then((database) => getActiveTimetableSet(database)).then(setTimetableSet).catch(() => setStatus('시간표를 불러오지 못했어요.'));
@@ -70,7 +87,8 @@ export default function ManageScreen() {
     if (!form.dirty) { resolve(true); return; }
     Alert.alert('작성 중인 내용이 있어요', '시간표를 바꾸면 저장하지 않은 내용이 사라져요.', [
       { text: '계속 편집', style: 'cancel', onPress: () => resolve(false) },
-      { text: '버리고 바꾸기', style: 'destructive', onPress: () => { formState.current = CLEAN_FORM_STATE; resolve(true); } },
+      // 적용이 실패하면 폼이 그대로 남으므로 여기서 미저장 표시를 지우지 않는다. 편집기가 새로 열리면 스스로 깨끗한 상태를 알린다(P9.7 리뷰 M-B)
+      { text: '버리고 바꾸기', style: 'destructive', onPress: () => resolve(true) },
     ], { onDismiss: () => resolve(false) });
   });
 
@@ -94,9 +112,9 @@ export default function ManageScreen() {
         {status !== '' && <Text accessibilityLiveRegion="polite" style={[styles.status, { color: colors.text }]}>{status}</Text>}
         {section === 'timetable' && <>
           {timetableSet && <TimetableSetPanel theme={theme} activeSet={timetableSet} refreshKey={scheduleRefresh} onApplied={applyTimetableSet} onRenamed={setTimetableSet} confirmDiscard={confirmDiscard} onBusyChange={reportSetBusy} />}
-          {timetableSet && <TimetableEditor key={timetableSet.id} refreshKey={scheduleRefresh} theme={theme} setId={timetableSet.id} onChanged={refreshAfterScheduleChange} onFormState={reportFormState} />}
-          <AdminCollapsible title="교시 시간" theme={theme}><PeriodSettings theme={theme} onSaved={refreshAfterScheduleChange} /></AdminCollapsible>
-          {timetableSet && <AdminCollapsible title="요일 시간표 복사" theme={theme}><WeekdayCopy theme={theme} setId={timetableSet.id} onCopied={refreshAfterScheduleChange} /></AdminCollapsible>}
+          {timetableSet && <TimetableEditor key={timetableSet.id} refreshKey={scheduleRefresh} theme={theme} setId={timetableSet.id} onChanged={refreshAfterScheduleChange} onFormState={reportFormState} onOpenChange={setTimetableFormOpen} />}
+          {!timetableFormOpen && <AdminCollapsible title="교시 시간" theme={theme}><PeriodSettings theme={theme} onSaved={refreshAfterScheduleChange} /></AdminCollapsible>}
+          {timetableSet && !timetableFormOpen && <AdminCollapsible title="요일 시간표 복사" theme={theme}><WeekdayCopy theme={theme} setId={timetableSet.id} onCopied={refreshAfterScheduleChange} /></AdminCollapsible>}
         </>}
         {section === 'tasks' && <TaskEditor theme={theme} onChanged={refreshAfterTaskChange} onFormState={reportFormState} />}
         {section === 'rewards' && <>

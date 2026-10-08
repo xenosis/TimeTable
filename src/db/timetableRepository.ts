@@ -43,17 +43,20 @@ export async function createTimetableItem(database: Pick<TimetableDatabase, 'run
 export async function updateTimetableItem(database: Pick<TimetableDatabase, 'runAsync'>, id: number, item: TimetableItemInput): Promise<void> {
   if (!Number.isInteger(id) || id < 1) throw new Error('항목이 이미 변경되었거나 없어요.');
   requireValidItem(item);
-  await database.runAsync(
+  const result = await database.runAsync(
     `UPDATE timetable_items SET weekday = ?, period_no = ?, start_time = ?, end_time = ?, title = ?, category = ?, color_key = ?, icon_key = ?, alert_mode = ?, alert_before_min = ?, memo = COALESCE(?, memo), set_id = ?
      WHERE id = ? AND family_id = ? AND set_id = ?`,
     item.weekday, item.periodNo ?? null, item.startTime ?? null, item.endTime ?? null, item.title.trim(), item.category, item.colorKey, item.iconKey,
     item.alertMode ?? 'none', item.alertBeforeMin ?? 0, item.memo === undefined ? null : cleanMemo(item.memo), item.setId, id, item.familyId?.trim() || 'local-family', item.setId,
-  );
+  ) as { readonly changes?: number };
+  // 다른 곳(요일 복사·다른 기기 동기화)에서 이미 지워진 항목이면 저장 성공으로 보이지 않게 한다(P9.7 리뷰 M-A)
+  if (result?.changes === 0) throw new Error('항목이 이미 변경되었거나 없어요.');
 }
 
 export async function deleteTimetableItem(database: Pick<TimetableDatabase, 'runAsync'>, id: number, setId: TimetableSetId, familyId = 'local-family'): Promise<void> {
   if (!Number.isInteger(id) || id < 1) throw new Error('항목이 이미 변경되었거나 없어요.');
-  await database.runAsync('DELETE FROM timetable_items WHERE id = ? AND family_id = ? AND set_id = ?', id, familyId, setId);
+  const result = await database.runAsync('DELETE FROM timetable_items WHERE id = ? AND family_id = ? AND set_id = ?', id, familyId, setId) as { readonly changes?: number };
+  if (result?.changes === 0) throw new Error('항목이 이미 변경되었거나 없어요.');
 }
 
 export async function copyTimetableWeekday(database: Pick<TimetableDatabase, 'execAsync' | 'getAllAsync' | 'runAsync'>, sourceWeekday: number, targetWeekday: number, setId: TimetableSetId, familyId = 'local-family'): Promise<void> {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
@@ -19,19 +19,22 @@ const toDraft = (item: EditableTimetableItem): TimetableDraft => ({
   colorKey: item.colorKey, iconKey: item.iconKey, alertMode: item.alertMode ?? 'none', alertBeforeMin: String(item.alertBeforeMin ?? 0), memo: item.memo ?? '',
 });
 
-export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormState }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly onChanged: () => Promise<void>; readonly setId: TimetableSetId; readonly onFormState?: (state: AdminFormState) => void }) {
+const LOADING_MESSAGE = '시간표 항목을 불러오는 중이에요.';
+const LIST_HINT = '요일을 고르고 항목을 누르거나 추가를 눌러 주세요.';
+
+export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormState, onOpenChange }: { readonly refreshKey: number; readonly theme: ThemeDefinition; readonly onChanged: () => Promise<void>; readonly setId: TimetableSetId; readonly onFormState?: (state: AdminFormState) => void; readonly onOpenChange?: (open: boolean) => void }) {
   const [periods, setPeriods] = useState<readonly Period[]>([]);
   const [items, setItems] = useState<readonly EditableTimetableItem[]>([]);
   // 목록 필터(보는 요일)와 폼의 반복 요일은 서로 다른 상태다. 필터를 바꿔도 폼 값은 변하지 않는다.
   const [filterDay, setFilterDay] = useState(() => new Date().getDay());
   const [formOpen, setFormOpen] = useState(false);
   const [draft, setDraft] = useState<TimetableDraft>(() => emptyTimetableDraft(new Date().getDay()));
-  const [message, setMessage] = useState('시간표 항목을 불러오는 중이에요.');
+  const [message, setMessage] = useState(LOADING_MESSAGE);
   const [saving, setSaving] = useState(false);
   const { colors } = theme;
 
   const reload = () => void getDatabase().then(async (database) => ({ periods: await getPeriods(database), items: await getEditableTimetableItems(database, setId) })).then((saved) => {
-    setPeriods(saved.periods); setItems(saved.items); setMessage('요일을 고르고 항목을 누르거나 추가를 눌러 주세요.');
+    setPeriods(saved.periods); setItems(saved.items); setMessage((current) => current === LOADING_MESSAGE ? LIST_HINT : current);
   }).catch(() => setMessage('시간표 항목을 불러오지 못했어요.'));
   useEffect(reload, [refreshKey, setId]);
 
@@ -39,22 +42,28 @@ export function TimetableEditor({ refreshKey, theme, onChanged, setId, onFormSta
   const loaded = draft.id != null ? items.find((item) => item.id === draft.id) : undefined;
   const dirty = formOpen && JSON.stringify(draft) !== JSON.stringify(loaded ? toDraft(loaded) : emptyTimetableDraft(filterDay));
   useEffect(() => { onFormState?.({ dirty, saving }); }, [dirty, saving, onFormState]);
+  useEffect(() => { onOpenChange?.(formOpen); }, [formOpen, onOpenChange]);
+  useEffect(() => () => onOpenChange?.(false), [onOpenChange]);
 
-  // 모달을 열 때 목록용 안내·이전 저장 결과 문구를 비워, 모달 안에는 이번 저장의 오류만 보이게 한다
+  // 폼을 열 때 목록용 안내·이전 저장 결과 문구를 비워, 폼에는 이번 저장의 오류만 보이게 한다
   const openNew = () => { setMessage(''); setDraft(emptyTimetableDraft(filterDay)); setFormOpen(true); };
   const openItem = (item: EditableTimetableItem) => { setMessage(''); setDraft(toDraft(item)); setFormOpen(true); };
-  const closeNow = () => { setFormOpen(false); setDraft(emptyTimetableDraft(filterDay)); };
+  // 닫을 때 비웠던 목록 안내를 되돌린다(저장 결과 문구는 finish에서 다시 덮어쓴다)
+  const closeNow = () => { setFormOpen(false); setDraft(emptyTimetableDraft(filterDay)); setMessage(LIST_HINT); };
   const requestClose = () => {
     if (saving) return;
     if (!dirty) { closeNow(); return; }
     Alert.alert('작성 중인 내용이 있어요', '닫으면 저장하지 않은 내용이 사라져요.', [{ text: '계속 편집', style: 'cancel' }, { text: '버리고 닫기', style: 'destructive', onPress: closeNow }]);
   };
-  // 편집 폼은 관리자 화면 안에서 열리므로(키보드 처리 공유) 휴대폰 뒤로 가기는 화면을 떠나지 않고 폼 닫기로 쓴다
+  // 편집 폼은 관리자 화면 안에서 열리므로(키보드 처리 공유) 휴대폰 뒤로 가기는 화면을 떠나지 않고 폼 닫기로 쓴다.
+  // 항상 최신 상태의 닫기 동작을 쓰도록 ref에 담고, 폼이 열려 있을 때만 한 번 등록한다
+  const requestCloseRef = useRef(requestClose);
+  useEffect(() => { requestCloseRef.current = requestClose; });
   useEffect(() => {
     if (!formOpen) return undefined;
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { requestClose(); return true; });
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { requestCloseRef.current(); return true; });
     return () => subscription.remove();
-  });
+  }, [formOpen]);
 
   const memoLength = Array.from(draft.memo.trim()).length;
   const input = () => ({ title: draft.title, periodNo: draft.periodNo, startTime: draft.periodNo == null ? draft.startTime : null, endTime: draft.periodNo == null ? draft.endTime : null, category: draft.category, colorKey: draft.colorKey, iconKey: draft.iconKey, alertMode: draft.alertMode, alertBeforeMin: Number(draft.alertBeforeMin), memo: draft.memo, setId });

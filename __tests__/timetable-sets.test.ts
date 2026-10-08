@@ -1,7 +1,7 @@
 /** @jest-environment node */
 import { databaseVersion, migrateDatabase, schemaV1, schemaV2, schemaV3, schemaV4, schemaV5, schemaV6, schemaV7, schemaV8 } from '../src/db/migrations';
 import {
-  copyTimetableWeekday, createTimetableItem, deleteTimetableItem, getEditableTimetableItems, getTimetableItemsForWeekday,
+  copyTimetableWeekday, createTimetableItem, deleteTimetableItem, getEditableTimetableItems, getTimetableItemsForWeekday, updateTimetableItem,
 } from '../src/db/timetableRepository';
 import {
   createTimetableSet, deleteTimetableSet, getActiveTimetableSet, listTimetableSets, renameTimetableSet, setActiveTimetableSet,
@@ -103,6 +103,17 @@ describe('시간표 세트 저장소', () => {
     await deleteTimetableItem(database, copied.id, copy);
     expect(await getEditableTimetableItems(database, copy)).toHaveLength(1);
     expect(await getEditableTimetableItems(database, first)).toHaveLength(2);
+  });
+
+  it('요일 복사 등으로 이미 사라진 항목을 수정·삭제하면 저장 성공으로 보이지 않고 오류가 난다(P9.7 리뷰 M-A)', async () => {
+    const database = await freshDatabase();
+    const setId = (await getActiveTimetableSet(database)).id;
+    await createTimetableItem(database, item(setId, '수학', 3));
+    await createTimetableItem(database, item(setId, '국어', 2));
+    const [math] = (await getEditableTimetableItems(database, setId)).filter(({ title }) => title === '수학');
+    await copyTimetableWeekday(database, 2, 3, setId); // 수요일 '수학'이 지워지고 화요일 항목으로 바뀐다
+    await expect(updateTimetableItem(database, math.id, item(setId, '수학2', 3))).rejects.toThrow('항목이 이미 변경되었거나 없어요.');
+    await expect(deleteTimetableItem(database, math.id, setId)).rejects.toThrow('항목이 이미 변경되었거나 없어요.');
   });
 
   it('요일 복사는 적용한 세트 안에서만 대상 요일을 바꾼다', async () => {
