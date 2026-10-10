@@ -5,5 +5,5 @@ import { runSync, syncTarget } from '../sync/syncRunner';
 export async function syncTappedFamilyPush(familyId: string | undefined): Promise<boolean> {
   const target = syncTarget(getAccount());
   if (!familyId || target?.familyId !== familyId || target.role !== 'child') return false;
-  return runSync(target);
+  return runSync(target, { fresh: true });
 }

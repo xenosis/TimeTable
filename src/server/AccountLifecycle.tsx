@@ -16,7 +16,11 @@ export function AccountLifecycle(): null {
       const actions = accountUserActions();
       const apply = (state: AccountState) => { if (!cancelled && actions === accountUserActions()) setAccount(state); };
       let stored: AccountState | null = null;
-      restoreAccount(useStored ? (state) => { stored = state; apply(state); } : undefined)
+      restoreAccount(useStored ? (state) => {
+        stored = state;
+        // 캐시 역할은 화면에 먼저 쓰되, 알림 경로는 서버 확인 완료까지 기다린다.
+        apply(state.kind === 'signedIn' ? { ...state, restoring: true } : state);
+      } : undefined)
         .then(apply)
         .catch(() => apply(stored ?? (useStored ? { kind: 'local' } : getAccount())));
     };

@@ -28,6 +28,7 @@ export function subscribeFamilyChanges(familyId: string, onChange: () => void, d
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectAttempt = 0;
   let missedSignals = false;
+  let subscribedOnce = false;
   let stopped = false;
   let channel: RealtimeChannel | null = null;
 
@@ -49,18 +50,23 @@ export function subscribeFamilyChanges(familyId: string, onChange: () => void, d
     if (stopped) return;
     // 같은 이름의 채널이 아직 정리 중일 수 있어 구독마다 다른 이름을 쓴다(라이브러리가 같은 이름 채널을 재사용함)
     topicCounter += 1;
-    let next = supabase.channel(`tt-family-${familyId}-${topicCounter}`);
+    // DB 변경 수신 준비가 끝난 뒤 SUBSCRIBED를 받아 보충 조회 앞의 누락 구간을 닫는다.
+    let next = supabase.channel(`tt-family-${familyId}-${topicCounter}`, { config: { postgres_changes_options: { wait: true } } });
     for (const table of realtimeTables) {
-      next = next.on('postgres_changes', { event: '*', schema: 'public', table, filter: `family_id=eq.${familyId}` }, schedule);
+      next = next.on('postgres_changes', { event: '*', schema: 'public', table, filter: `family_id=eq.${familyId}` }, () => {
+        console.info(`채아시간표: Realtime 변경 ${table}`);
+        schedule();
+      });
     }
     channel = next;
     next.subscribe((status) => {
       if (stopped || channel !== next) return;
+      console.info(`채아시간표: Realtime 연결 ${status}`);
       if (status === 'SUBSCRIBED') {
         reconnectAttempt = 0;
-        // 처음 연결은 앱 시작·로그인 동기화가 이미 돈다. 끊겼다 다시 이어진 연결이면(처음 연결 전에 끊겨 있었던 경우 포함,
-        // 예: 인터넷 없이 앱을 켜 시작 동기화가 실패함) 놓친 변경을 받으려고 한 번 더 맞춘다
-        if (missedSignals) schedule();
+        // 첫 조회와 구독 완료 사이의 서버 변경도 놓칠 수 있어, 처음 연결된 뒤에도 다시 맞춘다.
+        if (!subscribedOnce || missedSignals) schedule();
+        subscribedOnce = true;
         missedSignals = false;
         return;
       }

@@ -5622,7 +5622,7 @@
     },
     {
       "id": "P6.18",
-      "status": "todo",
+      "status": "needs_info",
       "priority": null,
       "category": "bug",
       "title": "딸 폰 실시간 반영·알림 탭 동기화 누락 조사",
@@ -5636,10 +5636,29 @@
       "done_when": "앱이 켜진 딸 폰에서 서버 변경이 수 초 안에 반영되고, 꺼진 상태에서 변경 알림을 탭해도 열리자마자 최신 내용이 보이며, 아빠 화면의 딸 폰 마지막 동기화 시각이 실제와 맞음. 테스트·전체 검사·리뷰·두 기기 실기기 근거 기록",
       "est_min": 45,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-10-10T07:53:09.651Z",
-      "log": []
+      "owner": "codex",
+      "claimed_at": "2026-10-10T07:57:32.555Z",
+      "updated_at": "2026-10-10T14:26:55.902Z",
+      "log": [
+        {
+          "at": "2026-10-10T07:57:32.555Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "1.62.1 인계 상태 재확인. 딸 폰 ADB 연결 확인, 알림 탭의 checking 계정 조기 반환·Realtime 재연결·설치본 동기화 기록을 조사하고 회귀 검증 후 실기기 확인한다."
+        },
+        {
+          "at": "2026-10-10T09:47:50.152Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.62.4/168 코드 보완 검토 단계. 알림 탭은 임시 캐시 복원 완료와 요청 이후 새 조회를 기다리고 실패·대기 중 저장 내용 보기를 제공한다. Realtime DB 수신 준비 wait 옵션 적용. 알림·위젯 갱신은 모두 종료를 기다리고 부분 실패·기기 기록 인증/RPC 오류를 안내하며 서버 완료 시각을 성공으로 오인하지 않는다. 설치본 증명 RPC 작성, 실제 authenticated 역할의 등록 전후 순서·설치본 격리·다른 가족 거절·계정 전환 토큰 제거 BEGIN/ROLLBACK PASS(.tmp/p618-device-sync-auth-rollback.log). 전체 check PASS: 87 suites/526 tests·Android build·push-tests(.tmp/p618-quality-1624-records.log). 딸 폰에는 1.62.3/167 설치 확인, 최신 APK 재빌드 예정. 운영 RPC 미적용·패턴 잠금·아빠 폰 미연결로 두 기기 완료 조건은 아직 미검증. 등록 재리뷰 후 운영 적용 승인과 실제 반영을 확인한다."
+        },
+        {
+          "at": "2026-10-10T14:26:55.902Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "1.62.9/173 전체 검사 통과(89 suites/533 tests, Android build, push-tests) 및 Device arm64 APK ABI/서명 확인. 연속 신호 fresh 대기 보완, 구버전 미연결 토큰 통합, 서버 완료 시각 기록과 설치본 행 조회 보완. 실제 authenticated BEGIN/ROLLBACK 검증 PASS(.tmp/p618-device-sync-1629-rollback.log), 최종 등록 병렬 리뷰 완료(.tmp/reviews/P6.18-bdc19062b584-1791641933996). 아빠 SM-S918N·딸 SM-A245N 동시 연결 확인. 운영 RPC 적용과 최신 두 기기 전경 변경·종료 상태 알림 탭·아빠 시각 확인은 아직 남아 done 처리하지 않는다. 기존 RLS의 자기 기기 직접 쓰기 허용과 시간 합격 기준은 리뷰의 남은 지적으로 기록한다. 사용자 지시대로 커밋·푸시를 먼저 수행한다."
+        }
+      ]
     },
     {
       "id": "P7",
@@ -6104,7 +6123,7 @@
     },
     {
       "id": "P8.4",
-      "status": "in_review",
+      "status": "needs_info",
       "priority": "P3",
       "category": "feature",
       "title": "아빠용 주간 리포트",
@@ -6116,9 +6135,9 @@
       "done_when": "주간 완료율·스티커 추이 리포트가 표시됨",
       "est_min": 30,
       "gate": null,
-      "owner": "claude",
+      "owner": "codex",
       "claimed_at": "2026-09-24T01:24:33.705Z",
-      "updated_at": "2026-10-10T07:53:17.564Z",
+      "updated_at": "2026-10-10T13:50:44.869Z",
       "log": [
         {
           "at": "2026-09-24T01:24:33.705Z",
@@ -6149,6 +6168,30 @@
           "owner": "claude",
           "status": "in_review",
           "note": "2026-10-10 아빠 폰(SM-S918N 1.62.1)에서 주간 리포트 표시 확인: 월~토 날짜별 칸, 할 일 추가 후 '이번 주 할 일 1개 중 0개(0%)'·'토 0/1', 최근 4주 주별 보석 변화(모두 0). 보석 증감이 있는 상태의 표시는 미확인. 리뷰·done 판단은 Codex 인계"
+        },
+        {
+          "at": "2026-10-10T13:06:59.373Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "등록 critical-reviewer가 CLI 사용량 한도로 종료되어 완료 검토는 현재 진행할 수 없다. 인계 코드 확인에서 주간 리포트 조회 효과에 familyId 의존성이 없고 이전 가족 결과가 유지되는 경로를 확인했다. 검토 완료로 취급하지 않고 이 코드 보완에 재착수한다."
+        },
+        {
+          "at": "2026-10-10T13:07:30.597Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "가족 전환 시 이전 주간 집계 표시를 차단하고 새 familyId 조회를 실행하는 보완에 착수한다. 긍정·부정 보석 추이와 현재 가족 조회 대기를 회귀 테스트로 확인한다. 실제 아빠 폰 1.62.1 표시 근거는 기존 로그에 있고 추가 두 기기 동기화 확인은 별도다."
+        },
+        {
+          "at": "2026-10-10T13:22:20.231Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.62.5/169 가족 전환 시 이전 주간 집계 표시 차단과 지연 응답 무시를 보완했다. 전체 검사 통과: 88 suites/528 tests, Android build, push-tests. 실제 아빠 화면 기존 확인 근거는 로그에 있으며 등록 병렬 리뷰를 준비한다. 현재 ADB 연결 기기는 없다."
+        },
+        {
+          "at": "2026-10-10T13:50:44.869Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "1.62.7/171 전체 검사 통과: 89 suites/532 tests, Android build, push-tests. 가족 전환 보호, 오늘까지 문구, 다음 주 원장 제외, 생성일 제한, 집계와 동기화 교체 큐 직렬화를 보완했다. 등록 병렬 리뷰 완료(.tmp/reviews/P8.4-4dccf33083bd-1791639911661). 과거 날짜는 현재 tasks 정의로 재계산되므로 미완료 항목 삭제 시 분모가 바뀌는 한계가 있다. P6.8 선행 완료 및 완료조건/의존성 기록 보완이 남아 done으로 처리하지 않는다."
         }
       ]
     },

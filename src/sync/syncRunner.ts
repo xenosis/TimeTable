@@ -4,6 +4,7 @@ import { refreshAllRollingOwners } from '../notifications/rollingOwners';
 import type { AccountState } from '../server/account';
 import { hasLocalData, readLocalPayload } from '../server/localImport';
 import { getSupabase } from '../server/supabaseClient';
+import { getPushInstallation } from '../push/pushInstallation';
 import { accountUserActions, getAccount } from '../store/accountStore';
 import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { applyPendingWidgetChecksNow, requestWidgetRefresh } from '../widgets/widgetRefresh';
@@ -27,21 +28,22 @@ export function syncTarget(account: AccountState): SyncTarget | null {
 export { hasSyncedFamily, lastSyncedAt };
 
 /**
- * 서버의 내 기기 행에 마지막 동기화 시각을 남긴다(아빠가 딸 폰 반영 여부를 볼 때 쓴다). 지금은 계정 단위 한 행이며(푸시 토큰이 없는 행),
- * 설치본·푸시 토큰 단위 기록은 푸시(P6.9)에서 정한다. 실패해도 동기화는 성공으로 두고 경고만 남긴다.
+ * 푸시 등록 여부와 관계없이 설치본 증명으로 같은 행에 마지막 동기화 시각을 남긴다.
+ * 기록 실패는 부분 실패로 알린다. 다른 폰의 설치본 행은 갱신하지 않는다.
  */
-async function recordDeviceSync(familyId: string, at: string): Promise<void> {
+async function recordDeviceSync(familyId: string, at: string, isCurrent: () => boolean): Promise<void> {
   const supabase = getSupabase();
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth, error: authError } = await supabase.auth.getUser();
   const userId = auth.user?.id;
-  if (!userId) return;
-  const { data: existing, error: readError } = await supabase.from('tt_devices').select('id').eq('user_id', userId).is('push_token', null).limit(1);
-  if (readError) { console.warn('TimeTable: 기기 동기화 기록을 읽지 못했어요.'); return; }
-  const row = { last_synced_at: at, app_version: appVersion(), family_id: familyId };
-  const { error } = existing && existing.length > 0
-    ? await supabase.from('tt_devices').update(row).eq('id', existing[0].id)
-    : await supabase.from('tt_devices').insert({ ...row, user_id: userId });
-  if (error) console.warn('TimeTable: 기기 동기화 기록을 남기지 못했어요.');
+  if (!isCurrent()) return;
+  if (authError || !userId) throw new Error('내용은 받았지만 기기 기록을 위해 계정을 확인하지 못했어요. 다시 맞춰 주세요.');
+  const installation = await getPushInstallation();
+  if (!isCurrent()) return;
+  const { error } = await supabase.rpc('tt_record_device_sync', {
+    p_family: familyId, p_installation: installation.id, p_secret: installation.secret,
+    p_version: appVersion(), p_synced_at: at,
+  });
+  if (error) throw new Error('내용은 받았지만 마지막 동기화 기록을 남기지 못했어요. 다시 맞춰 주세요.');
 }
 
 async function currentUserId(): Promise<string> {
@@ -69,10 +71,17 @@ function sameAccount(target: SyncTarget, generation: number): boolean {
  * 같은 가족 동기화가 진행 중이면 그것을 같이 기다리고, 다른 가족이면 끝난 뒤 다시 한다.
  * 인터넷이 없거나 실패하면 로컬은 그대로이고 false를 돌려준다.
  */
-export function runSync(target: SyncTarget, options: { readonly forceServer?: boolean } = {}): Promise<boolean> {
+export function runSync(target: SyncTarget, options: { readonly forceServer?: boolean; readonly fresh?: boolean } = {}): Promise<boolean> {
   const generation = accountUserActions();
   if (!sameAccount(target, generation)) return Promise.resolve(false);
   if (running) {
+    // 알림 탭은 요청 전에 시작한 조회를 공유하지 않고, 이후 새 조회의 적용까지 기다린다.
+    if (options.fresh) return running.promise.then(() => {
+      if (!sameAccount(target, generation)) return false;
+      // 이미 시작한 후속 조회는 알림 요청 이후의 새 조회이므로 완료를 함께 기다린다.
+      if (running?.familyId === target.familyId && running.role === target.role && running.generation === generation && !options.forceServer) return running.promise;
+      return runSync(target, options);
+    });
     // 같은 가족 동기화가 도는 중에 온 요청(Realtime 신호 등)은 이미 받아 온 내용보다 새 변경일 수 있어, 끝난 뒤 한 번 더 맞춘다(P6.7 리뷰 H1)
     if (running.familyId === target.familyId && running.role === target.role && running.generation === generation && !options.forceServer) { running.again = true; return running.promise; }
     // 직접 고른 '서버 내용으로 다시 맞추기'와 다른 가족 요청은 진행 중인 동기화가 끝난 뒤 따로 실행한다
@@ -143,12 +152,20 @@ async function syncOnce(target: SyncTarget, options: { readonly forceServer?: bo
     const at = new Date().toISOString();
     markSynced(target.familyId, at);
     notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 데이터를 다시 읽는다
-    await Promise.allSettled([refreshAllRollingOwners(), requestWidgetRefresh(), recordDeviceSync(target.familyId, at)]);
+    const refreshed = await Promise.allSettled([refreshAllRollingOwners(), requestWidgetRefresh()]);
+    if (refreshed.some((result) => result.status === 'rejected')) {
+      throw new Error('내용은 받았지만 알림·위젯을 갱신하지 못했어요. 다시 맞춰 주세요.');
+    }
+    // 로컬 조회 마커는 유지하되, 알림·위젯 적용이 끝난 뒤에만 서버 기기 시각을 남긴다.
+    if (!sameAccount(target, generation)) return false;
+    await recordDeviceSync(target.familyId, at, () => sameAccount(target, generation));
+    if (!sameAccount(target, generation)) return false;
     setSyncStatus({ familyId: target.familyId, state: 'idle', lastSyncedAt: at });
     // 올린 뒤 생긴 체크·보석 변경은 폰에 지켜졌으니 곧 다시 올린다(다음 앱 복귀까지 기다리지 않게)
     if (target.role === 'child' && childChangeVersion() !== versionAtPush) requestSyncSoon();
     return true;
   } catch (error) {
+    if (!sameAccount(target, generation)) return false;
     setSyncStatus({ familyId: target.familyId, state: 'error', lastSyncedAt: lastSyncedAt(), message: syncErrorMessage(error) });
     return false;
   }

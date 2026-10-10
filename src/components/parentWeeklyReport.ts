@@ -1,5 +1,6 @@
 import { getDatabase } from '../db/database';
 import { getTodayTasks } from '../db/taskRepository';
+import { withRewardQueue } from '../db/rewardQueue';
 import { toLocalDateStr } from '../utils/date';
 
 /**
@@ -40,15 +41,16 @@ export function buildGemWeeks(ledger: readonly LedgerRow[], now: Date, weeks = G
   const thisMonday = mondayOf(now);
   const starts = Array.from({ length: weeks }, (_, index) => addDays(thisMonday, (index - weeks + 1) * 7));
   const startKeys = starts.map(toLocalDateStr);
+  const nextMonday = toLocalDateStr(addDays(thisMonday, 7));
   const result = startKeys.map((weekStart) => ({ weekStart, gemChange: 0, largeGemChange: 0, gemTotal: 0, largeGemTotal: 0 }));
   let gemBefore = 0;
   let largeBefore = 0;
   for (const row of ledger) {
     const day = ledgerLocalDate(row.createdAt);
-    if (day === null) continue;
+    if (day === null || day >= nextMonday) continue;
     const large = isLargeGem(row.reason);
     if (day < startKeys[0]) { if (large) largeBefore += row.delta; else gemBefore += row.delta; continue; }
-    // 이번 주보다 뒤(폰 시계 차이 등)는 이번 주로 센다
+    // 월요일부터 다음 월요일 전까지의 기록만 해당 주에 포함한다.
     let index = startKeys.length - 1;
     while (index > 0 && day < startKeys[index]) index -= 1;
     if (large) result[index].largeGemChange += row.delta; else result[index].gemChange += row.delta;
@@ -74,13 +76,17 @@ export function buildWeeklyReport(days: readonly DayProgress[], ledger: readonly
 
 /** 이번 주 월요일부터 오늘까지의 날짜별 할 일 진행과 최근 4주 보석 장부를 읽는다. */
 export async function loadWeeklyReport(now = new Date()): Promise<WeeklyReport> {
+  return withRewardQueue(() => readWeeklyReport(now));
+}
+
+async function readWeeklyReport(now: Date): Promise<WeeklyReport> {
   const database = await getDatabase();
   const monday = mondayOf(now);
   const days: DayProgress[] = [];
   for (let offset = 0; offset <= (now.getDay() + 6) % 7; offset += 1) {
     const day = addDays(monday, offset);
     const date = toLocalDateStr(day);
-    const tasks = await getTodayTasks(database, date, day.getDay());
+    const tasks = await getTodayTasks(database, date, day.getDay(), true);
     days.push({ date, weekday: day.getDay(), total: tasks.length, done: tasks.filter((task) => task.completed === 1).length });
   }
   const ledger = await database.getAllAsync<LedgerRow>("SELECT delta, reason, created_at AS createdAt FROM sticker_ledger WHERE family_id = 'local-family' ORDER BY created_at, id");
@@ -99,10 +105,10 @@ export function dayLabel(day: DayProgress): string {
 
 /** 주간 완료율 한 줄. 못 한 일은 '아직 남았어요'로 표현한다(디자인 원칙). */
 export function weekSummaryLine(report: WeeklyReport): string {
-  if (report.total === 0) return '이번 주에는 아직 할 일이 없었어요.';
+  if (report.total === 0) return '이번 주 오늘까지는 할 일이 없었어요.';
   const rate = Math.round((report.done / report.total) * 100);
   const left = report.total - report.done;
-  return `이번 주 할 일 ${report.total}개 중 ${report.done}개 했어요(${rate}%).${left > 0 ? ` ${left}개가 아직 남았어요.` : ''}`;
+  return `이번 주 오늘까지 할 일 ${report.total}개 중 ${report.done}개 했어요(${rate}%).${left > 0 ? ` ${left}개가 아직 남았어요.` : ''}`;
 }
 
 /** 주별 보석 변화 한 줄. */

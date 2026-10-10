@@ -81,13 +81,14 @@ export async function deleteTask(database: Pick<TimetableDatabase, 'getFirstAsyn
   if (result.changes === 0) throw new Error('항목이 이미 변경되었거나 없어요.');
 }
 
-export async function getTodayTasks(database: Pick<TimetableDatabase, 'getAllAsync'>, date: string, weekday: number): Promise<readonly TodayTask[]> {
+export async function getTodayTasks(database: Pick<TimetableDatabase, 'getAllAsync'>, date: string, weekday: number, excludeBeforeCreation = false): Promise<readonly TodayTask[]> {
   return database.getAllAsync<TodayTask>(
     `SELECT tasks.id, tasks.title, CASE WHEN task_completions.id IS NULL THEN 0 ELSE 1 END AS completed
      FROM tasks LEFT JOIN task_completions ON task_completions.task_id = tasks.id AND task_completions.completion_date = ?
      WHERE tasks.family_id = ? AND (tasks.effective_until IS NULL OR tasks.effective_until >= ?)
        AND (tasks.task_date = ? OR (instr(',' || tasks.repeat_weekdays || ',', ',' || ? || ',') > 0 AND tasks.effective_from <= ?))
-     ORDER BY tasks.id`, date, 'local-family', date, date, String(weekday), date,
+       ${excludeBeforeCreation ? "AND date(tasks.created_at, 'localtime') <= ?" : ''}
+     ORDER BY tasks.id`, date, 'local-family', date, date, String(weekday), date, ...(excludeBeforeCreation ? [date] : []),
   );
 }
 

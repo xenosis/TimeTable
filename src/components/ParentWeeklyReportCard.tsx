@@ -14,18 +14,20 @@ import { dayLabel, gemWeekLine, loadWeeklyReport, weekSummaryLine, type WeeklyRe
  * 이 폰이 서버와 맞출 때마다(동기화 끝 신호·앱 복귀·날짜 바뀜) 다시 읽는다. 서버와 맞추기 전에는 비어 있는 이 폰 기록을 보이지 않는다.
  */
 export function ParentWeeklyReportCard({ theme, familyId }: { readonly theme: ThemeDefinition; readonly familyId: string }) {
-  const [report, setReport] = useState<WeeklyReport | null | undefined>(undefined);
+  const [loaded, setLoaded] = useState<{ familyId: string; day: string; value: WeeklyReport | null } | undefined>(undefined);
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = useCallback(() => setRefreshKey((value) => value + 1), []);
   const day = toLocalDateStr(useNow());
   const synced = hasSyncedFamily(familyId);
+  // 새 가족이나 날짜를 읽는 동안 이전 가족의 집계를 표시하지 않는다.
+  const report = loaded?.familyId === familyId && loaded.day === day ? loaded.value : undefined;
 
   useEffect(() => {
     if (!synced) return undefined;
     let active = true;
-    void loadWeeklyReport().then((next) => { if (active) setReport(next); }).catch(() => { if (active) setReport(null); });
+    void loadWeeklyReport().then((next) => { if (active) setLoaded({ familyId, day, value: next }); }).catch(() => { if (active) setLoaded({ familyId, day, value: null }); });
     return () => { active = false; };
-  }, [synced, refreshKey, day]);
+  }, [familyId, synced, refreshKey, day]);
   useEffect(() => subscribeWidgetChecksApplied(refresh), [refresh]);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => { if (state === 'active') refresh(); });

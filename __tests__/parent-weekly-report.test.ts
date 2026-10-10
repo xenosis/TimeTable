@@ -35,6 +35,15 @@ test('장부가 비어 있으면 모든 주가 0이다', () => {
   expect(buildGemWeeks([], THURSDAY).every((week) => week.gemChange === 0 && week.gemTotal === 0 && week.largeGemTotal === 0)).toBe(true);
 });
 
+test('다음 월요일 기록은 이번 주 보석 증감과 합계에서 제외한다', () => {
+  const weeks = buildGemWeeks([
+    row(2, 'gem', at(2026, 10, 11, 23)),
+    row(9, 'gem', at(2026, 10, 12, 0)),
+    row(3, 'large-gem', at(2026, 10, 12, 0)),
+  ], THURSDAY);
+  expect(weeks[3]).toMatchObject({ gemChange: 2, gemTotal: 2, largeGemChange: 0, largeGemTotal: 0 });
+});
+
 test('이번 주 완료율과 날짜별 칸 문구, 못 한 일은 아직 남았어요로 알린다', () => {
   const days = [
     { date: '2026-10-05', weekday: 1, total: 0, done: 0 },
@@ -43,9 +52,9 @@ test('이번 주 완료율과 날짜별 칸 문구, 못 한 일은 아직 남았
   ];
   const report = buildWeeklyReport(days, [], THURSDAY);
   expect(report.weekStart).toBe('2026-10-05');
-  expect(weekSummaryLine(report)).toBe('이번 주 할 일 6개 중 4개 했어요(67%). 2개가 아직 남았어요.');
+  expect(weekSummaryLine(report)).toBe('이번 주 오늘까지 할 일 6개 중 4개 했어요(67%). 2개가 아직 남았어요.');
   expect(days.map(dayLabel)).toEqual(['월 없음', '화 3/3 ✓', '수 1/3']);
-  expect(weekSummaryLine(buildWeeklyReport([days[0]], [], THURSDAY))).toBe('이번 주에는 아직 할 일이 없었어요.');
+  expect(weekSummaryLine(buildWeeklyReport([days[0]], [], THURSDAY))).toBe('이번 주 오늘까지는 할 일이 없었어요.');
 });
 
 test('주별 보석 한 줄은 이번 주를 따로 표시한다', () => {

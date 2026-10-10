@@ -16,7 +16,7 @@ export type Membership = { readonly role: FamilyRole; readonly familyId: string 
 export type AccountState =
   | { readonly kind: 'checking' }
   | { readonly kind: 'local' }
-  | { readonly kind: 'signedIn'; readonly email: string; readonly membership: Membership | null; readonly offline: boolean };
+  | { readonly kind: 'signedIn'; readonly email: string; readonly membership: Membership | null; readonly offline: boolean; readonly restoring?: boolean };
 
 const CACHE_KEY = ACCOUNT_CACHE_KEY;
 

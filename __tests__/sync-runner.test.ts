@@ -8,19 +8,23 @@ const mockReplace = jest.fn();
 const mockServerHasData = jest.fn();
 const mockHasLocalData = jest.fn();
 const mockStatus = jest.fn();
+const mockRefreshOwners = jest.fn();
+const mockRefreshWidget = jest.fn();
 
 jest.mock('../src/db/database', () => ({ getDatabase: async () => ({}) }));
 const mockRpc = jest.fn();
 const mockFrom = jest.fn();
-jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => ({ from: (...args: unknown[]) => mockFrom(...args), rpc: (...args: unknown[]) => mockRpc(...args), auth: { getUser: async () => ({ data: { user: null } }), getSession: async () => ({ data: { session: { user: { id: 'child-uid' } } } }) } }) }));
+const mockGetUser = jest.fn();
+jest.mock('../src/push/pushInstallation', () => ({ getPushInstallation: async () => ({ id: 'this-installation', secret: 'not-used' }) }));
+jest.mock('../src/server/supabaseClient', () => ({ getSupabase: () => ({ from: (...args: unknown[]) => mockFrom(...args), rpc: (...args: unknown[]) => mockRpc(...args), auth: { getUser: () => mockGetUser(), getSession: async () => ({ data: { session: { user: { id: 'child-uid' } } } }) } }) }));
 const mockPush = jest.fn();
 jest.mock('../src/sync/pushChildRecords', () => ({ pushChildRecords: (...args: unknown[]) => { calls.push('push'); return mockPush(...args); } }));
 jest.mock('../src/widgets/widgetRefresh', () => ({
   applyPendingWidgetChecksNow: async () => { calls.push('pending'); return 0; },
-  requestWidgetRefresh: async () => { calls.push('widget'); },
+  requestWidgetRefresh: async () => { calls.push('widget'); await mockRefreshWidget(); },
 }));
 jest.mock('../src/widgets/widgetChecksSignal', () => ({ notifyWidgetChecksApplied: () => calls.push('notify') }));
-jest.mock('../src/notifications/rollingOwners', () => ({ refreshAllRollingOwners: async () => { calls.push('alarms'); } }));
+jest.mock('../src/notifications/rollingOwners', () => ({ refreshAllRollingOwners: async () => { calls.push('alarms'); await mockRefreshOwners(); } }));
 jest.mock('../src/server/localImport', () => ({ readLocalPayload: async () => ({}), hasLocalData: () => mockHasLocalData() }));
 jest.mock('../src/sync/syncStatus', () => ({ setSyncStatus: (status: unknown) => mockStatus(status) }));
 const mockSoon = jest.fn();
@@ -51,11 +55,110 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockFetch.mockResolvedValue({ timetable_sets: [{ id: 1, name: '채아' }] });
   mockRpc.mockResolvedValue({ error: null });
+  mockGetUser.mockResolvedValue({ data: { user: { id: 'child-uid' } }, error: null });
   mockReplace.mockResolvedValue(undefined);
   mockPush.mockResolvedValue(0);
   mockServerHasData.mockReturnValue(true);
   mockHasLocalData.mockReturnValue(false);
+  mockRefreshOwners.mockResolvedValue(undefined);
+  mockRefreshWidget.mockResolvedValue(undefined);
   signedIn('fam-1');
+});
+
+test('알림의 새 조회 요청은 진행 중인 이전 조회와 후속 적용을 모두 기다린다', async () => {
+  let finishPrevious!: (value: unknown) => void;
+  let finishFresh!: (value: unknown) => void;
+  mockFetch.mockImplementationOnce(() => new Promise((resolve) => { finishPrevious = resolve; }));
+  mockFetch.mockImplementationOnce(() => new Promise((resolve) => { finishFresh = resolve; }));
+  const previous = runSync(target);
+  await new Promise((resolve) => setImmediate(resolve));
+  let finished = false;
+  const fresh = runSync(target, { fresh: true }).then((result) => { finished = true; return result; });
+  finishPrevious({ timetable_sets: [{ id: 1, name: '이전' }] });
+  await previous;
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(finished).toBe(false);
+  expect(mockFetch).toHaveBeenCalledTimes(2);
+  finishFresh({ timetable_sets: [{ id: 1, name: '최신' }] });
+  await expect(fresh).resolves.toBe(true);
+  expect(mockReplace).toHaveBeenLastCalledWith({}, { timetable_sets: [{ id: 1, name: '최신' }] }, expect.any(Function));
+});
+
+test('연속 신호가 와도 알림 탭은 요청 이후 첫 조회 완료로 끝난다', async () => {
+  const finishes: ((value: unknown) => void)[] = [];
+  mockFetch.mockImplementation(() => new Promise((resolve) => { finishes.push(resolve); }));
+  const previous = runSync(target);
+  await new Promise((resolve) => setImmediate(resolve));
+  void runSync(target);
+  const fresh = runSync(target, { fresh: true });
+  finishes[0]({ timetable_sets: [{ id: 1, name: '이전' }] });
+  await previous;
+  await new Promise((resolve) => setImmediate(resolve));
+  void runSync(target);
+  finishes[1]({ timetable_sets: [{ id: 1, name: '알림 이후' }] });
+  await expect(fresh).resolves.toBe(true);
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(finishes).toHaveLength(3);
+  const last = runSync(target, { fresh: true });
+  finishes[2]({ timetable_sets: [{ id: 1, name: '추가 변경' }] });
+  await new Promise((resolve) => setImmediate(resolve));
+  finishes[3]({ timetable_sets: [{ id: 1, name: '마지막' }] });
+  await last;
+  mockFetch.mockResolvedValue({ timetable_sets: [{ id: 1, name: '채아' }] });
+});
+
+test('후속 알림 갱신 실패는 안내하고 서버 완료 시각을 남기지 않으며 로컬 조회 마커는 보존한다', async () => {
+  mockGetUser.mockResolvedValue({ data: { user: { id: 'child-uid' } } });
+  mockRefreshOwners.mockRejectedValueOnce(new Error('native failed'));
+  await expect(runSync(target)).resolves.toBe(false);
+  expect(mockRpc).not.toHaveBeenCalledWith('tt_record_device_sync', expect.anything());
+  expect(hasSyncedFamily('fam-1')).toBe(true);
+  expect(mockStatus).toHaveBeenLastCalledWith(expect.objectContaining({ state: 'error', message: expect.stringContaining('알림·위젯을 갱신하지 못했어요') }));
+});
+
+test('위젯 갱신이 실패해도 지연된 알림 갱신이 끝날 때까지 동기화 잠금을 유지한다', async () => {
+  const { withSyncLock } = jest.requireActual('../src/sync/syncLock') as typeof import('../src/sync/syncLock');
+  let finish!: () => void;
+  mockRefreshOwners.mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve; }));
+  mockRefreshWidget.mockRejectedValueOnce(new Error('widget failed'));
+  const sync = runSync(target);
+  await new Promise((resolve) => setImmediate(resolve));
+  let edited = false;
+  const edit = withSyncLock(async () => { edited = true; });
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(edited).toBe(false);
+  finish();
+  await expect(sync).resolves.toBe(false);
+  await edit;
+  expect(edited).toBe(true);
+});
+
+test.each(['auth', 'rpc'])('기기 기록의 %s 실패를 성공으로 표시하지 않고 재시도할 수 있게 안내한다', async (failure) => {
+  if (failure === 'auth') mockGetUser.mockResolvedValueOnce({ data: { user: null }, error: { message: 'offline' } });
+  else mockRpc.mockResolvedValueOnce({ error: { message: 'offline' } });
+  await expect(runSync(target)).resolves.toBe(false);
+  expect(hasSyncedFamily('fam-1')).toBe(true);
+  expect(mockStatus).toHaveBeenLastCalledWith(expect.objectContaining({ state: 'error', message: expect.stringContaining('다시 맞춰 주세요') }));
+});
+
+test('푸시 등록 여부와 관계없이 현재 설치본 증명으로 동기화 시각을 기록한다', async () => {
+  mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'child-uid' } } });
+  await expect(runSync(target)).resolves.toBe(true);
+  expect(mockRpc).toHaveBeenCalledWith('tt_record_device_sync', {
+    p_family: 'fam-1', p_installation: 'this-installation', p_secret: 'not-used',
+    p_version: expect.any(String), p_synced_at: expect.any(String),
+  });
+  expect(mockFrom).not.toHaveBeenCalled();
+});
+
+test('기기 기록의 인증 확인 중 계정이 바뀌면 이전 계정 시각을 기록하지 않는다', async () => {
+  mockGetUser.mockImplementationOnce(async () => {
+    setAccountByUser({ kind: 'local' });
+    return { data: { user: { id: 'child-uid' } } };
+  });
+  await runSync(target);
+  expect(mockFrom).not.toHaveBeenCalled();
+  expect(mockRpc).not.toHaveBeenCalledWith('tt_record_device_sync', expect.anything());
 });
 
 test('같은 가족의 아빠 조회 중 딸 계정으로 전환하면 이전 결과로 딸 체크를 덮지 않는다', async () => {
