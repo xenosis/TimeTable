@@ -5963,7 +5963,7 @@
     },
     {
       "id": "P8.2",
-      "status": "in_progress",
+      "status": "cancelled",
       "priority": "P3",
       "category": "feature",
       "title": "급식 식단 보기",
@@ -5977,7 +5977,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-10T07:07:32.305Z",
-      "updated_at": "2026-10-10T07:07:32.305Z",
+      "updated_at": "2026-10-10T07:20:55.901Z",
       "log": [
         {
           "at": "2026-09-18T11:06:11.242Z",
@@ -5990,6 +5990,12 @@
           "owner": "codex",
           "status": "in_progress",
           "note": "착수: 필요하던 나이스 인증키·학교 코드(J10/7591095, 학교 설정 서버 공유)가 준비됨. 오늘 화면에 '오늘의 급식' 카드(mealServiceDietInfo, 주 단위 하루 한 번 받아 보관, 알레르기 번호·표시 기호 제거). 1.62.0 구현·npm run check 통과"
+        },
+        {
+          "at": "2026-10-10T07:20:55.901Z",
+          "owner": "codex",
+          "status": "cancelled",
+          "note": "사용자 결정 2026-10-10: '급식은 그냥 빼자'. 1.62.0(99faecb)의 급식 카드·조회 코드와 테스트를 1.62.1에서 모두 삭제"
         }
       ]
     },

@@ -13,7 +13,6 @@ jest.mock('../src/components/PermissionGuide', () => ({ PermissionGuide: () => n
 let mockScheduleSetId: number | null = null;
 let mockOnTasksChanged: (() => void) | undefined;
 jest.mock('../src/components/TodayScheduleCard', () => ({ TodayScheduleCard: ({ setId, children }: { setId: number | null; children: React.ReactNode }) => { mockScheduleSetId = setId; return children; } }));
-jest.mock('../src/components/TodayMealCard', () => ({ TodayMealCard: () => null }));
 jest.mock('../src/components/TodayTasksCard', () => ({ TodayTasksCard: ({ onChanged }: { onChanged?: () => void }) => { mockOnTasksChanged = onChanged; return null; } }));
 jest.mock('../src/widgets/widgetChecksSignal', () => ({ subscribeWidgetChecksApplied: () => () => undefined }));
 
