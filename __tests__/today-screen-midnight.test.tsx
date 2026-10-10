@@ -10,6 +10,7 @@ jest.mock('../src/db/timetableSetRepository', () => ({ getActiveTimetableSet: je
 jest.mock('../src/components/CharacterHeader', () => ({ CharacterHeader: ({ children }: { children: React.ReactNode }) => children }));
 jest.mock('../src/components/PermissionGuide', () => ({ PermissionGuide: () => null }));
 jest.mock('../src/components/TodayScheduleCard', () => ({ TodayScheduleCard: () => null }));
+jest.mock('../src/components/TodayMealCard', () => ({ TodayMealCard: () => null }));
 jest.mock('../src/components/TodayTasksCard', () => ({ TodayTasksCard: () => null }));
 jest.mock('../src/components/GemSummaryLine', () => ({ GemSummaryLine: () => null }));
 jest.mock('../src/widgets/widgetChecksSignal', () => ({ subscribeWidgetChecksApplied: () => () => undefined }));

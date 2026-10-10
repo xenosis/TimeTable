@@ -1,6 +1,6 @@
 {
   "name": "kidtimetable",
-  "version": "1.61.2",
+  "version": "1.62.0",
   "main": "index.ts",
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",

@@ -4,6 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 
 import { CharacterHeader } from '../../src/components/CharacterHeader';
 import { PermissionGuide } from '../../src/components/PermissionGuide';
+import { TodayMealCard } from '../../src/components/TodayMealCard';
 import { TodayScheduleCard } from '../../src/components/TodayScheduleCard';
 import { TodayTasksCard } from '../../src/components/TodayTasksCard';
 import { getDatabase } from '../../src/db/database';
@@ -62,6 +63,7 @@ export default function TodayScreen() {
     <TodayScheduleCard refreshKey={refreshKey} theme={theme} setId={status === 'ready' ? timetableSet?.id ?? null : null}>
       <TodayTasksCard theme={theme} refreshKey={refreshKey} onChanged={bump} />
     </TodayScheduleCard>
+    <TodayMealCard theme={theme} refreshKey={refreshKey} />
   </ScrollView>;
 }
 

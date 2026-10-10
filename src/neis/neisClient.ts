@@ -76,3 +76,13 @@ export async function fetchSchoolHolidays(school: Pick<SchoolInfo, 'officeCode' 
   }
   return holidays;
 }
+
+/** 한 끼 급식. dishes는 나이스 원문 그대로(알레르기 번호 포함)이고, 화면용 정리는 meals.ts가 한다. */
+export type NeisMeal = { readonly date: string; readonly kind: string; readonly dishes: readonly string[]; readonly calories: string };
+
+/** 학교 급식 식단(YYYYMMDD~YYYYMMDD)을 읽는다(P8.2). 급식이 없는 날(주말·방학)은 행이 없다. */
+export async function fetchMeals(school: Pick<SchoolInfo, 'officeCode' | 'schoolCode'>, from: string, to: string, fetcher: Fetcher = fetch): Promise<NeisMeal[]> {
+  const rows = await request('mealServiceDietInfo', { ATPT_OFCDC_SC_CODE: school.officeCode, SD_SCHUL_CODE: school.schoolCode, MLSV_FROM_YMD: from, MLSV_TO_YMD: to }, fetcher);
+  return rows.map((row) => ({ date: text(row.MLSV_YMD), kind: text(row.MMEAL_SC_NM) || '중식', dishes: text(row.DDISH_NM).split(/<br\s*\/?>/i).map((dish) => dish.trim()).filter(Boolean), calories: text(row.CAL_INFO) }))
+    .filter((meal) => /^\d{8}$/.test(meal.date) && meal.dishes.length > 0);
+}

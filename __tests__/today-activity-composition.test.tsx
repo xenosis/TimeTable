@@ -13,6 +13,7 @@ jest.mock('../src/db/taskRepository', () => ({ getTodayTasks: jest.fn() }));
 jest.mock('../src/db/rewardRepository', () => ({ setTaskCompletionWithRewards: jest.fn() }));
 jest.mock('../src/notifications/taskRollingSchedule', () => ({ requestTaskRollingScheduleRefresh: jest.fn(async () => undefined) }));
 jest.mock('../src/components/CharacterHeader', () => ({ CharacterHeader: ({ children }: { children: React.ReactNode }) => children }));
+jest.mock('../src/components/TodayMealCard', () => ({ TodayMealCard: () => null }));
 jest.mock('../src/components/PermissionGuide', () => ({ PermissionGuide: () => null }));
 jest.mock('../src/widgets/widgetChecksSignal', () => ({ subscribeWidgetChecksApplied: () => () => undefined }));
 

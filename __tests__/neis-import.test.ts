@@ -3,7 +3,7 @@ import { migrateDatabase } from '../src/db/migrations';
 import { savePeriods } from '../src/db/periodRepository';
 import { createTimetableItem, getEditableTimetableItems } from '../src/db/timetableRepository';
 import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
-import { fetchClassTimetable, fetchSchoolHolidays, searchElementarySchools } from '../src/neis/neisClient';
+import { fetchClassTimetable, fetchMeals, fetchSchoolHolidays, searchElementarySchools } from '../src/neis/neisClient';
 import { buildWeekPlan, missingPeriods, replaceSchoolItems, schoolWeekDates, subjectStyle } from '../src/neis/neisImport';
 import { parseSchoolProfile } from '../src/neis/schoolProfile';
 import { openTestDatabase } from '../test-utils/sqliteTestDatabase';
@@ -52,6 +52,20 @@ describe('나이스 학사일정', () => {
       ['20261014', { name: '재량휴업일', kind: 'school-off' }], ['20260817', { name: '대체공휴일', kind: 'holiday' }],
     ]);
     expect(String(fetcher.mock.calls[0][0])).toContain('/hub/SchoolSchedule?');
+  });
+});
+
+describe('나이스 급식', () => {
+  it('끼니별 메뉴를 줄 단위로 나눠 읽고, 메뉴가 없는 행은 뺀다', async () => {
+    const fetcher = jest.fn(response({ mealServiceDietInfo: [{ head: [] }, { row: [
+      { MLSV_YMD: '20261013', MMEAL_SC_NM: '중식', DDISH_NM: '칼슘쌀밥ㅅ <br/>쇠고기미역국ㅅ (5.6.16)', CAL_INFO: '657.7 Kcal' },
+      { MLSV_YMD: '20261014', MMEAL_SC_NM: '중식', DDISH_NM: '', CAL_INFO: '' },
+    ] }] }));
+    await expect(fetchMeals({ officeCode: 'J10', schoolCode: '7591095' }, '20261012', '20261018', fetcher)).resolves.toEqual([
+      { date: '20261013', kind: '중식', dishes: ['칼슘쌀밥ㅅ', '쇠고기미역국ㅅ (5.6.16)'], calories: '657.7 Kcal' },
+    ]);
+    expect(String(fetcher.mock.calls[0][0])).toContain('/hub/mealServiceDietInfo?');
+    expect(String(fetcher.mock.calls[0][0])).toContain('MLSV_FROM_YMD=20261012&MLSV_TO_YMD=20261018');
   });
 });
 

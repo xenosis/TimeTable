@@ -5619,7 +5619,7 @@
     },
     {
       "id": "P7.1",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": null,
       "category": "feature",
       "title": "앱 꾸미기",
@@ -5635,7 +5635,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T10:11:28.628Z",
-      "updated_at": "2026-10-08T16:13:01.471Z",
+      "updated_at": "2026-10-10T07:07:34.320Z",
       "log": [
         {
           "at": "2026-09-16T04:50:33.860Z",
@@ -5702,6 +5702,12 @@
           "owner": "claude",
           "status": "in_progress",
           "note": "사용자 결정 2026-10-09: 실사용 전이므로 지금 패키지명을 com.chaea.timetable로, 앱 표시 이름을 '채아시간표'로 바꾼다(안드로이드는 다른 앱으로 보아 로컬 데이터는 넘어가지 않음 — 서버 로그인 동기화로 복구). Firebase(P6.9)는 바꾼 패키지로 등록. 착수"
+        },
+        {
+          "at": "2026-10-10T07:07:34.320Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "알림 아이콘 딸 폰 확인(1.61.2 상태표시줄에 달력 실루엣, 알림 목록은 One UI가 앱 아이콘 표시), 앱 이름 '채아시간표'(APK application-label·ko), 패키지 com.chaea.timetable, Firebase 재등록 완료(P6.9), 사용자가 아이콘·스플래시 확인. 안 쓰는 brand_icon_foreground.xml 삭제(1.62.0). app.json adaptiveIcon.monochromeImage는 prebuild를 다시 할 때만 쓰이는 Expo 기본 그림으로 남김"
         }
       ]
     },
@@ -5911,7 +5917,7 @@
     },
     {
       "id": "P8.1",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P3",
       "category": "feature",
       "title": "NEIS 초등학교 시간표 가져오기",
@@ -5925,7 +5931,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-08T16:56:25.056Z",
-      "updated_at": "2026-10-08T16:56:25.056Z",
+      "updated_at": "2026-10-10T06:57:22.779Z",
       "log": [
         {
           "at": "2026-09-18T11:05:51.799Z",
@@ -5938,12 +5944,26 @@
           "owner": "claude",
           "status": "in_progress",
           "note": "사용자 제공 2026-10-09: 나이스 인증키(저장소 밖 .env의 EXPO_PUBLIC_NEIS_API_KEY), 딸 학교 경기 빛가온초등학교(J10/7591095) 2학년 6반. 인증키로 2학년 반별 비교 — 같은 날도 반마다 과목 순서가 달라 반 선택이 필요함을 확인. 사용자 요청: 설정에서 학년(·반)을 정해 자동으로 가져오기. 구현: 관리자→시간표 '학교 시간표 가져오기(나이스)' — 학교 이름 검색·학년·반 저장(이 폰), 이번 주/다음 주 미리보기, 확인 후 과목 있는 요일의 '학교' 일정만 교체(학원·돌봄·빈 요일 유지), 교시 시간 없으면 안내. 테스트 7건 통과"
+        },
+        {
+          "at": "2026-10-10T06:57:20.834Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·리뷰 반영 완료(7f1cb41, df4e6db, 369e54a, 0366aef). 완료 검토 요청 — 리뷰 결과 done_when 충족, 문서 정리(476f32c)"
+        },
+        {
+          "at": "2026-10-10T06:57:22.779Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "완료 검토(critical-reviewer) 결과 done_when 충족, 지적된 문서 불일치는 476f32c로 정리. '자동' 의미는 P8.7, 공휴일은 P8.8로 처리"
         }
-      ]
+      ],
+      "done_at": "2026-10-10",
+      "evidence": "관리자→시간표 '학교 시간표 가져오기(나이스)'(src/neis/neisClient·neisImport·schoolProfile, SchoolTimetableImport). 딸 폰 1.58.0: 빛가온초 2학년 6반 다음 주 불러오기 → 서버 학교 일정 23개·아이 화면 표시(docs/device-verification-2026-10-08.md) · 검증: npm run check 1.61.2 통과(neis-import 9건·school-profile 5건 포함), critical-reviewer 완료 검토"
     },
     {
       "id": "P8.2",
-      "status": "needs_info",
+      "status": "in_progress",
       "priority": "P3",
       "category": "feature",
       "title": "급식 식단 보기",
@@ -5956,14 +5976,20 @@
       "est_min": 30,
       "gate": null,
       "owner": "codex",
-      "claimed_at": null,
-      "updated_at": "2026-09-18T11:06:11.242Z",
+      "claimed_at": "2026-10-10T07:07:32.305Z",
+      "updated_at": "2026-10-10T07:07:32.305Z",
       "log": [
         {
           "at": "2026-09-18T11:06:11.242Z",
           "owner": "codex",
           "status": "needs_info",
           "note": "NEIS 급식 API 실제 화면 표시는 사용자 발급 인증키와 대상 학교의 교육청 코드·학교 코드가 필요하다. 임의 학교·키로 조회하지 않으며, 입력 제공 뒤 오늘 급식 데이터 존재 여부와 화면 표시를 검증한다."
+        },
+        {
+          "at": "2026-10-10T07:07:32.305Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "착수: 필요하던 나이스 인증키·학교 코드(J10/7591095, 학교 설정 서버 공유)가 준비됨. 오늘 화면에 '오늘의 급식' 카드(mealServiceDietInfo, 주 단위 하루 한 번 받아 보관, 알레르기 번호·표시 기호 제거). 1.62.0 구현·npm run check 통과"
         }
       ]
     },
@@ -6193,7 +6219,7 @@
     },
     {
       "id": "P8.7",
-      "status": "in_progress",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "학교 시간표 자동 갱신",
@@ -6209,7 +6235,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-08T17:30:41.366Z",
-      "updated_at": "2026-10-10T02:53:42.815Z",
+      "updated_at": "2026-10-10T06:57:24.713Z",
       "log": [
         {
           "at": "2026-10-08T17:30:41.366Z",
@@ -6240,12 +6266,26 @@
           "owner": "claude",
           "status": "in_progress",
           "note": "사용자 결정 2026-10-10: ① 공휴일은 그날 일정을 통째로 비움(학원도 안 감) — 날짜별 휴일 처리는 P8.8로 분리 ② 손으로 고친 학교 일정도 자동 갱신이 덮어써도 됨 ③ 학교 설정은 서버로 아빠 폰과 공유 ④ 앱이 꺼진 상태의 백그라운드 확인은 하지 않아도 됨(폰 켜졌을 때만). ③ 구현 0366aef(1.60.0): 서버 tt_timetable_settings 학교 칸·tt_apply_family_edit 운영 적용(사전 롤백 시험, 사후 학교설정 6·가족편집 10·RLS 59 일치), 폰 DB V13·동기화·옛 설정 이전. npm run check 통과. 딸 폰 설치·서버 이전 확인 진행 중"
+        },
+        {
+          "at": "2026-10-10T06:48:06.156Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "사용자 결정 4건 반영 완료: ① 공휴일은 P8.8로 날짜별 처리(반복 시간표 학교 일정 삭제 제거) ② 덮어쓰기 허용(현재 동작) ③ 학교 설정 서버 공유 0366aef — 딸 폰 1.61.0에서 kv→서버 이전 확인 ④ 앱이 꺼진 상태의 백그라운드 확인 생략 승인. 최신 1.61.2 npm run check 통과"
+        },
+        {
+          "at": "2026-10-10T06:57:24.713Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "최종 검토 결과 코드 결함 없음, 문서 불일치 476f32c로 정리. 사용자 결정 4건 반영"
         }
-      ]
+      ],
+      "done_at": "2026-10-10",
+      "evidence": "자동 갱신(src/neis/schoolAutoRefresh·SchoolAutoRefreshLifecycle·backgroundRollingRefresh): 앱 실행·복귀·앱이 살아 있을 때 백그라운드에서 6시간(실패 30분) 간격, 학교(교시) 일정만 교체·학원 유지, 같으면 안 씀, 빈 주·교시 누락·네트워크 실패 처리, 아빠 폰 제외, 관리자 화면 상태. 학교 설정 서버 공유(0366aef). 딸 폰 1.59.0 자동 교체·same 확인, 1.61.0 학교 설정 서버 이전·다음 주 갱신 확인 · 검증: npm run check 1.61.2 통과(school-auto-refresh 13건), critical-reviewer 1차·2차·최종 검토 반영. 앱이 꺼진 상태의 백그라운드 확인은 사용자 결정 ④로 제외"
     },
     {
       "id": "P8.8",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "공휴일 날짜는 그날 일정 통째로 비우기",
@@ -6261,7 +6301,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-10T05:53:07.108Z",
-      "updated_at": "2026-10-10T06:43:05.239Z",
+      "updated_at": "2026-10-10T06:57:30.551Z",
       "log": [
         {
           "at": "2026-10-10T05:53:07.108Z",
@@ -6286,8 +6326,28 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "사용자 결정 2026-10-10: 학교만 쉬는 날(재량휴업일 등)은 학원 일정을 지우지 말고 표시, 교시(학교) 일정만 빼면 됨 — 현재 구현(discretionary)과 같아 done_when을 결정에 맞게 정리"
+        },
+        {
+          "at": "2026-10-10T06:57:26.679Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 결정(학교만 쉬는 날은 학원 유지) 반영 확인, 완료 처리 진행"
+        },
+        {
+          "at": "2026-10-10T06:57:28.624Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "1.61.2 딸 폰 화면 확인 완료, 최종 검토 결과 코드 결함 없음"
+        },
+        {
+          "at": "2026-10-10T06:57:30.551Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "최종 검토 결과 코드 결함 없음, 문서 불일치 476f32c로 정리. 실제 나이스 공휴일이 처음 오는 때 자동 저장·알람 미발생을 폰에서 다시 볼 것"
         }
-      ]
+      ],
+      "done_at": "2026-10-10",
+      "evidence": "공휴일=쉬는 날(holiday, 그날 일정 통째로 비움·모든 알림 건너뜀), 방학 아닌 휴업일=학교만 쉬는 날(discretionary, 학교 일정만 빼고 학원 유지), 방학 제외(2026 실데이터 확인). 반복 시간표는 지우지 않음. 오늘 카드·요일 보기·주간표·위젯 반영(2ecb72d, 2675764, b4c6707). 딸 폰 1.61.2에서 확인용 휴일로 네 화면 표시 확인 후 데이터 삭제(docs/device-verification-2026-10-08.md) · 검증: npm run check 1.61.2 통과(Kotlin 위젯 테스트 포함), critical-reviewer 1차·2차·최종 검토 반영. 자동 휴일 저장과 쉬는 날 알람 미발생은 단위 테스트로 확인(4주 안 실제 공휴일 없음)"
     },
     {
       "id": "P9",
