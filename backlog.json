@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.1",
   "meta": {
-    "updated": "2026-10-08",
+    "updated": "2026-10-10",
     "context_doc": "docs/tasks.md",
     "max_est_min": 45,
     "note": "TimeTable(kidtimetable) 작업 항목 SSOT. 이 프로젝트엔 전용 CLI가 없으므로 이 파일은 직접 편집한다(voice-claude-car의 pnpm backlog와 달리 수동 관리). 단계 구조·근거는 docs/tasks.md·docs/research.md 참고. 상태 갱신 시 status/log/updated_at을 함께 갱신하고, 완료 시 evidence에 확인 근거(파일 경로·명령 결과 등)를 남긴다. needs_info/blocked는 log에 사유를 남길 것."
@@ -5410,9 +5410,9 @@
       "done_when": "서버 변경 시 딸 폰에 푸시가 도착함",
       "est_min": 45,
       "gate": null,
-      "owner": "codex",
+      "owner": "claude",
       "claimed_at": "2026-10-07T15:47:04.730Z",
-      "updated_at": "2026-10-07T22:25:06.317Z",
+      "updated_at": "2026-10-10T00:34:42.100Z",
       "log": [
         {
           "at": "2026-10-07T15:47:04.730Z",
@@ -5443,6 +5443,18 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "claude 인계: codex 미커밋 코드(설치본 등록 마이그레이션 포함)를 마이그레이션 정적 테스트 보완 뒤 전체 check 통과(push-tests 포함)로 커밋 e79c167. 발송 큐·설치본 마이그레이션은 서버에 BEGIN…ROLLBACK 시험 적용으로 큐 검사 통과, 운영 적용 안 함(서버에 객체 없음 확인). done_when(딸 폰 실제 푸시 도착)은 Firebase 앱·google-services.json·Expo projectId·FCM v1 자격과 함수 배포가 필요해 사용자 결정 대기: ① Firebase를 현재 패키지 com.sewoong.kidtimetable로 등록할지, P7 이름 변경(com.chaea.timetable) 뒤 등록할지 ② 자격 준비·배포 승인"
+        },
+        {
+          "at": "2026-10-10T00:34:40.150Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 승인(2026-10-10)으로 운영 적용: 푸시 마이그레이션 2개 적용(사전 롤백 시험, 사후 큐 검사·RLS 59·가족편집 10 일치), tt-notify-change 배포(무인증 401). 사용자가 FCM V1 키 업로드, 딸 토큰 tt_devices 등록 확인, 함수와 같은 형식 메시지를 Expo로 직접 보내 딸 폰 family-change 알림 표시 확인. 기록 docs/push-notification-setup.md"
+        },
+        {
+          "at": "2026-10-10T00:34:42.100Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "done_when(서버 변경 시 딸 폰 도착) 전체 경로 미확인: ① 아빠 계정 기기에서 저장 후 도착 확인 필요 ② tt-push-worker(재시도 작업자) 배포·TT_PUSH_WORKER_SECRET 설정은 verify_jwt=false 구조라 자동 권한 검사가 거부 — 사용자 판단 필요"
         }
       ]
     },
@@ -6181,7 +6193,7 @@
     },
     {
       "id": "P8.7",
-      "status": "in_review",
+      "status": "needs_info",
       "priority": null,
       "category": "feature",
       "title": "학교 시간표 자동 갱신",
@@ -6197,7 +6209,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-08T17:30:41.366Z",
-      "updated_at": "2026-10-08T23:34:05.203Z",
+      "updated_at": "2026-10-08T23:42:30.922Z",
       "log": [
         {
           "at": "2026-10-08T17:30:41.366Z",
@@ -6216,6 +6228,12 @@
           "owner": "claude",
           "status": "in_review",
           "note": "설명 문서 연결. 리뷰 반영 재작업(1.59.2): 직전 기록의 '백그라운드는 새 라이브러리 필요'는 틀림 — expo-background-task가 이미 있어 기존 timetable-rolling-refresh 작업에서 자동 갱신도 호출(화면 없이 깨어난 실행은 계정 확인 전·편집 경로 미등록이라 건너뜀). 빈 요일은 나이스 학사일정(SchoolSchedule)의 공휴일·휴업일일 때만 비우고 그 외·조회 실패 시 유지. 같은 교시·과목의 알림·메모 유지, 시간으로 넣은 학교 일정은 삭제 대상에서 제외. 실패 결과는 30분 뒤 재시도. 테스트 추가. 1.59.1(셋째 줄 과목 글자 제거)은 debug 서명으로 잘못 빌드해 설치 실패 — release로 1.59.2 다시 빌드 후 재확인·재리뷰 예정"
+        },
+        {
+          "at": "2026-10-08T23:42:30.922Z",
+          "owner": "claude",
+          "status": "needs_info",
+          "note": "369e54a(1.59.2) 커밋·npm run check 통과·딸 폰 설치(release, 서명 295d86) 완료, 폰 잠김으로 화면 확인은 남음. 2차 리뷰 남은 결정: (1) 공휴일 요일을 매주 반복 시간표에서 지우면 그 요일 알림·메모가 다음 주에 사라지고 다음 주가 비면 복구 안 됨 — 날짜별 휴일 예외로 바꾸려면 아이 화면·주간표·위젯이 휴일을 반영해야 하고 학원 일정도 숨길지 결정 필요 (2) 아빠가 손으로 넣은 '다음 주' 적용·수정분을 자동 갱신이 덮어써도 되는지 (3) 학교 설정이 기기별 저장이라 딸 폰에도 설정이 있어야 함 — 서버로 공유할지 (4) 앱 프로세스가 죽은 상태의 백그라운드 실행은 건너뛰는 한계 승인"
         }
       ]
     },

@@ -39,3 +39,11 @@ Android는 데이터 메시지를 받은 뒤 현재 딸 가족과 기기 역할�
 - 임시 가족을 사용하는 롤백 시험에서 기록 생성·병합·중복 임대 차단·새 변경 보존·권한 거절·가족 삭제를 확인했다. 함수 연결 후 전체 검사는 별도로 진행 중이다.
 - 자동 발송 작업자 연결, Expo ticket·receipt 보관과 만료 토큰 처리, 설치본별 계정·토큰 이전은 아직 구현을 끝내지 않았다. 현재 코드를 실제 수신 완료로 판정하지 않는다.
 
+
+## 운영 적용과 수신 확인 (2026-10-10, 사용자 승인)
+
+- Firebase(routineplanner-e9bbd)에 `com.chaea.timetable` 앱 등록, `android/app/google-services.json` 추가, Expo 프로젝트(@xenosis/chaea-timetable)에 사용자가 Doro와 같은 프로젝트의 서비스 계정 키를 FCM V1 자격으로 업로드했다. `eas.json`은 자격 등록용 최소 설정이다(빌드는 계속 로컬 Gradle).
+- 마이그레이션 `20261007184801_tt_push_delivery_queue.sql`·`20261007193428_tt_push_installation.sql`을 한 트랜잭션으로 운영 서버에 적용했다(`db query -f`, 이력 테이블 없음). 적용 전 BEGIN…ROLLBACK 시험, 적용 후 `tt_push_queue_check` 통과·`tt_rls_check` 59건·`tt_family_edit_check` 10건 기대값 일치.
+- `tt-notify-change` 배포(verify_jwt 유지). 로그인 없이 호출하면 401.
+- 딸 폰(1.59.2, 딸 계정)의 Expo 토큰이 `tt_devices`에 등록됨. 함수와 같은 모양의 데이터 메시지(type family-change, changeOrder 1 — 서버 순번 68보다 작아 이후 실제 알림을 막지 않음)를 Expo로 직접 보내 딸 폰 알림 목록에 `family-change`(id 6901, 채널 family-changes) 표시를 확인했다. FCM V1 자격과 폰 표시 경로 확인이며, 아빠 저장 → 함수 → 도착 전체 경로는 아직이다.
+- 남은 것: `tt-push-worker` 배포와 `TT_PUSH_WORKER_SECRET` 설정(JWT 검사를 끄고 함수 안에서 비밀값을 확인하는 구조라 자동 권한 검사가 막음 — 사용자 판단 필요), 아빠 계정 기기에서 저장 후 실제 도착 확인.
