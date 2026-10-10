@@ -8,6 +8,7 @@ import { buildWeekPlan, missingPeriods, replaceSchoolItems, schoolWeekDates, sub
 import { parseSchoolProfile } from '../src/neis/schoolProfile';
 import { openTestDatabase } from '../test-utils/sqliteTestDatabase';
 
+jest.mock('../src/db/database', () => ({ getDatabase: jest.fn() }));
 jest.mock('expo-sqlite/kv-store', () => ({ __esModule: true, default: { getItemAsync: jest.fn(), setItemAsync: jest.fn() } }));
 
 const response = (body: unknown, ok = true) => (async () => ({ ok, json: async () => body })) as unknown as typeof fetch;

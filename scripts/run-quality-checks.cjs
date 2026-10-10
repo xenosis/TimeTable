@@ -98,4 +98,8 @@ if (failed) {
   console.error('\nQUALITY_CHECKS_FAILED: 실패 또는 미검증 항목이 남아 있습니다.');
   process.exit(1);
 }
+// 전체 검사를 통과했으면 지금 작업 트리의 수정은 검증된 것이다. Stop 훅이 같은 검사를 또 돌리지 않게 수정 표시를 지운다
+for (const directory of ['quality-edited', 'codex-quality-edited']) {
+  require('fs').rmSync(path.join(__dirname, '..', 'node_modules', '.cache', directory), { recursive: true, force: true });
+}
 console.log('\nQUALITY_CHECKS_OK: agent-instructions, code-length, lint, typecheck, test, build, push-tests 모두 통과했습니다.');

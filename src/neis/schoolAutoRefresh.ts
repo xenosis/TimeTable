@@ -12,7 +12,7 @@ import { userErrorMessage } from '../utils/userErrorMessage';
 import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { fetchClassTimetable, fetchSchoolHolidays } from './neisClient';
 import { buildWeekPlan, missingPeriods, replaceSchoolItems, schoolWeekDates } from './neisImport';
-import { loadSchoolProfile } from './schoolProfile';
+import { loadSchoolProfile, shareDeviceSchoolProfile } from './schoolProfile';
 
 /**
  * 학교 시간표 자동 갱신(P8.7). 저장해 둔 학교·학년·반으로 이번 주(주말에는 다음 주) 나이스 시간표를 확인해,
@@ -68,6 +68,8 @@ export function refreshSchoolTimetableIfDue(now = new Date(), force = false): Pr
 
 async function run(now: Date, force: boolean): Promise<AutoRefreshState | null> {
   if (!canAutoRefresh()) return null;
+  // 1.59 이하에서 이 폰에만 저장한 학교 설정을 가족 설정(서버 공유)으로 옮긴다. 실패하면 다음 확인 때 다시 한다
+  await shareDeviceSchoolProfile().catch(() => undefined);
   const profile = await loadSchoolProfile().catch(() => null);
   if (!profile) return null;
   const dates = schoolWeekDates(now, false);

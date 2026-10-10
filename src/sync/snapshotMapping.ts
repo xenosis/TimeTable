@@ -50,7 +50,10 @@ const createdAt = (row: Row): string => toSqliteUtc(row.created_at) ?? toSqliteU
 const mappers: Readonly<Record<LocalTable, (row: Row) => LocalRow>> = {
   periods: (r) => ({ id: num(r.id), family_id: LOCAL_FAMILY, period_no: num(r.period_no), start_time: text(r.start_time), end_time: text(r.end_time), created_at: createdAt(r) }),
   timetable_sets: (r) => ({ id: num(r.id), family_id: LOCAL_FAMILY, name: text(r.name), created_at: createdAt(r) }),
-  timetable_settings: (r) => ({ family_id: LOCAL_FAMILY, active_set_id: num(r.active_set_id) }),
+  timetable_settings: (r) => ({
+    family_id: LOCAL_FAMILY, active_set_id: num(r.active_set_id), school_office_code: text(r.school_office_code), school_code: text(r.school_code),
+    school_name: text(r.school_name), school_grade: num(r.school_grade), school_class: text(r.school_class),
+  }),
   timetable_items: (r) => ({
     id: num(r.id), family_id: LOCAL_FAMILY, set_id: num(r.set_id), weekday: num(r.weekday), period_no: num(r.period_no),
     start_time: text(r.start_time), end_time: text(r.end_time), title: text(r.title), category: text(r.category),

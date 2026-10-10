@@ -165,6 +165,8 @@ describe('V12 마이그레이션: 옛 정책의 하루 완료 보석', () => {
   it('보석 합계는 그대로 두고 완료 기록 행은 0으로 바꿔, 체크를 취소해도 개수가 줄지 않는다', async () => {
     // V11 상태의 DB에 옛 정책이 남긴 '하루 완료 보석 1개' 행 두 개와 직접 입력한 개수 조정이 있다고 가정
     await database.execAsync('PRAGMA user_version = 11');
+    // V13(학교 칸)도 V11에는 없으니 지워 둔다(다시 마이그레이션할 때 같은 칸을 또 만들지 않게)
+    for (const column of ['school_office_code', 'school_code', 'school_name', 'school_grade', 'school_class']) await database.execAsync(`ALTER TABLE timetable_settings DROP COLUMN ${column}`);
     await database.runAsync("INSERT INTO sticker_ledger (family_id, child_id, delta, reason) VALUES ('local-family','local-child',1,'daily-completion:2026-09-28')");
     await database.runAsync("INSERT INTO sticker_ledger (family_id, child_id, delta, reason) VALUES ('local-family','local-child',1,'daily-completion:2026-09-29')");
     await database.runAsync("INSERT INTO sticker_ledger (family_id, child_id, delta, reason) VALUES ('local-family','local-child',3,'manual-count:gem')");

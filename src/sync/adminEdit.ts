@@ -24,7 +24,12 @@ type ParentTable = (typeof parentTables)[number];
 type Row = LocalRow;
 type ParentRows = Partial<Record<LocalTable, readonly Row[]>>;
 
-export type ParentDiff = { readonly table: ParentTable; readonly inserts: readonly Row[]; readonly updates: readonly Row[]; readonly deletes: readonly number[] };
+export type ParentDiff = {
+  readonly table: ParentTable; readonly inserts: readonly Row[]; readonly updates: readonly Row[]; readonly deletes: readonly number[];
+  /** 적용 세트 설정만: 편집 전 행(학교 칸이 실제로 바뀌었는지 가리는 데 쓴다) */
+  readonly previous?: Row;
+};
+const schoolColumns = ['school_office_code', 'school_code', 'school_name', 'school_grade', 'school_class'] as const;
 
 const keyOf = (table: ParentTable, row: Row): string => (table === 'timetable_settings' ? String(row.family_id) : String(row.id));
 const same = (a: Row, b: Row) => Object.keys(a).every((column) => a[column] === b[column]);
@@ -42,7 +47,7 @@ export function diffParentTables(before: ParentRows, after: ParentRows): ParentD
       else if (!same(prev, row)) updates.push(row);
     }
     const deletes = table === 'timetable_settings' ? [] : [...old.keys()].filter((key) => !next.has(key)).map(Number);
-    return { table, inserts, updates, deletes };
+    return table === 'timetable_settings' ? { table, inserts, updates, deletes, previous: [...old.values()][0] } : { table, inserts, updates, deletes };
   }).filter((diff) => diff.inserts.length + diff.updates.length + diff.deletes.length > 0);
 }
 
@@ -76,7 +81,10 @@ export function buildEditPayload(diffs: readonly ParentDiff[]): Record<string, u
   for (const diff of diffs) {
     if (diff.table === 'timetable_settings') {
       const row = diff.inserts[0] ?? diff.updates[0];
-      if (row) settings = { active_set_id: row.active_set_id };
+      // 학교 설정(P8.7)은 이 편집에서 바뀐 때만 보낸다(서버는 school_code 키가 있을 때만 학교 칸을 바꾼다).
+      // 서버 값을 아직 받지 못한 폰이 적용 세트만 바꿔도 서버의 학교 설정을 비우지 않게 한다
+      const schoolChanged = row && schoolColumns.some((column) => (row[column] ?? null) !== (diff.previous?.[column] ?? null));
+      if (row) settings = { active_set_id: row.active_set_id, ...(schoolChanged ? Object.fromEntries(schoolColumns.map((column) => [column, row[column] ?? null])) : {}) };
       continue;
     }
     const name = `tt_${diff.table}`;

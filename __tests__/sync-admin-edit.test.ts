@@ -106,6 +106,16 @@ test('세트를 복사해 만들면 새 세트와 복사된 항목이 함께 ins
   expect(payload.inserts.tt_timetable_items.map((item) => [item.title, item.set_id])).toEqual([['수학', newSet.id], ['수학', newSet.id]]);
 });
 
+test('학교 설정은 그 편집에서 바뀐 때만 보내고, 적용 세트만 바꾼 편집은 서버의 학교 설정을 건드리지 않는다', () => {
+  const school = { school_office_code: 'J10', school_code: '7591095', school_name: '빛가온초등학교', school_grade: 2, school_class: '6' };
+  const empty = { school_office_code: null, school_code: null, school_name: null, school_grade: null, school_class: null };
+  const before = { family_id: 'local-family', active_set_id: 1, ...empty };
+  const schoolDiff = diffParentTables({ timetable_settings: [before] }, { timetable_settings: [{ ...before, ...school }] });
+  expect(buildEditPayload(schoolDiff).settings).toEqual({ active_set_id: 1, ...school });
+  const setOnly = diffParentTables({ timetable_settings: [before] }, { timetable_settings: [{ ...before, active_set_id: 2 }] });
+  expect(buildEditPayload(setOnly).settings).toEqual({ active_set_id: 2 });
+});
+
 test('서버 행으로 바꿀 때 옛 열·가족 id는 빼고 시각은 ISO로, 서버 거부 사유는 한글로 보인다', () => {
   const row = toServerRow('timetable_items', { id: 3, family_id: 'local-family', set_id: 1, weekday: 2, period_no: null, start_time: '16:00', end_time: '17:00', title: '피아노', category: 'academy', color_key: 'music', icon_key: 'music-note', alert_mode: 'none', alert_before_min: 0, memo: '', created_at: '2026-10-07 01:00:00', timetable_mode: 'regular' });
   expect(row).not.toHaveProperty('timetable_mode');

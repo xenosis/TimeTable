@@ -12,6 +12,7 @@ const mockStore = new Map<string, string>();
 jest.mock('expo-sqlite/kv-store', () => ({ __esModule: true, default: {
   getItemAsync: async (key: string) => mockStore.get(key) ?? null,
   setItemAsync: async (key: string, value: string) => { mockStore.set(key, value); },
+  removeItemAsync: async (key: string) => { mockStore.delete(key); },
 } }));
 let mockDatabase: TimetableDatabase;
 jest.mock('../src/db/database', () => ({ getDatabase: async () => mockDatabase }));

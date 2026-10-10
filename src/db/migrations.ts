@@ -1,6 +1,6 @@
 import type { TimetableDatabase } from './types';
 
-export const databaseVersion = 12;
+export const databaseVersion = 13;
 
 export const schemaV1 = [
   `CREATE TABLE IF NOT EXISTS periods (
@@ -204,6 +204,15 @@ export const schemaV12 = [
   "UPDATE sticker_ledger SET delta = 0 WHERE reason LIKE 'daily-completion:%' AND delta != 0",
 ] as const;
 
+/** V13: 학교 시간표 가져오기·자동 갱신에 쓰는 학교·학년·반(P8.7). 가족 설정이라 서버와 공유한다. 정하지 않았으면 null. */
+export const schemaV13 = [
+  'ALTER TABLE timetable_settings ADD COLUMN school_office_code TEXT',
+  'ALTER TABLE timetable_settings ADD COLUMN school_code TEXT',
+  'ALTER TABLE timetable_settings ADD COLUMN school_name TEXT',
+  'ALTER TABLE timetable_settings ADD COLUMN school_grade INTEGER',
+  'ALTER TABLE timetable_settings ADD COLUMN school_class TEXT',
+] as const;
+
 type UserVersionRow = { user_version: number };
 
 export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsync' | 'getFirstAsync'>): Promise<void> {
@@ -258,6 +267,10 @@ export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsy
     }
     if (version < 12) {
       for (const statement of schemaV12) await database.execAsync(statement);
+      await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
+    }
+    if (version < 13) {
+      for (const statement of schemaV13) await database.execAsync(statement);
       await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
     }
     await database.execAsync('COMMIT');
