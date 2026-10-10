@@ -29,3 +29,7 @@
 - 임시 요청 id8을 아빠 보상 UI에서 지급 처리했고 서버 given 확인(.tmp/p618-rights-given.log). 딸 화면은 전경 및 앱 재활성화 후에도 대기 문구가 남고 관리자 동기화 표시가 장시간 맞추는 중에 머물렀다(.tmp/p618-child-given-final.xml, .tmp/p618-child-sync.xml). 양방향 지급 반영 성공 근거가 아니다.
 - 임시 요청 id8만 삭제하여 요청0/장부1/합계0 복구 확인(.tmp/p618-fixture8-cleanup.log). 알람 발생 테스트는 하지 않았다.
 - 진행 중인 동기화 단계를 개인정보 없이 관찰하기 위한 1.62.10/174 진단 로그 보완을 추가했고 전체 검사를 진행 중이다.
+
+- 1.62.10/174 진단 보완 전체 check PASS(89 suites/533 tests·Android build·push-tests), 등록 병렬 리뷰 완료(.tmp/reviews/P6.18-fb1ccec20518-1791646042096), 0c214b5 커밋·푸시. Device arm64 서명 검증 후 딸 폰 업데이트 성공 및 실제 설치 버전 확인. 설치 도중 화면 잠금 발생으로 진단 실행 로그는 미확인.
+- 두 폰 USB 연결 중 화면 유지 설정을 임시 적용했다. 이전 값은 .tmp/R59X3033P3X-stayon-baseline.txt 및 .tmp/R3CW10EBFYB-stayon-baseline.txt에 저장했고 검증 후 복원해야 한다.
+- tt-push-worker 서버 비밀 등록 완료. 함수 배포는 자동 승인 검토가 no-verify-jwt 공개 엔드포인트 설정의 명시 승인을 요구하며 거절했고 사용자에게 정확한 설정 승인 질문을 남겼다. 배포 성공으로 기록하지 않는다.

@@ -5628,7 +5628,7 @@
     },
     {
       "id": "P6.18",
-      "status": "in_progress",
+      "status": "needs_info",
       "priority": null,
       "category": "bug",
       "title": "딸 폰 실시간 반영·알림 탭 동기화 누락 조사",
@@ -5644,7 +5644,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-10T07:57:32.555Z",
-      "updated_at": "2026-10-10T15:12:04.736Z",
+      "updated_at": "2026-10-10T15:41:47.044Z",
       "log": [
         {
           "at": "2026-10-10T07:57:32.555Z",
@@ -5669,6 +5669,12 @@
           "owner": "codex",
           "status": "in_progress",
           "note": "사용자가 운영 적용과 설치를 명시 승인. 운영 tt_record_device_sync 적용 완료: 함수 존재/authenticated 실행 허용/anon 실행 거부 확인(.tmp/p618-production-apply.log). 기존 서명과 arm64 ABI를 재확인하고 두 실기기에 1.62.9/173 데이터 유지 업데이트 진행 중. 이후 전경 반영·지급 반영·알림 탭·아빠 동기화 시각 검증을 진행한다."
+        },
+        {
+          "at": "2026-10-10T15:41:47.044Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "사용자 승인 후 운영 기기 기록 RPC 적용 및 권한 확인 완료. 두 폰 1.62.9/173 설치, 각각 설치본 행의 서버 동기화 시각 및 딸 푸시 토큰 확인. 원격 지급 서버 given 성공이나 딸 전경 대기 문구 유지·동기화 장시간 진행 재현. 임시 id8 정리: 요청0/장부1/합계0 복구. 1.62.10/174 개인정보 없는 단계 로그 추가, 전체 check 89 suites/533 tests·Android build·push-tests PASS, 등록 병렬 리뷰 완료, 0c214b5 커밋·푸시. 딸 진단 APK 설치 성공, 실제 화면 잠금으로 단계 관찰은 사용자 잠금 해제 대기. 별도 tt-push-worker 배포는 자동 승인 검토가 JWT 비활성화 설정의 명시 승인을 요구해 거절; 정확한 승인 질문 전송. 알람 발생 테스트 안 함."
         }
       ]
     },
