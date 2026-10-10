@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
+const { reviewContext } = require('./review-context.cjs');
 
 const projectRoot = path.resolve(__dirname, '..', '..');
 const backlogCli = path.join(projectRoot, 'scripts', 'backlog', 'cli.cjs');
@@ -148,7 +149,7 @@ async function main() {
   if (list.source.sha256 !== expectedHash || taskResult.source.sha256 !== expectedHash) {
     throw new Error(`SNAPSHOT_CONFLICT: 기대 ${expectedHash}, 현재 ${list.source.sha256}`);
   }
-  const snapshot = { source: list.source, tasks: list.page.items, task: taskResult.task };
+  const snapshot = { source: list.source, tasks: reviewContext(list.page.items, taskResult.task), task: taskResult.task };
   if (dryRun) {
     console.log(JSON.stringify({ dryRun: true, taskId, source: snapshot.source, task: snapshot.task.id }, null, 2));
     return;
