@@ -19,6 +19,13 @@ describe('buildRollingNotifications', () => {
     expect(result.map((notification) => notification.itemId)).toEqual([2]);
   });
 
+  it('쉬는 날(holiday)에는 학교뿐 아니라 학원 알림도 건너뛴다(P8.8)', () => {
+    const result = buildRollingNotifications(items, [{ startDate: '2026-09-14', endDate: '2026-09-14', type: 'holiday' }], new Date(2026, 8, 14, 8, 0));
+    expect(result.map((notification) => notification.itemId)).toEqual([]);
+    const vacation = buildRollingNotifications(items, [{ startDate: '2026-09-14', endDate: '2026-09-14', type: 'vacation' }], new Date(2026, 8, 14, 8, 0));
+    expect(vacation.map((notification) => notification.itemId)).toEqual([2]);
+  });
+
   it('excludes past alerts and rejects an invalid day count', () => {
     expect(buildRollingNotifications(items, [], new Date(2026, 8, 14, 9, 0)).map((notification) => notification.itemId)).toEqual([2, 1]);
     expect(() => buildRollingNotifications(items, [], new Date(2026, 8, 14), 0)).toThrow('days must be a positive integer');

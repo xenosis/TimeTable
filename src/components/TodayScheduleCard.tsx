@@ -2,7 +2,8 @@ import { useEffect, useState, type PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
-import { getTimetableItemsForWeekday, type TimetableItem } from '../db/timetableRepository';
+import { getScheduleForDate } from '../db/dateSchedule';
+import type { TimetableItem } from '../db/timetableRepository';
 import type { TimetableSetId } from '../db/types';
 import { resolveThemeColor, resolveThemeIcon, type ThemeDefinition } from '../theme';
 import { borderRadius, fontSize, spacing } from '../theme';
@@ -50,12 +51,13 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
   useEffect(() => {
     if (setId === null) return;
     let active = true;
-    void getDatabase().then((database) => getTimetableItemsForWeekday(database, weekday, setId)).then((saved) => {
+    // 쉬는 날(공휴일)이면 그날 일정은 통째로 비어 있다(P8.8)
+    void getDatabase().then((database) => getScheduleForDate(database, new Date(), setId)).then((schedule) => {
       if (!active) return;
-      setItems(saved);
+      setItems(schedule.items);
       setLoadedRequestKey(requestKey);
       setFailedRequestKey(null);
-      setMessage(saved.length ? '' : '오늘은 등록된 일정이 없어요.');
+      setMessage(schedule.holiday ? `오늘은 ${schedule.holiday === '쉬는 날' ? '' : `${schedule.holiday}, `}쉬는 날이에요 🎉` : schedule.items.length ? '' : '오늘은 등록된 일정이 없어요.');
     }).catch(() => {
       if (active) {
         // 실패 뒤 재시도 응답 전에 실패 전 일정이 다시 보이지 않게 이전 결과를 버린다

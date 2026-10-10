@@ -3,7 +3,7 @@ import { migrateDatabase } from '../src/db/migrations';
 import { savePeriods } from '../src/db/periodRepository';
 import { createTimetableItem, getEditableTimetableItems } from '../src/db/timetableRepository';
 import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
-import { fetchClassTimetable, searchElementarySchools } from '../src/neis/neisClient';
+import { fetchClassTimetable, fetchSchoolHolidays, searchElementarySchools } from '../src/neis/neisClient';
 import { buildWeekPlan, missingPeriods, replaceSchoolItems, schoolWeekDates, subjectStyle } from '../src/neis/neisImport';
 import { parseSchoolProfile } from '../src/neis/schoolProfile';
 import { openTestDatabase } from '../test-utils/sqliteTestDatabase';
@@ -36,6 +36,20 @@ describe('나이스 조회', () => {
     await expect(fetchClassTimetable({ officeCode: 'J10', schoolCode: '1' }, 2, '6', 'a', 'b', response({ RESULT: { CODE: 'INFO-200' } }))).resolves.toEqual([]);
     const offline = (async () => { throw new TypeError('network'); }) as unknown as typeof fetch;
     await expect(fetchClassTimetable({ officeCode: 'J10', schoolCode: '1' }, 2, '6', 'a', 'b', offline)).rejects.toThrow('인터넷 연결');
+  });
+});
+
+describe('나이스 학사일정', () => {
+  it('평일 공휴일·휴업일만 날짜 → 행사 이름으로 읽고, 토요휴업일과 수업일 행사는 뺀다', async () => {
+    const row = (date: string, name: string, kind: string) => ({ AA_YMD: date, EVENT_NM: name, SBTR_DD_SC_NM: kind });
+    const fetcher = jest.fn(response({ SchoolSchedule: [{ head: [] }, { row: [
+      row('20261005', '대체공휴일', '공휴일'), row('20261009', '한글날', '공휴일'), row('20261010', '토요휴업일', '휴업일'),
+      row('20261014', '재량휴업일', '휴업일'), row('20261015', '현장체험학습', '해당없음'),
+    ] }] }));
+    expect([...await fetchSchoolHolidays({ officeCode: 'J10', schoolCode: '7591095' }, '20261005', '20261101', fetcher)]).toEqual([
+      ['20261005', '대체공휴일'], ['20261009', '한글날'], ['20261014', '재량휴업일'],
+    ]);
+    expect(String(fetcher.mock.calls[0][0])).toContain('/hub/SchoolSchedule?');
   });
 });
 
@@ -90,7 +104,7 @@ describe('학교 일정 바꾸기', () => {
     expect(items.map((item) => `${item.weekday}:${item.title}:${item.category}`).sort()).toEqual(['2:국어:school', '2:즐거운생활:school', '2:피아노:academy', '5:금요 수학:school']);
   });
 
-  it('같은 교시·과목의 알림·메모는 옮기고, 시간으로 넣은 학교 일정은 두고, clearDates의 빈 요일만 비운다', async () => {
+  it('같은 교시·과목의 알림·메모는 옮기고, 시간으로 넣은 학교 일정과 빈 요일(공휴일)의 반복 시간표는 그대로 둔다', async () => {
     const database = openTestDatabase();
     await migrateDatabase(database);
     const setId = (await getActiveTimetableSet(database)).id;
@@ -104,10 +118,10 @@ describe('학교 일정 바꾸기', () => {
       { date: '20261013', weekday: 2, entries: [{ period: 1, subject: '국어' }, { period: 2, subject: '즐거운생활' }] },
       { date: '20261015', weekday: 4, entries: [] },
       { date: '20261016', weekday: 5, entries: [] },
-    ], { clearDates: new Set(['20261016']) });
+    ]);
     const items = await getEditableTimetableItems(database, setId);
     expect(items.map((item) => `${item.weekday}:${item.title}:${item.alertMode}:${item.alertBeforeMin}:${item.memo}`).sort()).toEqual([
-      '2:국어:notify:5:받아쓰기', '2:즐거운생활:none:0:', '2:현장학습:none:0:', '4:목요 국어:none:0:',
+      '2:국어:notify:5:받아쓰기', '2:즐거운생활:none:0:', '2:현장학습:none:0:', '4:목요 국어:none:0:', '5:금요 수학:none:0:',
     ]);
   });
 });

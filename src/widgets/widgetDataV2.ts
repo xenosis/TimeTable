@@ -1,5 +1,5 @@
 import { getTodayTasks } from '../db/taskRepository';
-import { getTimetableItemsForWeekday } from '../db/timetableRepository';
+import { getScheduleForDate } from '../db/dateSchedule';
 import { getActiveTimetableSet } from '../db/timetableSetRepository';
 import type { TimetableDatabase } from '../db/types';
 import { resolveThemeColor, type ThemeDefinition } from '../theme';
@@ -72,7 +72,8 @@ export async function buildWidgetData(database: TimetableDatabase, theme: ThemeD
     const date = toLocalDateStr(day);
     const weekday = day.getDay();
     // 정규 수업(학교)은 아이가 이미 아는 시간이라 위젯에서 뺀다. 수업 뒤 방과후·학원이 헷갈리는 것을 막는 게 이 앱의 목적이다.
-    const allItems = await getTimetableItemsForWeekday(database, weekday, set.id);
+    // 쉬는 날(공휴일)에는 학교·학원 일정을 모두 비운다(P8.8)
+    const allItems = (await getScheduleForDate(database, day, set.id)).items;
     const items = allItems.filter((item) => item.category !== 'school');
     const tasks = await getTodayTasks(database, date, weekday);
     days.push({

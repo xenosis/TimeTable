@@ -4,6 +4,7 @@ import { savePeriods } from '../src/db/periodRepository';
 import { createTimetableItem, getEditableTimetableItems } from '../src/db/timetableRepository';
 import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
 import type { TimetableDatabase } from '../src/db/types';
+import { getScheduleForDate } from '../src/db/dateSchedule';
 import { refreshSchoolTimetableIfDue, scheduleSignature } from '../src/neis/schoolAutoRefresh';
 import { setAccount } from '../src/store/accountStore';
 import { openTestDatabase } from '../test-utils/sqliteTestDatabase';
@@ -39,7 +40,7 @@ beforeEach(async () => {
   mockStore.set('timetable.school-profile', JSON.stringify({ officeCode: 'J10', schoolCode: '7591095', schoolName: '빛가온초등학교', grade: 2, classNo: '6' }));
   mockFetch.mockReset();
   mockHolidays.mockReset();
-  mockHolidays.mockResolvedValue(new Set(['20261009']));
+  mockHolidays.mockResolvedValue(new Map([['20261009', '한글날']]));
   mockRunnerRegistered = true;
   setAccount({ kind: 'local' });
   mockDatabase = openTestDatabase();
@@ -80,11 +81,30 @@ test('주 중에 학교가 시간표를 바꾸면 다음 확인 때 반영한다
   expect((await schoolTitles()).filter((title) => title.startsWith('5:'))).toEqual(['5:1:국어', '5:2:수학']);
 });
 
-test('그 주에 수업이 있는데 빈 요일(공휴일)은 그날 학교 일정을 비운다', async () => {
+const holidays = async () => (await mockDatabase.getAllAsync<{ start_date: string; note: string }>("SELECT start_date, note FROM day_exceptions WHERE type = 'holiday' ORDER BY start_date")).map((row) => `${row.start_date}:${row.note}`);
+
+test('공휴일은 매주 반복 시간표를 지우지 않고 날짜별 휴일로 저장해 그날만 비운다(학원도 숨김)', async () => {
   await createTimetableItem(mockDatabase, { weekday: 5, periodNo: 1, title: '옛 금요일', category: 'school', colorKey: 'other', iconKey: 'other', setId });
+  await createTimetableItem(mockDatabase, { weekday: 5, startTime: '16:00', endTime: '17:00', title: '금요 학원', category: 'academy', colorKey: 'academy', iconKey: 'academy', setId });
   mockFetch.mockResolvedValue(week({ '20261009': [] }));
+  const state = await refreshSchoolTimetableIfDue(THURSDAY);
+  expect(mockHolidays).toHaveBeenCalledWith(expect.objectContaining({ schoolCode: '7591095' }), '20261005', '20261101');
+  expect((await schoolTitles()).filter((title) => title.startsWith('5:'))).toEqual(['5:16:00:금요 학원', '5:1:옛 금요일']);
+  expect(await holidays()).toEqual(['2026-10-09:나이스: 한글날']);
+  expect(state?.message).toContain('쉬는 날(공휴일) 정보도 맞췄어요');
+  const friday = await getScheduleForDate(mockDatabase, new Date(2026, 9, 9), setId);
+  expect(friday).toMatchObject({ holiday: '한글날', items: [] });
+  expect((await getScheduleForDate(mockDatabase, new Date(2026, 9, 16), setId)).items.map((item) => item.title)).toEqual(['옛 금요일', '금요 학원']);
+});
+
+test('나이스에서 사라진 자동 휴일은 지우고, 아빠가 직접 넣은 휴일은 그대로 둔다', async () => {
+  await mockDatabase.runAsync("INSERT INTO day_exceptions (start_date, end_date, type, note) VALUES ('2026-10-14', '2026-10-14', 'holiday', '나이스: 개교기념일'), ('2026-10-15', '2026-10-15', 'holiday', '가족 여행')");
+  mockFetch.mockResolvedValue(week());
   await refreshSchoolTimetableIfDue(THURSDAY);
-  expect((await schoolTitles()).filter((title) => title.startsWith('5:'))).toEqual([]);
+  expect(await holidays()).toEqual(['2026-10-09:나이스: 한글날', '2026-10-15:가족 여행']);
+  mockHolidays.mockRejectedValue(new Error('학사일정 실패'));
+  await refreshSchoolTimetableIfDue(THURSDAY, true);
+  expect(await holidays()).toEqual(['2026-10-09:나이스: 한글날', '2026-10-15:가족 여행']); // 못 읽으면 그대로
 });
 
 test('주 전체가 비었거나 교시 시간이 없거나 나이스에 연결하지 못하면 바꾸지 않고 상태만 남긴다', async () => {
@@ -112,15 +132,12 @@ test('아빠 폰과 계정 확인 전, 학교 설정이 없으면 자동 갱신�
   expect(mockFetch).not.toHaveBeenCalled();
 });
 
-test('빈 요일이 학사일정의 쉬는 날이 아니거나 학사일정을 못 읽으면 그 요일 학교 일정은 그대로 둔다', async () => {
+test('학교가 아직 입력하지 않은 빈 요일은 반복 시간표를 그대로 두고 휴일로도 만들지 않는다', async () => {
   await createTimetableItem(mockDatabase, { weekday: 3, periodNo: 1, title: '옛 수요일', category: 'school', colorKey: 'other', iconKey: 'other', setId });
   mockFetch.mockResolvedValue(week({ '20261007': [] }));
   await refreshSchoolTimetableIfDue(THURSDAY);
   expect((await schoolTitles()).filter((title) => title.startsWith('3:'))).toEqual(['3:1:옛 수요일']);
-  mockHolidays.mockRejectedValue(new Error('학사일정 실패'));
-  mockFetch.mockResolvedValue(week({ '20261007': [], '20261009': [] }));
-  await refreshSchoolTimetableIfDue(THURSDAY, true);
-  expect((await schoolTitles()).filter((title) => title.startsWith('3:') || title.startsWith('5:'))).toEqual(['3:1:옛 수요일', '5:1:바른생활']);
+  expect(await holidays()).toEqual(['2026-10-09:나이스: 한글날']);
 });
 
 test('같은 주라도 실패했으면 30분 뒤 다시 확인한다', async () => {

@@ -54,8 +54,16 @@ export async function fetchClassTimetable(school: Pick<SchoolInfo, 'officeCode' 
     .filter((row) => /^\d{8}$/.test(row.date) && Number.isInteger(row.period) && row.period > 0);
 }
 
-/** 학사일정에서 수업이 없는 날(공휴일·휴업일, YYYYMMDD)을 읽는다. 시간표가 빈 요일이 정말 쉬는 날인지 가리는 데 쓴다. */
-export async function fetchSchoolHolidays(school: Pick<SchoolInfo, 'officeCode' | 'schoolCode'>, from: string, to: string, fetcher: Fetcher = fetch): Promise<Set<string>> {
+/** 학사일정에서 수업이 없는 평일(공휴일·휴업일)을 날짜(YYYYMMDD) → 행사 이름(예: '한글날')으로 읽는다. 주말 토요휴업일은 뺀다. */
+export async function fetchSchoolHolidays(school: Pick<SchoolInfo, 'officeCode' | 'schoolCode'>, from: string, to: string, fetcher: Fetcher = fetch): Promise<Map<string, string>> {
   const rows = await request('SchoolSchedule', { ATPT_OFCDC_SC_CODE: school.officeCode, SD_SCHUL_CODE: school.schoolCode, AA_FROM_YMD: from, AA_TO_YMD: to }, fetcher);
-  return new Set(rows.filter((row) => ['공휴일', '휴업일'].includes(text(row.SBTR_DD_SC_NM))).map((row) => text(row.AA_YMD)).filter((date) => /^\d{8}$/.test(date)));
+  const holidays = new Map<string, string>();
+  for (const row of rows) {
+    const date = text(row.AA_YMD);
+    if (!/^\d{8}$/.test(date) || !['공휴일', '휴업일'].includes(text(row.SBTR_DD_SC_NM))) continue;
+    const weekday = new Date(Number(date.slice(0, 4)), Number(date.slice(4, 6)) - 1, Number(date.slice(6, 8))).getDay();
+    if (weekday === 0 || weekday === 6 || holidays.has(date)) continue;
+    holidays.set(date, text(row.EVENT_NM) || '쉬는 날');
+  }
+  return holidays;
 }

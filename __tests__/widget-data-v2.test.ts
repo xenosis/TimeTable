@@ -55,6 +55,18 @@ describe('buildWidgetData: 위젯 v2 데이터', () => {
     expect(after.days[2].schedule).toEqual([]);
   });
 
+  it('쉬는 날(공휴일)에는 그날 학교·학원 일정을 비우고 다음 주 같은 요일은 그대로 보인다(P8.8)', async () => {
+    const database = await freshDatabase();
+    const regular = (await getActiveTimetableSet(database)).id;
+    await createTimetableItem(database, item(regular, '수업', 5, '09:00', '13:00', 'school'));
+    await createTimetableItem(database, item(regular, '피아노', 5, '17:00', '18:00'));
+    await database.runAsync("INSERT INTO day_exceptions (start_date, end_date, type, note) VALUES ('2026-10-02', '2026-10-02', 'holiday', '나이스: 개교기념일')");
+    const data = await buildWidgetData(database, daylightTheme, WEDNESDAY);
+    expect(data.days[2]).toMatchObject({ date: '2026-10-02', schedule: [], hasSchool: false });
+    const nextWeek = await buildWidgetData(database, daylightTheme, new Date(2026, 9, 7, 8, 0));
+    expect(nextWeek.days.find((day) => day.date === '2026-10-09')?.schedule.map(({ title }) => title)).toEqual(['피아노']);
+  });
+
   it('일정에 대비가 보장된 과목 색을 담는다', async () => {
     const database = await freshDatabase();
     const regular = (await getActiveTimetableSet(database)).id;

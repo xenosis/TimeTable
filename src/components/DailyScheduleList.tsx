@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import { getDatabase } from '../db/database';
-import { getTimetableItemsForWeekday, type TimetableItem } from '../db/timetableRepository';
+import { getScheduleForDate, holidayLine, upcomingDateForWeekday } from '../db/dateSchedule';
+import type { TimetableItem } from '../db/timetableRepository';
 import type { TimetableSetId } from '../db/types';
 import { useNow } from '../hooks/useNow';
 import { fontSize, spacing, type ThemeDefinition } from '../theme';
@@ -25,19 +26,22 @@ export function DailyScheduleList({ weekday, isToday, theme, setId, refreshKey, 
 }) {
   const [items, setItems] = useState<readonly TimetableItem[]>([]);
   const [failed, setFailed] = useState(false);
+  const [holiday, setHoliday] = useState<string | null>(null);
   const [areaHeight, setAreaHeight] = useState<number | undefined>(undefined);
   useNow(active); // 매 분·앱 복귀 때 다시 그리게 한다(화면이 보일 때만)
   const now = new Date(); // 다시 그릴 때마다 현재 시각을 새로 읽는다(요일 선택 즉시 반영)
 
   useEffect(() => {
     let active = true;
-    void getDatabase().then((database) => getTimetableItemsForWeekday(database, weekday, setId)).then((saved) => {
-      if (active) { setItems(saved); setFailed(false); }
+    // 이 요일이 가리키는 다가오는 날짜가 쉬는 날(공휴일)이면 그날 일정은 통째로 비운다(P8.8)
+    void getDatabase().then((database) => getScheduleForDate(database, upcomingDateForWeekday(new Date(), weekday), setId)).then((schedule) => {
+      if (active) { setItems(schedule.items); setHoliday(schedule.holiday ? holidayLine(schedule) : null); setFailed(false); }
     }).catch(() => { if (active) setFailed(true); });
     return () => { active = false; };
   }, [weekday, setId, refreshKey]);
 
   if (failed) return <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>⚠️ 시간표를 불러오지 못했어요.</Text>;
+  if (holiday) return <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>🎉 {holiday}</Text>;
   if (!items.length) return <Text style={[styles.empty, { color: theme.colors.textMuted }]}>등록된 일정이 없어요.</Text>;
   const onArea = (event: LayoutChangeEvent) => setAreaHeight(event.nativeEvent.layout.height);
   return <View style={styles.wrap}>

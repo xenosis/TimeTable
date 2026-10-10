@@ -1,6 +1,7 @@
 import Storage from 'expo-sqlite/kv-store';
 
 import { getDatabase } from '../db/database';
+import { replaceNeisHolidays } from '../db/dayExceptionRepository';
 import { getPeriods } from '../db/periodRepository';
 import { getEditableTimetableItems } from '../db/timetableRepository';
 import { getActiveTimetableSet } from '../db/timetableSetRepository';
@@ -8,11 +9,12 @@ import { refreshAllRollingOwners } from '../notifications/rollingOwners';
 import { getAccount } from '../store/accountStore';
 import { isAdminEditRunnerRegistered, runAdminEdit } from '../sync/adminEditGate';
 import { hasSyncedFamily } from '../sync/syncMarkers';
+import { toLocalDateStr } from '../utils/date';
 import { userErrorMessage } from '../utils/userErrorMessage';
 import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { fetchClassTimetable, fetchSchoolHolidays } from './neisClient';
 import { buildWeekPlan, missingPeriods, replaceSchoolItems, schoolWeekDates } from './neisImport';
-import { loadSchoolProfile, shareDeviceSchoolProfile } from './schoolProfile';
+import { loadSchoolProfile, shareDeviceSchoolProfile, type SchoolProfile } from './schoolProfile';
 
 /**
  * 학교 시간표 자동 갱신(P8.7). 저장해 둔 학교·학년·반으로 이번 주(주말에는 다음 주) 나이스 시간표를 확인해,
@@ -27,6 +29,7 @@ export const AUTO_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 export const RETRY_INTERVAL_MS = 30 * 60 * 1000;
 const STATE_KEY = 'timetable.school-auto-refresh';
 const WEEKDAYS = [1, 2, 3, 4, 5];
+const HOLIDAY_DAYS = 28;
 
 export async function loadAutoRefreshState(): Promise<AutoRefreshState | null> {
   try {
@@ -84,24 +87,46 @@ async function run(now: Date, force: boolean): Promise<AutoRefreshState | null> 
     return state;
   };
   try {
-    const plan = buildWeekPlan(await fetchClassTimetable(profile, profile.grade, profile.classNo, dates[0], dates[4]), dates);
-    if (plan.every((day) => day.entries.length === 0)) return await save('empty', '이번 주 나이스 시간표가 아직 없어요(방학이거나 학교가 입력하기 전). 지금 시간표를 그대로 둬요.');
-    // 빈 요일은 학사일정의 공휴일·휴업일일 때만 비운다. 학교가 아직 입력하지 않은 날이거나 학사일정을 못 읽으면 그 요일은 그대로 둔다
-    const holidays = plan.some((day) => day.entries.length === 0) ? await fetchSchoolHolidays(profile, dates[0], dates[4]).catch(() => new Set<string>()) : new Set<string>();
     const database = await getDatabase();
+    const holidaysChanged = await syncNeisHolidays(profile, dates[0]);
+    const done = async (result: AutoRefreshResult, message: string) => {
+      if (holidaysChanged || result === 'updated') {
+        // 로컬 모드는 동기화가 알림을 다시 예약하지 않으므로 여기서 다시 예약한다(로그인한 폰은 편집 뒤 동기화도 다시 예약한다)
+        await refreshAllRollingOwners().catch(() => undefined);
+        notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 시간표·쉬는 날을 다시 읽는다
+      }
+      return save(holidaysChanged && result === 'same' ? 'updated' : result, holidaysChanged ? `${message} 쉬는 날(공휴일) 정보도 맞췄어요.` : message);
+    };
+    const plan = buildWeekPlan(await fetchClassTimetable(profile, profile.grade, profile.classNo, dates[0], dates[4]), dates);
+    if (plan.every((day) => day.entries.length === 0)) return await done('empty', '이번 주 나이스 시간표가 아직 없어요(방학이거나 학교가 입력하기 전). 지금 시간표를 그대로 둬요.');
     const missing = missingPeriods(plan, (await getPeriods(database)).map((period) => period.periodNo));
-    if (missing.length > 0) return await save('missing-periods', `교시 시간에 ${missing.join('·')}교시가 없어 자동으로 바꾸지 못했어요.`);
+    if (missing.length > 0) return await done('missing-periods', `교시 시간에 ${missing.join('·')}교시가 없어 자동으로 바꾸지 못했어요.`);
     const setId = (await getActiveTimetableSet(database)).id;
     const current = (await getEditableTimetableItems(database, setId)).filter((item) => item.category === 'school' && item.periodNo != null);
     const currentDays = WEEKDAYS.map((weekday) => ({ weekday, entries: current.filter((item) => item.weekday === weekday).map((item) => ({ period: item.periodNo!, subject: item.title })) }));
-    const target = plan.map((day) => (day.entries.length === 0 && !holidays.has(day.date) ? currentDays.find((kept) => kept.weekday === day.weekday) ?? day : day));
-    if (scheduleSignature(currentDays) === scheduleSignature(target)) return await save('same', '나이스 시간표와 지금 시간표가 같아요.');
-    await runAdminEdit(async () => replaceSchoolItems(await getDatabase(), setId, plan, { clearDates: holidays }));
-    // 로컬 모드는 동기화가 알림을 다시 예약하지 않으므로 여기서 다시 예약한다(로그인한 폰은 편집 뒤 동기화도 다시 예약한다)
-    await refreshAllRollingOwners().catch(() => undefined);
-    notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 시간표를 다시 읽는다
-    return await save('updated', `${Number(week.slice(4, 6))}/${Number(week.slice(6, 8))} 주 나이스 시간표로 학교 일정을 바꿨어요.`);
+    // 과목이 빈 요일(공휴일이거나 학교가 아직 입력하지 않은 날)은 매주 반복 시간표를 그대로 둔다. 공휴일은 날짜별 휴일로 그날만 숨긴다(P8.8)
+    const target = plan.map((day) => (day.entries.length === 0 ? currentDays.find((kept) => kept.weekday === day.weekday) ?? day : day));
+    if (scheduleSignature(currentDays) === scheduleSignature(target)) return await done('same', '나이스 시간표와 지금 시간표가 같아요.');
+    await runAdminEdit(async () => replaceSchoolItems(await getDatabase(), setId, plan));
+    return await done('updated', `${Number(week.slice(4, 6))}/${Number(week.slice(6, 8))} 주 나이스 시간표로 학교 일정을 바꿨어요.`);
   } catch (error) {
     return save('error', userErrorMessage(error, '학교 시간표를 확인하지 못했어요. 다음에 다시 확인해요.'));
   }
 }
+
+/**
+ * 쉬는 날(P8.8): 이번 주 월요일부터 4주 동안 나이스 학사일정의 평일 공휴일·휴업일을 날짜별 휴일로 맞춘다. 바뀌었으면 true.
+ * 학사일정을 못 읽으면 지금 휴일을 그대로 두고 false(시간표 확인은 계속한다).
+ */
+async function syncNeisHolidays(profile: SchoolProfile, monday: string): Promise<boolean> {
+  const from = dashed(monday);
+  const to = toLocalDateStr(new Date(Number(monday.slice(0, 4)), Number(monday.slice(4, 6)) - 1, Number(monday.slice(6, 8)) + HOLIDAY_DAYS - 1));
+  const fetched = await fetchSchoolHolidays(profile, monday, to.replaceAll('-', '')).catch(() => null);
+  if (!fetched) return false;
+  const holidays = new Map([...fetched].map(([date, name]) => [dashed(date), name]));
+  if (!await replaceNeisHolidays(await getDatabase(), from, to, holidays, { dryRun: true })) return false;
+  await runAdminEdit(async () => replaceNeisHolidays(await getDatabase(), from, to, holidays));
+  return true;
+}
+
+const dashed = (date: string) => `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;

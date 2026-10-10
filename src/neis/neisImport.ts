@@ -49,17 +49,17 @@ type KeptSettings = { readonly alertMode: 'none' | 'notify' | 'alarm'; readonly 
 
 /**
  * 과목이 있는 요일만 그 요일의 교시 '학교' 일정을 나이스 시간표로 바꾼다. 학원·돌봄·생활 일정, 시간으로 넣은 학교 일정과
- * 빈 요일은 그대로 둔다. 다만 clearDates에 든 빈 요일(학사일정의 공휴일·휴업일)은 그날 교시 학교 일정을 비운다(다음 주 확인 때 다시 채워진다).
+ * 빈 요일(공휴일 등)은 그대로 둔다. 공휴일은 매주 반복 시간표를 지우지 않고 날짜별 휴일로 그날만 숨긴다(P8.8).
  * 같은 교시·같은 과목이 다시 오면 그 칸에 넣어 둔 알림·메모는 그대로 옮긴다.
  * 로그인한 폰에서는 호출하는 쪽이 runAdminEdit로 감싸 서버에 먼저 저장한다.
  */
-export async function replaceSchoolItems(database: Pick<TimetableDatabase, 'execAsync' | 'runAsync' | 'getAllAsync'>, setId: TimetableSetId, plan: readonly WeekdayPlan[], options: { readonly clearDates?: ReadonlySet<string> } = {}): Promise<number> {
+export async function replaceSchoolItems(database: Pick<TimetableDatabase, 'execAsync' | 'runAsync' | 'getAllAsync'>, setId: TimetableSetId, plan: readonly WeekdayPlan[]): Promise<number> {
   let created = 0;
   // 중간에 실패하면 앞 요일만 바뀐 채 남지 않도록 한 번에 저장하거나 모두 되돌린다(P8.1 리뷰)
   await database.execAsync('BEGIN IMMEDIATE');
   try {
     for (const day of plan) {
-      if (day.entries.length === 0 && !options.clearDates?.has(day.date)) continue;
+      if (day.entries.length === 0) continue;
       const where = "family_id = 'local-family' AND set_id = ? AND weekday = ? AND category = 'school' AND period_no IS NOT NULL";
       const previous = await database.getAllAsync<{ periodNo: number; title: string } & KeptSettings>(
         `SELECT period_no AS periodNo, title, alert_mode AS alertMode, alert_before_min AS alertBeforeMin, memo FROM timetable_items WHERE ${where}`, setId, day.weekday,
