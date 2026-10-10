@@ -5473,16 +5473,22 @@
       "doc": "docs/push-notification-setup.md",
       "done_when": "외부 설정 및 배포가 승인·완료되고, 서버 시간표 변경 후 딸 폰에서 보이는 알림 도착과 탭 후 최신 내용 적용을 직접 확인한다.",
       "est_min": null,
-      "gate": "Google 인증 화면 접근은 자동 승인 검토에서 거절되어 명시 승인 필요. Firebase·Expo 자격 준비와 함수·발송 작업자 배포 승인, 두 기기의 계정 로그인 및 실수신 확인 필요.",
+      "gate": "아빠 계정 로그인 기기에서 저장 → 딸 폰 알림 도착·탭 후 최신 내용 확인 필요. tt-push-worker(재시도 작업자)는 verify_jwt=false 구조라 배포에 사용자 권한 규칙 필요",
       "owner": "codex",
       "claimed_at": null,
-      "updated_at": "2026-10-07T19:05:42.930Z",
+      "updated_at": "2026-10-10T07:21:41.104Z",
       "log": [
         {
           "at": "2026-10-07T19:05:42.930Z",
           "owner": "codex",
           "status": "needs_info",
           "note": "실제 푸시 수신은 Firebase·Expo·FCM 설정과 서버 배포 뒤 검증해야 한다. Google 인증 접근이 자동 승인 검토에서 거절되어 사용자 명시 승인 필요. 로컬 발송 큐·receipt·토큰 이전 개발은 P6.9에서 계속 진행하며 외부 설정 대기로 중단하지 않는다."
+        },
+        {
+          "at": "2026-10-10T07:21:41.104Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "2026-10-10 외부 설정 완료: Firebase(routineplanner-e9bbd)에 com.chaea.timetable 등록·google-services.json, 사용자가 Expo에 FCM V1 서비스 계정 키 업로드(eas.json 추가), 푸시 마이그레이션 2개 운영 적용·검증, tt-notify-change 배포(무인증 401). 딸 폰 토큰 등록, 함수와 같은 형식 메시지를 Expo로 보내 딸 폰 알림 표시 확인(2회). 남은 것: 아빠 기기 저장→도착 전체 경로, 재시도 작업자 배포"
         }
       ]
     },
