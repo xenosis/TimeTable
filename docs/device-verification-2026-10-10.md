@@ -41,3 +41,7 @@
 1.62.11/175에서 요청15초 실제 취소, AbortError 식별 보존, db.retry=false, 개인정보 없는 고정 HTTP 경로 시간 로그를 보완했다. 실제 SDK의 취소 재시도 방지와 실패 후 다음 요청 성공을 포함한 전체 check PASS(90 suites/538 tests·Android build·push-tests, .tmp/p618-quality-16211-retryfix.log). 아직 실기기 수정본 확인 전이다.
 
 1.62.11 최종 보완: GET/HEAD/OPTIONS만 15초 실제 취소하고 쓰기 응답은 임의로 취소하지 않는다. 실제 SDK 저장 후 응답 지연 테스트 포함 전체 check PASS(90 suites/539 tests·Android build·push-tests, .tmp/p618-quality-16211-readonly.log). 등록 병렬 리뷰 완료(.tmp/reviews/P6.18-7be6c32d8c2b-1791649544235). 쓰기 요청 정체 가능성과 두 기기 최신본 확인은 미해결이며 완료로 기록하지 않는다.
+
+1.62.11/175 커밋1756e2e 푸시 및 두 폰 업데이트 성공. arm64와 기존 서명 확인. 딸 로그에서 토큰 등록 RPC와 Auth 조회의 반복 호출 관찰. 설치된 Expo PushTokenModule.kt의 getDevicePushTokenAsync가 조회할 때마다 onNewToken을 호출하는 사실과 PushLifecycle의 이벤트→재조회 경로 확인. 동일 토큰 이벤트 중복 제거 및 동시 실행 직렬화를 1.62.12/176에서 보완하고 실제 이벤트 회귀 테스트 추가. 아직 수정본 실기기 검증 전이며 P6.18 완료 근거가 아니다.
+
+1.62.12 전체 check PASS(91 suites/540 tests·Android build·push-tests, .tmp/p618-quality-16212.log), 등록 병렬 리뷰 완료(.tmp/reviews/P6.18-7be6c32d8c2b-1791650592033). 토큰 반복 보완 실기기 확인, 쓰기 정체 복구, 시각 신뢰 한계는 미완료 사항으로 구분한다.
