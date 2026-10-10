@@ -4,5 +4,6 @@ project_id = "chaea-timetable"
 verify_jwt = true
 
 [functions.tt-push-worker]
-# 전용 비밀 헤더를 작업자 함수에서 검증한다. 사용자 변경 함수의 JWT 검사는 유지한다.
-verify_jwt = false
+# 기본 JWT 검사와 작업자 전용 비밀 헤더 검증을 모두 유지한다.
+# 서버 호출자는 Authorization에 프로젝트의 유효한 JWT를 함께 전달한다.
+verify_jwt = true

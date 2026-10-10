@@ -1,6 +1,6 @@
 # 변경 푸시 설정과 확인
 
-P6.9 구현 버전은 1.55.1/147이며 리뷰 보완 중이다. 아직 Firebase 앱·Expo 프로젝트·FCM 발신 자격 증명과 실기기 수신은 확인되지 않았다. 코드 테스트 통과는 푸시 도착 증거가 아니다.
+2026-10-11 현재 Firebase·Expo·FCM 설정과 운영 직접 발송 함수 적용은 완료했다. 1.62.12/176 두 폰에서 아빠 저장 → 딸 알림 도착 → 종료 후 실제 알림 탭 → 최신 할 일 표시를 확인했다. 남은 작업은 재시도 함수의 배포·인증 검증과 자동 실행 연결이다. 코드 테스트 통과는 푸시 도착 증거가 아니다.
 
 ## 구현 흐름
 
@@ -12,7 +12,7 @@ Android는 데이터 메시지를 받은 뒤 현재 딸 가족과 기기 역할�
 
 ## 필요한 설정
 
-1. Firebase에 앱의 실제 Android 패키지명으로 앱을 등록한다. 현재 패키지는 `com.chaea.timetable`이며, 사용자가 결정한 변경 목표는 `com.chaea.timetable`이다. P7의 이름 변경 순서를 임의로 앞당기지 않았다. Firebase에 등록한 패키지명은 나중에 바꿀 수 없으므로 변경 후에는 새 Android 등록이 필요하다.
+1. Firebase에 앱의 실제 Android 패키지명으로 앱을 등록한다. 현재 패키지 `com.chaea.timetable`으로 등록 완료했다. Firebase에 등록한 패키지명은 나중에 바꿀 수 없으므로 변경 후에는 새 Android 등록이 필요하다.
 2. 해당 앱의 `google-services.json`을 `android/app/google-services.json`에 둔다. 다른 앱의 등록 파일을 복사하지 않는다. 파일이 있으면 Gradle이 Google services 플러그인을 적용한다. Expo 설정에도 `android.googleServicesFile` 경로를 기록한다.
 3. Expo 프로젝트의 실제 ID를 `app.json`의 `expo.extra.eas.projectId`에 기록하고 해당 프로젝트에 FCM v1 자격 증명을 등록한다. 서비스 계정 비공개 키는 앱이나 Git에 넣지 않는다.
 4. 서버 함수 배포는 별도 승인 후 실행한다. `supabase/config.toml`의 `verify_jwt = true`와 함수 내부 사용자·가족 검증을 유지한다. Expo 프로젝트가 액세스 토큰 보호를 사용하면 서버 함수의 `EXPO_ACCESS_TOKEN` 비밀값도 설정한다.
@@ -30,7 +30,9 @@ Android는 데이터 메시지를 받은 뒤 현재 딸 가족과 기기 역할�
 - [Expo 푸시 설정](https://docs.expo.dev/push-notifications/push-notifications-setup/)
 - [Expo 메시지 종류와 수신 제한](https://docs.expo.dev/push-notifications/what-you-need-to-know/)
 - [Supabase 함수 인증](https://supabase.com/docs/guides/functions/auth)
-## 1.55.1 리뷰 보완 진행
+## 과거 1.55.1 리뷰 당시 상태
+
+아래 미적용·미완료 설명은 당시 기록이다. 이후 운영 적용과 현재 남은 작업은 이 문서 첫머리 및 아래 운영 기록을 기준으로 확인한다.
 
 - 인증 확인 중 일시적인 통신 실패를 재시도 대상으로 처리한다. 계정 전환 뒤 이전 요청은 버린다.
 - 새 migration `20261007184801_tt_push_delivery_queue.sql`은 시간표·할 일 변경과 같은 트랜잭션에서 가족별 발송 대기 기록을 만든다. 운영 서버에는 아직 적용하지 않았다.
@@ -45,5 +47,6 @@ Android는 데이터 메시지를 받은 뒤 현재 딸 가족과 기기 역할�
 - Firebase(routineplanner-e9bbd)에 `com.chaea.timetable` 앱 등록, `android/app/google-services.json` 추가, Expo 프로젝트(@xenosis/chaea-timetable)에 사용자가 Doro와 같은 프로젝트의 서비스 계정 키를 FCM V1 자격으로 업로드했다. `eas.json`은 자격 등록용 최소 설정이다(빌드는 계속 로컬 Gradle).
 - 마이그레이션 `20261007184801_tt_push_delivery_queue.sql`·`20261007193428_tt_push_installation.sql`을 한 트랜잭션으로 운영 서버에 적용했다(`db query -f`, 이력 테이블 없음). 적용 전 BEGIN…ROLLBACK 시험, 적용 후 `tt_push_queue_check` 통과·`tt_rls_check` 59건·`tt_family_edit_check` 10건 기대값 일치.
 - `tt-notify-change` 배포(verify_jwt 유지). 로그인 없이 호출하면 401.
-- 딸 폰(1.59.2, 딸 계정)의 Expo 토큰이 `tt_devices`에 등록됨. 함수와 같은 모양의 데이터 메시지(type family-change, changeOrder 1 — 서버 순번 68보다 작아 이후 실제 알림을 막지 않음)를 Expo로 직접 보내 딸 폰 알림 목록에 `family-change`(id 6901, 채널 family-changes) 표시를 확인했다. FCM V1 자격과 폰 표시 경로 확인이며, 아빠 저장 → 함수 → 도착 전체 경로는 아직이다.
-- 남은 것: `tt-push-worker` 배포와 `TT_PUSH_WORKER_SECRET` 설정(JWT 검사를 끄고 함수 안에서 비밀값을 확인하는 구조라 자동 권한 검사가 막음 — 사용자 판단 필요), 아빠 계정 기기에서 저장 후 실제 도착 확인.
+- 당시 딸 폰(1.59.2, 딸 계정)의 Expo 토큰이 `tt_devices`에 등록됨. 함수와 같은 모양의 데이터 메시지(type family-change, changeOrder 1 — 서버 순번 68보다 작아 이후 실제 알림을 막지 않음)를 Expo로 직접 보내 딸 폰 알림 목록에 `family-change`(id 6901, 채널 family-changes) 표시를 확인했다. 당시 FCM V1 자격과 폰 표시 경로만 확인했고 전체 경로는 2026-10-11의 1.62.12 두 폰 검증에서 확인했다.
+- 작업자도 기본 JWT 검사를 유지하며, 서버 호출은 유효한 JWT와 `TT_PUSH_WORKER_SECRET` 헤더를 함께 전달한다. 이전 JWT 비활성화 배포는 자동 승인 검토에서 거절됐으며 이 설정으로 실행하지 않는다.
+- 남은 것: 기본 JWT 검사를 유지하는 `tt-push-worker` 배포·호출 검증과 자동 재시도 실행 연결. 서버 비밀은 등록 완료이며, 아빠 저장 후 실제 도착·정상 종료/프로세스 종료 뒤 알림 탭은 1.62.12 두 폰에서 확인했다.
