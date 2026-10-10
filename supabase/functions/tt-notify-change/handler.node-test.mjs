@@ -56,7 +56,7 @@ test('같은 가족 자녀 토큰만 중복 제거하고 가족 식별 데이터
     if (url.endsWith('/tt_claim_push_receipts')) return response([]);
     if (url.endsWith('/tt_record_push_tickets')) {
       assert.deepEqual(JSON.parse(options.body).p_tickets, [{ deviceId, token: 'ExpoPushToken[abc]', ticketId, error: null }]);
-      return response(null);
+      return new Response(null, { status: 204 });
     }
     calls++;
     if (calls === 1) return response({ id: dad });

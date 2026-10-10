@@ -34,7 +34,9 @@ export function changePushHandler(environment: PushEnvironment, fetcher: Fetcher
         body: JSON.stringify(body), signal: AbortSignal.timeout(10_000),
       });
       if (!response.ok) throw new Error('queue_unavailable');
-      return await response.json() as unknown;
+      // void RPC는 성공해도 본문이 비어 있다. 접수 후 JSON 파싱 오류로 재발송하지 않는다.
+      const raw = await response.text();
+      return raw.trim() ? JSON.parse(raw) as unknown : null;
     };
     const readRows = async (table: string, filters: Record<string, string>) => {
       const response = await fetcher(`${environment.url}/rest/v1/${table}?${new URLSearchParams(filters)}`, { headers: authHeaders, signal: AbortSignal.timeout(10_000) });
