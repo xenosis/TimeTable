@@ -33,3 +33,11 @@
 - 1.62.10/174 진단 보완 전체 check PASS(89 suites/533 tests·Android build·push-tests), 등록 병렬 리뷰 완료(.tmp/reviews/P6.18-fb1ccec20518-1791646042096), 0c214b5 커밋·푸시. Device arm64 서명 검증 후 딸 폰 업데이트 성공 및 실제 설치 버전 확인. 설치 도중 화면 잠금 발생으로 진단 실행 로그는 미확인.
 - 두 폰 USB 연결 중 화면 유지 설정을 임시 적용했다. 이전 값은 .tmp/R59X3033P3X-stayon-baseline.txt 및 .tmp/R3CW10EBFYB-stayon-baseline.txt에 저장했고 검증 후 복원해야 한다.
 - tt-push-worker 서버 비밀 등록 완료. 함수 배포는 자동 승인 검토가 no-verify-jwt 공개 엔드포인트 설정의 명시 승인을 요구하며 거절했고 사용자에게 정확한 설정 승인 질문을 남겼다. 배포 성공으로 기록하지 않는다.
+
+## 2026-10-11 잠금 해제 후 요청 지연 조사
+딸 1.62.10 실제 전경 실행 확인. 로그 00:46:41 계정 확인 후 00:47:09 딸 기록 조회 완료(약28초), 00:47:46 서버 전체 조회 완료(약37초), 로컬 반영 약0.05초, 00:49:38 서버 시각 기록 완료(기기 갱신 후 약111초). 일반 ping 평균40.9ms/손실0%, Supabase 호스트 ping27.6ms, PC Auth health200/501ms. 지연의 정확한 HTTP 경로는 아직 미확인.
+아빠 화면에 딸 마지막 동기화 오늘00:49(앱1.62.10) 표시, 실제 딸 로그의 서버 기록 완료 시각과 일치(.tmp/p618-dad-status.xml).
+아빠 실기기 UI에서 임시 할 일 제목1011 추가 성공. 서버 id2, repeat_weekdays=[0], effective_from=2026-10-11, alert_mode=none 확인(.tmp/p618-task-fixture-read.log). 딸 기존 진단 버전에는 즉시 표시되지 않았고 Realtime tt_tasks 이벤트는01:05:41 로그에서 수신 확인. 테스트 종료 시 id2 및 이 항목의 생성 기록만 정리해야 한다.
+1.62.11/175에서 요청15초 실제 취소, AbortError 식별 보존, db.retry=false, 개인정보 없는 고정 HTTP 경로 시간 로그를 보완했다. 실제 SDK의 취소 재시도 방지와 실패 후 다음 요청 성공을 포함한 전체 check PASS(90 suites/538 tests·Android build·push-tests, .tmp/p618-quality-16211-retryfix.log). 아직 실기기 수정본 확인 전이다.
+
+1.62.11 최종 보완: GET/HEAD/OPTIONS만 15초 실제 취소하고 쓰기 응답은 임의로 취소하지 않는다. 실제 SDK 저장 후 응답 지연 테스트 포함 전체 check PASS(90 suites/539 tests·Android build·push-tests, .tmp/p618-quality-16211-readonly.log). 등록 병렬 리뷰 완료(.tmp/reviews/P6.18-7be6c32d8c2b-1791649544235). 쓰기 요청 정체 가능성과 두 기기 최신본 확인은 미해결이며 완료로 기록하지 않는다.

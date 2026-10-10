@@ -33,7 +33,9 @@ export { hasSyncedFamily, lastSyncedAt };
  */
 async function recordDeviceSync(familyId: string, at: string, isCurrent: () => boolean): Promise<void> {
   const supabase = getSupabase();
+  console.info('채아시간표: 기기 기록 단계 계정 조회 시작');
   const { data: auth, error: authError } = await supabase.auth.getUser();
+  console.info('채아시간표: 기기 기록 단계 계정 조회 종료');
   const userId = auth.user?.id;
   if (!isCurrent()) return;
   if (authError || !userId) throw new Error('내용은 받았지만 기기 기록을 위해 계정을 확인하지 못했어요. 다시 맞춰 주세요.');

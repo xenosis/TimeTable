@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from './supabaseConfig';
+import { createReadTimedFetch } from './requestTimeout';
 
 let client: SupabaseClient | null = null;
 
@@ -14,6 +15,9 @@ let client: SupabaseClient | null = null;
 export function getSupabase(): SupabaseClient {
   if (client) return client;
   client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    // 재시도는 앱의 새 동기화 요청이 맡는다. SDK 내부 재시도가 같은 잠금을 오래 점유하지 않게 한다.
+    db: { retry: false },
+    global: { fetch: createReadTimedFetch(globalThis.fetch) },
     auth: { storage: globalThis.localStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
   });
   // 앱이 화면에 있을 때만 토큰을 자동 갱신한다(Supabase React Native 안내). 백그라운드에서 갱신 타이머가 돌지 않게 한다.
