@@ -31,6 +31,8 @@ export type WidgetDay = {
   readonly schedule: readonly WidgetScheduleItem[];
   /** 그날 학교 정규 수업이 있는지. 위젯에서는 수업을 빼므로 '수업 뒤 일정이 없어요'와 '일정이 없어요'를 구분하는 데만 쓴다. */
   readonly hasSchool: boolean;
+  /** 쉬는 날(공휴일)이면 그 이름(일정은 비어 있다). 위젯이 '일정이 없어요' 대신 쉬는 날로 알린다(P8.8). 아니면 null */
+  readonly holiday: string | null;
   readonly tasks: readonly WidgetTask[];
   /** 하루 상한을 넘어 담지 못한 개수. 0이 아니면 위젯이 '+N개'로 알려 '다 했다'로 오해하지 않게 한다. */
   readonly hiddenScheduleCount: number;
@@ -72,14 +74,16 @@ export async function buildWidgetData(database: TimetableDatabase, theme: ThemeD
     const date = toLocalDateStr(day);
     const weekday = day.getDay();
     // 정규 수업(학교)은 아이가 이미 아는 시간이라 위젯에서 뺀다. 수업 뒤 방과후·학원이 헷갈리는 것을 막는 게 이 앱의 목적이다.
-    // 쉬는 날(공휴일)에는 학교·학원 일정을 모두 비운다(P8.8)
-    const allItems = (await getScheduleForDate(database, day, set.id)).items;
+    // 쉬는 날(공휴일)에는 학교·학원 일정을 모두 비우고, 학교만 쉬는 날에는 학교 일정만 뺀다(P8.8)
+    const scheduled = await getScheduleForDate(database, day, set.id);
+    const allItems = scheduled.items;
     const items = allItems.filter((item) => item.category !== 'school');
     const tasks = await getTodayTasks(database, date, weekday);
     days.push({
       date,
       weekday,
       hasSchool: allItems.length > items.length,
+      holiday: scheduled.dayOff?.kind === 'holiday' ? scheduled.dayOff.name : null,
       schedule: items.slice(0, LIMITS.schedule).map((item) => {
         const color = resolveThemeColor(theme, item.colorKey);
         return { title: shorten(item.title), startTime: item.startTime, endTime: item.endTime, backgroundColor: color.backgroundColor, textColor: color.textColor };

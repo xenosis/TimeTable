@@ -35,16 +35,18 @@ export function DailyScheduleList({ weekday, isToday, theme, setId, refreshKey, 
     let active = true;
     // 이 요일이 가리키는 다가오는 날짜가 쉬는 날(공휴일)이면 그날 일정은 통째로 비운다(P8.8)
     void getDatabase().then((database) => getScheduleForDate(database, upcomingDateForWeekday(new Date(), weekday), setId)).then((schedule) => {
-      if (active) { setItems(schedule.items); setHoliday(schedule.holiday ? holidayLine(schedule) : null); setFailed(false); }
+      if (active) { setItems(schedule.items); setHoliday(schedule.dayOff ? holidayLine({ date: schedule.date, dayOff: schedule.dayOff }) : null); setFailed(false); }
     }).catch(() => { if (active) setFailed(true); });
     return () => { active = false; };
   }, [weekday, setId, refreshKey]);
 
   if (failed) return <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>⚠️ 시간표를 불러오지 못했어요.</Text>;
-  if (holiday) return <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>🎉 {holiday}</Text>;
+  const holidayNote = holiday && <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>🎉 {holiday}</Text>;
+  if (holiday && !items.length) return holidayNote;
   if (!items.length) return <Text style={[styles.empty, { color: theme.colors.textMuted }]}>등록된 일정이 없어요.</Text>;
   const onArea = (event: LayoutChangeEvent) => setAreaHeight(event.nativeEvent.layout.height);
   return <View style={styles.wrap}>
+    {holidayNote}
     {/* 남은 화면 높이를 재서 표를 그 안에 맞춘다. 행이 너무 낮아지는 아주 많은 일정일 때만 스크롤된다 */}
     <View style={styles.area} onLayout={onArea}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>

@@ -36,7 +36,7 @@ export function WeekOverviewGrid({ theme, setId, today, refreshKey, onSelectDay,
     )).then((result) => {
       if (!active) return;
       setDays(result.map(({ day, schedule }) => ({ day, items: schedule.items })));
-      setHolidays(result.filter(({ schedule }) => schedule.holiday).sort((a, b) => a.schedule.date.localeCompare(b.schedule.date)).map(({ schedule }) => holidayLine(schedule)));
+      setHolidays(result.flatMap(({ schedule }) => (schedule.dayOff ? [{ date: schedule.date, dayOff: schedule.dayOff }] : [])).sort((a, b) => a.date.localeCompare(b.date)).map(holidayLine));
       setFailed(false);
     })
       .catch(() => { if (active) setFailed(true); });

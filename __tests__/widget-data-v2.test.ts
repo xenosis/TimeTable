@@ -62,9 +62,21 @@ describe('buildWidgetData: 위젯 v2 데이터', () => {
     await createTimetableItem(database, item(regular, '피아노', 5, '17:00', '18:00'));
     await database.runAsync("INSERT INTO day_exceptions (start_date, end_date, type, note) VALUES ('2026-10-02', '2026-10-02', 'holiday', '나이스: 개교기념일')");
     const data = await buildWidgetData(database, daylightTheme, WEDNESDAY);
-    expect(data.days[2]).toMatchObject({ date: '2026-10-02', schedule: [], hasSchool: false });
+    expect(data.days[2]).toMatchObject({ date: '2026-10-02', schedule: [], hasSchool: false, holiday: '개교기념일' });
+    expect(data.days[0].holiday).toBeNull();
     const nextWeek = await buildWidgetData(database, daylightTheme, new Date(2026, 9, 7, 8, 0));
     expect(nextWeek.days.find((day) => day.date === '2026-10-09')?.schedule.map(({ title }) => title)).toEqual(['피아노']);
+  });
+
+  it('학교만 쉬는 날(재량휴업일)에는 학원 일정은 그대로 두고 쉬는 날 표시는 하지 않는다', async () => {
+    const database = await freshDatabase();
+    const regular = (await getActiveTimetableSet(database)).id;
+    await createTimetableItem(database, item(regular, '수업', 5, '09:00', '13:00', 'school'));
+    await createTimetableItem(database, item(regular, '피아노', 5, '17:00', '18:00'));
+    await database.runAsync("INSERT INTO day_exceptions (start_date, end_date, type, note) VALUES ('2026-10-02', '2026-10-02', 'discretionary', '나이스: 재량휴업일')");
+    const data = await buildWidgetData(database, daylightTheme, WEDNESDAY);
+    expect(data.days[2]).toMatchObject({ hasSchool: false, holiday: null });
+    expect(data.days[2].schedule.map(({ title }) => title)).toEqual(['피아노']);
   });
 
   it('일정에 대비가 보장된 과목 색을 담는다', async () => {

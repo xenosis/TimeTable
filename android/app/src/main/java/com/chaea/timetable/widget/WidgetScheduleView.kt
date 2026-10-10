@@ -42,7 +42,12 @@ object WidgetScheduleView {
     val heading = heading(day.date)
     val ordered = day.schedule.sortedBy { it.startTime }
     if (ordered.isEmpty()) {
-      val text = if (day.hiddenScheduleCount > 0) null else if (day.hasSchool) NO_AFTER_SCHOOL_MESSAGE else WidgetDayResolver.NO_SCHEDULE_MESSAGE
+      val text = when {
+        day.holiday != null -> WidgetDayResolver.holidayMessage(day.holiday)
+        day.hiddenScheduleCount > 0 -> null
+        day.hasSchool -> NO_AFTER_SCHOOL_MESSAGE
+        else -> WidgetDayResolver.NO_SCHEDULE_MESSAGE
+      }
       return ScheduleView(heading, emptyList(), day.hiddenScheduleCount, text)
     }
     val rows = ordered.map { entry ->

@@ -97,8 +97,8 @@ android {
         applicationId 'com.chaea.timetable'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 161
-        versionName "1.61.0"
+        versionCode 162
+        versionName "1.61.1"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }

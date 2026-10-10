@@ -40,14 +40,16 @@ describe('나이스 조회', () => {
 });
 
 describe('나이스 학사일정', () => {
-  it('평일 공휴일·휴업일만 날짜 → 행사 이름으로 읽고, 토요휴업일과 수업일 행사는 뺀다', async () => {
+  it('평일 공휴일은 쉬는 날, 방학이 아닌 휴업일은 학교만 쉬는 날로 읽고, 토요휴업일·방학·수업일 행사는 뺀다', async () => {
     const row = (date: string, name: string, kind: string) => ({ AA_YMD: date, EVENT_NM: name, SBTR_DD_SC_NM: kind });
     const fetcher = jest.fn(response({ SchoolSchedule: [{ head: [] }, { row: [
       row('20261005', '대체공휴일', '공휴일'), row('20261009', '한글날', '공휴일'), row('20261010', '토요휴업일', '휴업일'),
       row('20261014', '재량휴업일', '휴업일'), row('20261015', '현장체험학습', '해당없음'),
+      row('20260727', '여름방학', '휴업일'), row('20260817', '여름방학', '휴업일'), row('20260817', '대체공휴일', '공휴일'),
     ] }] }));
     expect([...await fetchSchoolHolidays({ officeCode: 'J10', schoolCode: '7591095' }, '20261005', '20261101', fetcher)]).toEqual([
-      ['20261005', '대체공휴일'], ['20261009', '한글날'], ['20261014', '재량휴업일'],
+      ['20261005', { name: '대체공휴일', kind: 'holiday' }], ['20261009', { name: '한글날', kind: 'holiday' }],
+      ['20261014', { name: '재량휴업일', kind: 'school-off' }], ['20260817', { name: '대체공휴일', kind: 'holiday' }],
     ]);
     expect(String(fetcher.mock.calls[0][0])).toContain('/hub/SchoolSchedule?');
   });

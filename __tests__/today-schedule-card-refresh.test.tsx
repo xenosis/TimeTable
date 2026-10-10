@@ -1,13 +1,13 @@
 import { Text } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { TodayScheduleCard } from '../src/components/TodayScheduleCard';
-import { getHolidayName } from '../src/db/dayExceptionRepository';
+import { getDayOff } from '../src/db/dayExceptionRepository';
 import { getTimetableItemsForWeekday, type TimetableItem } from '../src/db/timetableRepository';
 import { defaultTheme } from '../src/theme';
 
 jest.mock('../src/db/database', () => ({ getDatabase: jest.fn(async () => ({})) }));
 jest.mock('../src/db/timetableRepository', () => ({ getTimetableItemsForWeekday: jest.fn() }));
-jest.mock('../src/db/dayExceptionRepository', () => ({ getHolidayName: jest.fn(async () => null) }));
+jest.mock('../src/db/dayExceptionRepository', () => ({ getDayOff: jest.fn(async () => null) }));
 
 const item = { id: 1, title: '국어', startTime: '09:00', endTime: '09:40', category: 'school', colorKey: 'korean', iconKey: 'text', memo: '' } as TimetableItem;
 const copy = (tree: ReactTestRenderer) => tree.root.findAllByType(Text).map((node) => node.props.children).flat().join(' ');
@@ -114,7 +114,7 @@ describe('오늘 일정 조회 상태', () => {
     expect(copy(tree)).not.toContain('미술');
   });
   it('쉬는 날(공휴일)이면 일정 대신 쉬는 날 안내를 보여 준다(P8.8)', async () => {
-    jest.mocked(getHolidayName).mockResolvedValueOnce('개천절');
+    jest.mocked(getDayOff).mockResolvedValueOnce({ name: '개천절', kind: 'holiday' });
     jest.mocked(getTimetableItemsForWeekday).mockResolvedValueOnce([item]);
     await act(async () => { tree = create(<TodayScheduleCard theme={defaultTheme} refreshKey={0} setId={1} />); });
     expect(copy(tree)).toContain('오늘은 개천절, 쉬는 날이에요');

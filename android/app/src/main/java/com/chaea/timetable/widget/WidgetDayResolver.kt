@@ -8,6 +8,9 @@ object WidgetDayResolver {
   const val STALE_MESSAGE = "앱을 열어 새로고침해 줘"
   const val NO_SCHEDULE_MESSAGE = "오늘 일정이 없어요"
 
+  /** 쉬는 날(공휴일) 문구(P8.8): "한글날, 쉬는 날이에요" */
+  fun holidayMessage(name: String): String = if (name == "쉬는 날") "오늘은 쉬는 날이에요" else "$name, 쉬는 날이에요"
+
   data class Status(val current: WidgetScheduleEntry?, val next: WidgetScheduleEntry?)
 
   /**
@@ -27,6 +30,7 @@ object WidgetDayResolver {
   /** 한 줄 위젯에 보일 문구. 레이아웃이 바뀌기 전까지의 표시 규칙이다. */
   fun singleLine(snapshot: WidgetSnapshot?, today: String, nowTime: String): String {
     val day = dayFor(snapshot, today) ?: return STALE_MESSAGE
+    day.holiday?.let { return holidayMessage(it) }
     val status = status(day, nowTime)
     val text = when {
       status.current != null -> status.current.title

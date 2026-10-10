@@ -89,12 +89,15 @@ async function run(now: Date, force: boolean): Promise<AutoRefreshState | null> 
   try {
     const database = await getDatabase();
     const holidaysChanged = await syncNeisHolidays(profile, dates[0]);
+    // 로컬 모드는 동기화가 알림을 다시 예약하지 않으므로 여기서 다시 예약한다(로그인한 폰은 편집 뒤 동기화도 다시 예약한다).
+    // 쉬는 날이 바뀌었으면 시간표 확인 결과(실패 포함)와 상관없이 바로 다시 예약한다
+    const reschedule = async () => {
+      await refreshAllRollingOwners().catch(() => undefined);
+      notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 시간표·쉬는 날을 다시 읽는다
+    };
+    if (holidaysChanged) await reschedule();
     const done = async (result: AutoRefreshResult, message: string) => {
-      if (holidaysChanged || result === 'updated') {
-        // 로컬 모드는 동기화가 알림을 다시 예약하지 않으므로 여기서 다시 예약한다(로그인한 폰은 편집 뒤 동기화도 다시 예약한다)
-        await refreshAllRollingOwners().catch(() => undefined);
-        notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 시간표·쉬는 날을 다시 읽는다
-      }
+      if (result === 'updated') await reschedule();
       return save(holidaysChanged && result === 'same' ? 'updated' : result, holidaysChanged ? `${message} 쉬는 날(공휴일) 정보도 맞췄어요.` : message);
     };
     const plan = buildWeekPlan(await fetchClassTimetable(profile, profile.grade, profile.classNo, dates[0], dates[4]), dates);
@@ -116,7 +119,7 @@ async function run(now: Date, force: boolean): Promise<AutoRefreshState | null> 
 
 /**
  * 쉬는 날(P8.8): 이번 주 월요일부터 4주 동안 나이스 학사일정의 평일 공휴일·휴업일을 날짜별 휴일로 맞춘다. 바뀌었으면 true.
- * 학사일정을 못 읽으면 지금 휴일을 그대로 두고 false(시간표 확인은 계속한다).
+ * 학사일정을 못 읽거나 서버가 저장을 거부하면 지금 휴일을 그대로 두고 false(시간표 확인은 계속한다).
  */
 async function syncNeisHolidays(profile: SchoolProfile, monday: string): Promise<boolean> {
   const from = dashed(monday);
@@ -125,8 +128,7 @@ async function syncNeisHolidays(profile: SchoolProfile, monday: string): Promise
   if (!fetched) return false;
   const holidays = new Map([...fetched].map(([date, name]) => [dashed(date), name]));
   if (!await replaceNeisHolidays(await getDatabase(), from, to, holidays, { dryRun: true })) return false;
-  await runAdminEdit(async () => replaceNeisHolidays(await getDatabase(), from, to, holidays));
-  return true;
+  return runAdminEdit(async () => replaceNeisHolidays(await getDatabase(), from, to, holidays)).catch(() => false);
 }
 
 const dashed = (date: string) => `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;

@@ -24,6 +24,8 @@ data class WidgetDay(
   val hiddenTaskCount: Int,
   /** 그날 학교 정규 수업이 있는지(위젯에는 수업을 싣지 않으므로 상태 문구를 나누는 데만 쓴다) */
   val hasSchool: Boolean = false,
+  /** 쉬는 날(공휴일)이면 그 이름. 일정 대신 쉬는 날로 알린다(P8.8) */
+  val holiday: String? = null,
 )
 
 /** 앱 테마의 대비가 보장된 색(#RRGGBB). 안드로이드 색으로 바꾸는 일은 그리는 쪽이 한다. */
@@ -71,6 +73,7 @@ object WidgetSnapshotParser {
           hiddenScheduleCount = day.optInt("hiddenScheduleCount"),
           hiddenTaskCount = day.optInt("hiddenTaskCount"),
           hasSchool = day.optBoolean("hasSchool"),
+          holiday = if (day.isNull("holiday")) null else day.optString("holiday").takeIf { it.isNotBlank() },
         )
       },
     )

@@ -54,16 +54,25 @@ export async function fetchClassTimetable(school: Pick<SchoolInfo, 'officeCode' 
     .filter((row) => /^\d{8}$/.test(row.date) && Number.isInteger(row.period) && row.period > 0);
 }
 
-/** 학사일정에서 수업이 없는 평일(공휴일·휴업일)을 날짜(YYYYMMDD) → 행사 이름(예: '한글날')으로 읽는다. 주말 토요휴업일은 뺀다. */
-export async function fetchSchoolHolidays(school: Pick<SchoolInfo, 'officeCode' | 'schoolCode'>, from: string, to: string, fetcher: Fetcher = fetch): Promise<Map<string, string>> {
+/** 학사일정의 쉬는 평일. holiday: 공휴일(학교·학원 모두 쉼), school-off: 재량휴업일·개교기념일 등(학교만 쉼). */
+export type SchoolHoliday = { readonly name: string; readonly kind: 'holiday' | 'school-off' };
+
+/**
+ * 학사일정에서 수업이 없는 평일을 날짜(YYYYMMDD) → 쉬는 날로 읽는다. 주말(토요휴업일)은 뺀다.
+ * 여름·겨울방학도 나이스에는 날마다 '휴업일'로 오지만 방학에도 학원·돌봄은 가므로 넣지 않는다(방학은 방학 시간표 세트로 관리한다).
+ * 같은 날 공휴일과 휴업일이 겹치면 공휴일로 본다.
+ */
+export async function fetchSchoolHolidays(school: Pick<SchoolInfo, 'officeCode' | 'schoolCode'>, from: string, to: string, fetcher: Fetcher = fetch): Promise<Map<string, SchoolHoliday>> {
   const rows = await request('SchoolSchedule', { ATPT_OFCDC_SC_CODE: school.officeCode, SD_SCHUL_CODE: school.schoolCode, AA_FROM_YMD: from, AA_TO_YMD: to }, fetcher);
-  const holidays = new Map<string, string>();
+  const holidays = new Map<string, SchoolHoliday>();
   for (const row of rows) {
     const date = text(row.AA_YMD);
-    if (!/^\d{8}$/.test(date) || !['공휴일', '휴업일'].includes(text(row.SBTR_DD_SC_NM))) continue;
+    const name = text(row.EVENT_NM) || '쉬는 날';
+    const type = text(row.SBTR_DD_SC_NM);
+    if (!/^\d{8}$/.test(date) || (type !== '공휴일' && type !== '휴업일') || (type === '휴업일' && name.includes('방학'))) continue;
     const weekday = new Date(Number(date.slice(0, 4)), Number(date.slice(4, 6)) - 1, Number(date.slice(6, 8))).getDay();
-    if (weekday === 0 || weekday === 6 || holidays.has(date)) continue;
-    holidays.set(date, text(row.EVENT_NM) || '쉬는 날');
+    if (weekday === 0 || weekday === 6 || holidays.get(date)?.kind === 'holiday') continue;
+    holidays.set(date, { name, kind: type === '공휴일' ? 'holiday' : 'school-off' });
   }
   return holidays;
 }

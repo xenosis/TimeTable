@@ -114,6 +114,14 @@ class WidgetDayResolverTest {
     assertNull(WidgetSnapshotParser.parse(""))
   }
 
+  @Test fun 쉬는_날_이름을_읽어_한_줄_위젯에도_쉬는_날로_보인다() {
+    val parsed = WidgetSnapshotParser.parse("""{"schemaVersion":2,"days":[{"date":"2026-10-09","schedule":[],"holiday":"한글날"},{"date":"2026-10-10","schedule":[],"holiday":null}]}""")!!
+    assertEquals("한글날", parsed.days[0].holiday)
+    assertNull(parsed.days[1].holiday)
+    assertEquals("한글날, 쉬는 날이에요", WidgetDayResolver.singleLine(parsed, "2026-10-09", "10:00"))
+    assertEquals(WidgetDayResolver.NO_SCHEDULE_MESSAGE, WidgetDayResolver.singleLine(parsed, "2026-10-10", "10:00"))
+  }
+
   @Test fun 일정_목록이_없는_날짜도_오류_없이_읽는다() {
     val parsed = WidgetSnapshotParser.parse("""{"schemaVersion":2,"days":[{"date":"2026-09-30"}]}""")!!
     assertEquals(emptyList<WidgetScheduleEntry>(), parsed.days.single().schedule)

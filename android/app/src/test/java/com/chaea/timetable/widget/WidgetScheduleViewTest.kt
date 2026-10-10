@@ -73,6 +73,12 @@ class WidgetScheduleViewTest {
     assertEquals(4, view.moreCount)
   }
 
+  @Test fun 쉬는_날에는_일정이_없어요_대신_쉬는_날로_알린다() {
+    val holiday = WidgetDay("2026-09-30", emptyList(), emptyList(), 0, 0, false, "한글날")
+    assertEquals("한글날, 쉬는 날이에요", build(holiday, "10:00").message)
+    assertEquals("오늘은 쉬는 날이에요", WidgetDayResolver.holidayMessage("쉬는 날"))
+  }
+
   @Test fun 상태_문구가_경우마다_다르다() {
     assertEquals(WidgetScheduleView.NO_AFTER_SCHOOL_MESSAGE, build(day(hasSchool = true), "10:00").message)
     assertEquals(WidgetDayResolver.NO_SCHEDULE_MESSAGE, build(day(hasSchool = false), "10:00").message)

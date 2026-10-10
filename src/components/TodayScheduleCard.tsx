@@ -2,7 +2,7 @@ import { useEffect, useState, type PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getDatabase } from '../db/database';
-import { getScheduleForDate } from '../db/dateSchedule';
+import { dayOffText, getScheduleForDate } from '../db/dateSchedule';
 import type { TimetableItem } from '../db/timetableRepository';
 import type { TimetableSetId } from '../db/types';
 import { resolveThemeColor, resolveThemeIcon, type ThemeDefinition } from '../theme';
@@ -57,7 +57,7 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
       setItems(schedule.items);
       setLoadedRequestKey(requestKey);
       setFailedRequestKey(null);
-      setMessage(schedule.holiday ? `오늘은 ${schedule.holiday === '쉬는 날' ? '' : `${schedule.holiday}, `}쉬는 날이에요 🎉` : schedule.items.length ? '' : '오늘은 등록된 일정이 없어요.');
+      setMessage(schedule.dayOff ? `오늘은 ${dayOffText(schedule.dayOff)}이에요 🎉` : schedule.items.length ? '' : '오늘은 등록된 일정이 없어요.');
     }).catch(() => {
       if (active) {
         // 실패 뒤 재시도 응답 전에 실패 전 일정이 다시 보이지 않게 이전 결과를 버린다
