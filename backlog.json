@@ -5255,7 +5255,7 @@
     },
     {
       "id": "P6.8",
-      "status": "needs_info",
+      "status": "in_progress",
       "priority": null,
       "category": "feature",
       "title": "아빠 화면",
@@ -5271,7 +5271,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-07T13:56:59.382Z",
-      "updated_at": "2026-10-07T17:19:32.323Z",
+      "updated_at": "2026-10-10T07:53:15.591Z",
       "log": [
         {
           "at": "2026-10-07T13:56:59.382Z",
@@ -5356,12 +5356,18 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "1.54.6/145 전체 검사와 딸 폰 설치·버전 확인 완료. 등록 병렬 리뷰에서 문서 리뷰 종료, critical-reviewer 480초 시간 초과로 이번 리뷰는 완료 근거가 아니다. 확인된 이전 지적 2건과 예약 보존 회귀 수정은 검사 통과했으며 코드 저장 후 P6.9를 개발한다. P6.16 아빠 로그인 두 기기 검증·동시 편집 정책 미해결로 P6.8 done 금지."
+        },
+        {
+          "at": "2026-10-10T07:53:15.591Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "2026-10-10 아빠 폰(SM-S918N 1.62.1, 아빠 계정) 화면 확인: 딸 오늘 현황·보석·딸 폰 마지막 동기화(앱 버전 포함)·이 폰 마지막 동기화·편집 열기 표시, 편집 저장이 현황에 바로 반영. 단 '딸 폰이 마지막으로 맞춘 때'가 실제보다 늦게 갱신되는 문제는 P6.18. 리뷰·done 판단은 Codex 인계"
         }
       ]
     },
     {
       "id": "P6.16",
-      "status": "todo",
+      "status": "in_progress",
       "priority": null,
       "category": "test",
       "title": "아빠 원격 관리 추가 검증",
@@ -5377,8 +5383,8 @@
       "est_min": 45,
       "gate": "아빠 계정 로그인 기기 필요. 기존 행 마지막 저장 우선 정책 수용 여부 미확정.",
       "owner": "codex",
-      "claimed_at": null,
-      "updated_at": "2026-10-08T16:13:14.521Z",
+      "claimed_at": "2026-10-10T07:53:11.633Z",
+      "updated_at": "2026-10-10T07:53:11.633Z",
       "log": [
         {
           "at": "2026-10-07T16:04:20.589Z",
@@ -5391,12 +5397,18 @@
           "owner": "codex",
           "status": "todo",
           "note": "사용자 결정 2026-10-09: 아빠 폰과 딸 폰에서 같은 항목을 동시에 고치면 시간 순으로 가장 늦게 저장한 입력으로 덮어쓴다(마지막 저장 우선 수용). 정책 질문 해소. 남은 것: 아빠 계정 로그인 기기에서의 두 기기 실기기 검증"
+        },
+        {
+          "at": "2026-10-10T07:53:11.633Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "2026-10-10 Claude 두 기기 확인(아빠 SM-S918N 1.62.1 아빠 계정 로그인, 딸 SM-A245N 1.62.1): 아빠 폰에서 토요일 반복 할 일 'DadTest' 추가 → 서버 tt_tasks 즉시 저장·아빠 화면 현황 '1개 중 0개'·주간 리포트 '토 0/1' 반영, 딸 폰은 알림 탭 직후엔 안 보이다 나중에 표시되고 딸이 체크함(딸 화면 '오늘 할 일을 다 했어요'). 아빠 현황에 체크 반영 여부·원격 보석 지급·아빠 로그아웃 후 알람 차단은 미확인 — 사용자 요청으로 테스트 중단, Codex 인계. 실시간 반영 누락은 P6.18. 정리 필요: 서버 tt_tasks id=1(확인용, SQL로 제목 'DadTest2'로 바꿈)과 그 완료 기록"
         }
       ]
     },
     {
       "id": "P6.9",
-      "status": "needs_info",
+      "status": "in_progress",
       "priority": null,
       "category": "feature",
       "title": "변경 푸시",
@@ -5412,7 +5424,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-07T15:47:04.730Z",
-      "updated_at": "2026-10-10T00:34:42.100Z",
+      "updated_at": "2026-10-10T07:53:13.628Z",
       "log": [
         {
           "at": "2026-10-07T15:47:04.730Z",
@@ -5455,6 +5467,12 @@
           "owner": "claude",
           "status": "needs_info",
           "note": "done_when(서버 변경 시 딸 폰 도착) 전체 경로 미확인: ① 아빠 계정 기기에서 저장 후 도착 확인 필요 ② tt-push-worker(재시도 작업자) 배포·TT_PUSH_WORKER_SECRET 설정은 verify_jwt=false 구조라 자동 권한 검사가 거부 — 사용자 판단 필요"
+        },
+        {
+          "at": "2026-10-10T07:53:13.628Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "2026-10-10 실제 경로 확인: 아빠 폰 저장 → tt-notify-change → Expo ticket(16:35) → receipt status ok → 딸 폰 '시간표가 바뀌었어요' 알림 표시·탭 시 앱 열림(사용자 확인). done_when(서버 변경 시 딸 폰 도착) 충족 근거 확보. 남은 것: 탭 직후 최신 내용 미표시(P6.18), tt-push-worker(재시도 작업자) 배포는 verify_jwt=false라 사용자 권한 규칙 필요. 리뷰 후 done 판단은 Codex 인계"
         }
       ]
     },
@@ -5601,6 +5619,27 @@
       ],
       "done_at": "2026-10-07",
       "evidence": "docs/device-verification-2026-10-08.md: 연결 없음에서 일반 알림 00:06:00.012 및 자정 위젯 00:00:01.001 관찰, 임시 행0·통신 원복. sync-runner/sync-pull: 오류 결과 주입 시 교체·마커·알림 갱신 생략과 rollback. 선행 P6.6 done. · 검증: .tmp/codex-p69-quality-1551-queue-final.log QUALITY_CHECKS_OK: 78 suites/464 tests, Android build, 함수6건 PASS. .tmp/reviews/P6.12-b677bb3b2e98-1791400411609 두 등록 리뷰 exit0, 미해결 지적 없음. 공유 서버 실제 중지·전체화면 소리·장기간 장애는 주장하지 않음."
+    },
+    {
+      "id": "P6.18",
+      "status": "todo",
+      "priority": null,
+      "category": "bug",
+      "title": "딸 폰 실시간 반영·알림 탭 동기화 누락 조사",
+      "summary": "2026-10-10 Claude 실기기 확인 중 발견(Codex 인계). ① 딸 폰(SM-A245N 1.62.1) 앱이 켜진 상태에서 서버 tt_tasks 이름을 SQL로 바꿨는데 30초 넘게 반영·동기화 기록 없음 — supabase_realtime 게시에는 tt_tasks 포함 확인, 앱의 subscribeFamilyChanges(src/sync/realtimeSync.ts) 수신·runSync 호출 여부 조사 필요. ② 아빠 폰 저장 → 딸 폰 변경 알림 도착·탭으로 앱 실행까지 되지만 그 직후 할 일이 안 보였고 서버 last_synced_at(옛 행 514e…)도 16:30→16:50(앱 재실행)까지 안 바뀜 — 앱이 꺼진 상태에서 탭하면 app/push-change.tsx의 syncTappedFamilyPush가 계정 확인 전('checking')이라 건너뛰는 것으로 추정. ③ tt_devices에 딸 폰이 두 행(설치본 행 38dd…: 토큰 있음·last_synced_at null, 옛 행 514e…: 토큰 없음·last_synced_at 기록) — recordDeviceSync(src/sync/syncRunner.ts)는 토큰 없는 행만 갱신. 아빠 화면 '딸 폰이 마지막으로 맞춘 때'가 어느 행을 읽는지 확인·한 행으로 정리 검토.",
+      "where": "src/sync/",
+      "parent": "P6",
+      "deps": [
+        "P6.6"
+      ],
+      "doc": null,
+      "done_when": "앱이 켜진 딸 폰에서 서버 변경이 수 초 안에 반영되고, 꺼진 상태에서 변경 알림을 탭해도 열리자마자 최신 내용이 보이며, 아빠 화면의 딸 폰 마지막 동기화 시각이 실제와 맞음. 테스트·전체 검사·리뷰·두 기기 실기기 근거 기록",
+      "est_min": 45,
+      "gate": null,
+      "owner": null,
+      "claimed_at": null,
+      "updated_at": "2026-10-10T07:53:09.651Z",
+      "log": []
     },
     {
       "id": "P7",
@@ -6065,7 +6104,7 @@
     },
     {
       "id": "P8.4",
-      "status": "in_progress",
+      "status": "in_review",
       "priority": "P3",
       "category": "feature",
       "title": "아빠용 주간 리포트",
@@ -6079,7 +6118,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-24T01:24:33.705Z",
-      "updated_at": "2026-10-08T16:24:08.051Z",
+      "updated_at": "2026-10-10T07:53:17.564Z",
       "log": [
         {
           "at": "2026-09-24T01:24:33.705Z",
@@ -6104,6 +6143,12 @@
           "owner": "claude",
           "status": "in_progress",
           "note": "착수·구현: 아빠 화면에 주간 리포트 카드(src/components/ParentWeeklyReportCard.tsx·parentWeeklyReport.ts). 이번 주 월~오늘 날짜별 완료/예정과 완료율, 최근 4주 월~일 주별 작은·큰 보석 증감과 그 주 끝 개수(장부 delta 합). 서버와 맞춘 뒤에만 표시. 단위 테스트 5건 통과. 남은 것: 전체 검사·리뷰, 아빠 계정 로그인 기기에서 화면 확인"
+        },
+        {
+          "at": "2026-10-10T07:53:17.564Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "2026-10-10 아빠 폰(SM-S918N 1.62.1)에서 주간 리포트 표시 확인: 월~토 날짜별 칸, 할 일 추가 후 '이번 주 할 일 1개 중 0개(0%)'·'토 0/1', 최근 4주 주별 보석 변화(모두 0). 보석 증감이 있는 상태의 표시는 미확인. 리뷰·done 판단은 Codex 인계"
         }
       ]
     },
