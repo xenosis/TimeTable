@@ -5619,7 +5619,7 @@
     },
     {
       "id": "P7.1",
-      "status": "in_review",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "앱 꾸미기",
@@ -5635,7 +5635,7 @@
       "gate": null,
       "owner": "claude",
       "claimed_at": "2026-09-18T10:11:28.628Z",
-      "updated_at": "2026-10-10T07:07:34.320Z",
+      "updated_at": "2026-10-10T07:21:18.817Z",
       "log": [
         {
           "at": "2026-09-16T04:50:33.860Z",
@@ -5708,8 +5708,16 @@
           "owner": "claude",
           "status": "in_review",
           "note": "알림 아이콘 딸 폰 확인(1.61.2 상태표시줄에 달력 실루엣, 알림 목록은 One UI가 앱 아이콘 표시), 앱 이름 '채아시간표'(APK application-label·ko), 패키지 com.chaea.timetable, Firebase 재등록 완료(P6.9), 사용자가 아이콘·스플래시 확인. 안 쓰는 brand_icon_foreground.xml 삭제(1.62.0). app.json adaptiveIcon.monochromeImage는 prebuild를 다시 할 때만 쓰이는 Expo 기본 그림으로 남김"
+        },
+        {
+          "at": "2026-10-10T07:21:18.817Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "검토(critical-reviewer) 결과 코드 결함 없음, 지적된 문서 불일치(테마 설명·round 아이콘·단색 아이콘 출처) 010a163로 정리"
         }
-      ]
+      ],
+      "done_at": "2026-10-10",
+      "evidence": "앱 이름 '채아시간표'·패키지 com.chaea.timetable(APK application-label 확인), 아이콘·스플래시는 사용자 확인, 알림 아이콘은 사용자 요청대로 앱 아이콘의 흰색 실루엣으로 교체(df4e6db)해 딸 폰 1.61.2 상태표시줄에서 확인, 테마 아이콘 1.47.3 확인, 안 쓰는 brand_icon_foreground.xml 삭제(99faecb). 앱 테마(src/theme JS 상태)와 OS 자산(android/res·app.json)은 분리되어 있고 아이콘을 바꾸는 코드가 없음(코드 확인) · 검증: npm run check 1.62.1 통과, critical-reviewer 검토 반영. prebuild --clean 시 직접 만든 아이콘 자산이 덮일 수 있음은 문서 한계로 기록"
     },
     {
       "id": "P7.2",
