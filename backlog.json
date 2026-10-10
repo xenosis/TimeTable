@@ -5628,7 +5628,7 @@
     },
     {
       "id": "P6.18",
-      "status": "needs_info",
+      "status": "in_progress",
       "priority": null,
       "category": "bug",
       "title": "딸 폰 실시간 반영·알림 탭 동기화 누락 조사",
@@ -5644,7 +5644,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-10T07:57:32.555Z",
-      "updated_at": "2026-10-10T14:26:55.902Z",
+      "updated_at": "2026-10-10T15:12:04.736Z",
       "log": [
         {
           "at": "2026-10-10T07:57:32.555Z",
@@ -5663,6 +5663,12 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "1.62.9/173 전체 검사 통과(89 suites/533 tests, Android build, push-tests) 및 Device arm64 APK ABI/서명 확인. 연속 신호 fresh 대기 보완, 구버전 미연결 토큰 통합, 서버 완료 시각 기록과 설치본 행 조회 보완. 실제 authenticated BEGIN/ROLLBACK 검증 PASS(.tmp/p618-device-sync-1629-rollback.log), 최종 등록 병렬 리뷰 완료(.tmp/reviews/P6.18-bdc19062b584-1791641933996). 아빠 SM-S918N·딸 SM-A245N 동시 연결 확인. 운영 RPC 적용과 최신 두 기기 전경 변경·종료 상태 알림 탭·아빠 시각 확인은 아직 남아 done 처리하지 않는다. 기존 RLS의 자기 기기 직접 쓰기 허용과 시간 합격 기준은 리뷰의 남은 지적으로 기록한다. 사용자 지시대로 커밋·푸시를 먼저 수행한다."
+        },
+        {
+          "at": "2026-10-10T15:12:04.736Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자가 운영 적용과 설치를 명시 승인. 운영 tt_record_device_sync 적용 완료: 함수 존재/authenticated 실행 허용/anon 실행 거부 확인(.tmp/p618-production-apply.log). 기존 서명과 arm64 ABI를 재확인하고 두 실기기에 1.62.9/173 데이터 유지 업데이트 진행 중. 이후 전경 반영·지급 반영·알림 탭·아빠 동기화 시각 검증을 진행한다."
         }
       ]
     },

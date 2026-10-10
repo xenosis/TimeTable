@@ -78,3 +78,6 @@
 - **`force row level security`**: 소유자 권한으로 도는 확인 함수가 정책에 막힐 수 있어 쓰지 않았습니다.
 - **"오늘 것만 체크/취소" 제한**: 오프라인에서 체크한 기록이 나중에 올라오므로 날짜 제한을 두지 않았습니다.
 - **Realtime 게시(publication) 등록(2026-10-07 적용, P6.7)**: `20261007000100_tt_realtime.sql`로 가족 데이터 테이블 11개(교시·세트·적용 세트·항목·휴일·할 일·체크·완료 이력·장부·보상·보석 자격)를 `supabase_realtime`에 넣고 `replica identity full`을 켰다(삭제 이벤트에는 RLS가 적용되지 않으므로, 이전 행 전체를 실어 family_id 필터로 이 가족 것만 받기 위해). `tt_devices`(동기화마다 갱신)·`tt_families`·`tt_family_members`는 넣지 않았다. 적용 전 게시는 비어 있었다(Doro는 쓰지 않음).
+
+## 설치본 동기화 시각 (P6.18, 2026-10-11)
+사용자 승인 후 20261010084815_tt_device_sync_installation.sql을 트랜잭션으로 운영 적용했다. tt_record_device_sync의 authenticated 실행 허용 및 anon 실행 거부를 확인했다(.tmp/p618-production-apply.log). 설치본 증명으로 동기화 시각을 기록하며, 자기 계정의 미연결 구버전 토큰은 등록 시 비워 같은 토큰 충돌을 피한다. 두 폰 1.62.9/173 설치 후 각각 설치본 행에 서버 시각 기록을 확인했다(.tmp/p618-device-current.log). 지급 이후 딸 화면 반영은 추가 조사 중이다.

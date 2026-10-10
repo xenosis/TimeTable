@@ -121,20 +121,25 @@ async function syncOnce(target: SyncTarget, options: { readonly forceServer?: bo
   setSyncStatus({ familyId: target.familyId, state: 'syncing' });
   try {
     const database = await getDatabase();
+    console.info('채아시간표: 동기화 단계 로컬 준비');
     if (!sameAccount(target, generation)) return false;
     // 직접 고른 '서버 내용으로 다시 맞추기'는 첫 동기화처럼 서버 기준으로 통째로 바꾼다(올리지 않음). 표시는 성공한 뒤에만 다시 남긴다
     const first = options.forceServer === true || !hasSyncedFamily(target.familyId);
     // 위젯에서 누른 체크를 먼저 로컬에 기록한다
     await applyPendingWidgetChecksNow(database).catch(() => 0);
+    console.info('채아시간표: 동기화 단계 위젯 체크 준비');
     // 딸 폰은 첫 동기화 뒤부터 체크·보석 기록을 서버에 먼저 올린다(P6.14). 올리기 시작 시점의 기록 변경 횟수를 기억해 둔다
     const versionAtPush = childChangeVersion();
     if (!sameAccount(target, generation)) return false;
     if (!first && target.role === 'child') {
       const userId = await currentUserId();
+      console.info('채아시간표: 동기화 단계 계정 확인');
       if (!sameAccount(target, generation)) return false;
       await pushChildRecords(database, target.familyId, userId, () => sameAccount(target, generation));
+      console.info('채아시간표: 동기화 단계 딸 기록 전송');
     }
     let snapshot = await fetchLocalSnapshot(target.familyId);
+    console.info('채아시간표: 동기화 단계 서버 조회');
     if (!sameAccount(target, generation)) { requestSyncSoon(); return false; }
     // 서버가 비어 있는데 이 폰에 데이터가 있으면 덮지 않는다. P6.5 '서버로 올리기'를 먼저 하게 안내한다(직접 고른 다시 맞추기는 건너뜀)
     if (first && !options.forceServer && !serverHasFamilyData(snapshot) && hasLocalData(await readLocalPayload(database))) {
@@ -150,15 +155,18 @@ async function syncOnce(target: SyncTarget, options: { readonly forceServer?: bo
       return !first && target.role === 'child' && childChangeVersion() !== versionAtPush;
     });
     const at = new Date().toISOString();
+    console.info('채아시간표: 동기화 단계 로컬 반영');
     markSynced(target.familyId, at);
     notifyWidgetChecksApplied(); // 열려 있는 화면이 바뀐 데이터를 다시 읽는다
     const refreshed = await Promise.allSettled([refreshAllRollingOwners(), requestWidgetRefresh()]);
+    console.info('채아시간표: 동기화 단계 기기 갱신');
     if (refreshed.some((result) => result.status === 'rejected')) {
       throw new Error('내용은 받았지만 알림·위젯을 갱신하지 못했어요. 다시 맞춰 주세요.');
     }
     // 로컬 조회 마커는 유지하되, 알림·위젯 적용이 끝난 뒤에만 서버 기기 시각을 남긴다.
     if (!sameAccount(target, generation)) return false;
     await recordDeviceSync(target.familyId, at, () => sameAccount(target, generation));
+    console.info('채아시간표: 동기화 단계 서버 시각 기록');
     if (!sameAccount(target, generation)) return false;
     setSyncStatus({ familyId: target.familyId, state: 'idle', lastSyncedAt: at });
     // 올린 뒤 생긴 체크·보석 변경은 폰에 지켜졌으니 곧 다시 올린다(다음 앱 복귀까지 기다리지 않게)
