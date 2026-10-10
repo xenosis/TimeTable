@@ -115,9 +115,18 @@ describe('오늘 일정 조회 상태', () => {
   });
   it('쉬는 날(공휴일)이면 일정 대신 쉬는 날 안내를 보여 준다(P8.8)', async () => {
     jest.mocked(getDayOff).mockResolvedValueOnce({ name: '개천절', kind: 'holiday' });
-    jest.mocked(getTimetableItemsForWeekday).mockResolvedValueOnce([item]);
+    jest.mocked(getTimetableItemsForWeekday).mockResolvedValue([item]); // 쉬는 날에는 시간표를 읽지 않아야 한다
     await act(async () => { tree = create(<TodayScheduleCard theme={defaultTheme} refreshKey={0} setId={1} />); });
     expect(copy(tree)).toContain('오늘은 개천절, 쉬는 날이에요');
     expect(copy(tree)).not.toContain('국어');
+    expect(getTimetableItemsForWeekday).not.toHaveBeenCalled();
+    jest.mocked(getTimetableItemsForWeekday).mockReset();
+  });
+  it('학교만 쉬는 날에 남은 학원 일정이 있으면 지금·다음 카드와 함께 안내 줄을 보인다', async () => {
+    jest.mocked(getDayOff).mockResolvedValueOnce({ name: '재량휴업일', kind: 'school-off' });
+    jest.mocked(getTimetableItemsForWeekday).mockResolvedValueOnce([{ ...item, title: '피아노', category: 'academy', startTime: '15:00', endTime: '16:00' }]);
+    await act(async () => { tree = create(<TodayScheduleCard theme={defaultTheme} refreshKey={0} setId={1} />); });
+    expect(copy(tree)).toContain('오늘은 재량휴업일, 학교 쉬는 날이에요');
+    expect(copy(tree)).toContain('피아노');
   });
 });

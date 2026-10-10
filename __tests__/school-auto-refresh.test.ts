@@ -5,6 +5,7 @@ import { createTimetableItem, getEditableTimetableItems } from '../src/db/timeta
 import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
 import type { TimetableDatabase } from '../src/db/types';
 import { getScheduleForDate } from '../src/db/dateSchedule';
+import { refreshAllRollingOwners } from '../src/notifications/rollingOwners';
 import { refreshSchoolTimetableIfDue, scheduleSignature } from '../src/neis/schoolAutoRefresh';
 import { setAccount } from '../src/store/accountStore';
 import { openTestDatabase } from '../test-utils/sqliteTestDatabase';
@@ -150,6 +151,17 @@ test('학교만 쉬는 날(재량휴업일)은 그날 학교 일정만 빼고 �
   expect(state?.result).toBe('updated');
   expect(await holidays()).toEqual(['2026-10-07:discretionary:나이스: 재량휴업일']);
   expect((await schoolTitles()).filter((title) => title.startsWith('5:'))).toEqual(['5:1:국어', '5:2:수학']);
+});
+
+test('쉬는 날이 바뀌면 시간표 조회가 실패해도 알림·위젯을 바로 다시 예약한다', async () => {
+  jest.mocked(refreshAllRollingOwners).mockClear();
+  mockFetch.mockRejectedValue(new Error('나이스에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'));
+  expect((await refreshSchoolTimetableIfDue(THURSDAY))?.result).toBe('error');
+  expect(await holidays()).toEqual(['2026-10-09:holiday:나이스: 한글날']);
+  expect(refreshAllRollingOwners).toHaveBeenCalledTimes(1);
+  jest.mocked(refreshAllRollingOwners).mockClear();
+  await refreshSchoolTimetableIfDue(THURSDAY, true); // 휴일이 그대로면 다시 예약하지 않는다
+  expect(refreshAllRollingOwners).not.toHaveBeenCalled();
 });
 
 test('학교가 아직 입력하지 않은 빈 요일은 반복 시간표를 그대로 두고 휴일로도 만들지 않는다', async () => {

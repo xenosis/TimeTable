@@ -33,6 +33,8 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
   const [, setClockTick] = useState(0);
   const now = new Date();
   const [message, setMessage] = useState('오늘 일정을 불러오는 중이에요.');
+  // 학교만 쉬는 날처럼 쉬는 날이어도 남은 일정(학원)이 있으면, 지금·다음 카드와 함께 안내 줄을 따로 보인다
+  const [dayOffNote, setDayOffNote] = useState<string | null>(null);
   const weekday = now.getDay();
   const [retryKey, setRetryKey] = useState(0);
   // 같은 요일·세트의 새로고침(체크·앱 복귀)에서는 이전 일정을 유지해 카드가 깜빡이지 않게 한다
@@ -58,6 +60,7 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
       setLoadedRequestKey(requestKey);
       setFailedRequestKey(null);
       setMessage(schedule.dayOff ? `오늘은 ${dayOffText(schedule.dayOff)}이에요 🎉` : schedule.items.length ? '' : '오늘은 등록된 일정이 없어요.');
+      setDayOffNote(schedule.dayOff && schedule.items.length ? `오늘은 ${dayOffText(schedule.dayOff)}이에요` : null);
     }).catch(() => {
       if (active) {
         // 실패 뒤 재시도 응답 전에 실패 전 일정이 다시 보이지 않게 이전 결과를 버린다
@@ -79,6 +82,7 @@ export function TodayScheduleCard({ refreshKey, theme, setId, children }: PropsW
 
   return <>{setId !== null && <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
     <Text accessibilityRole="header" style={[styles.heading, { color: theme.colors.text }]}>지금 · 다음 일정</Text>
+    {!failed && sameIdentityLoaded && dayOffNote && <Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>🎉 {dayOffNote}</Text>}
     {current && <ScheduleItemCard label="지금" item={current} theme={theme} />}
     {next && <ScheduleItemCard label="다음" item={next} theme={theme} />}
     {failed && <><Text style={[styles.empty, { color: theme.colors.text, fontWeight: '700' }]}>⚠️ {message}</Text><Pressable accessibilityRole="button" accessibilityLabel="일정 다시 불러오기" onPress={() => setRetryKey((value) => value + 1)} style={styles.retry}><Text style={{ color: theme.colors.primary }}>다시 불러오기</Text></Pressable></>}
