@@ -4738,7 +4738,7 @@
     },
     {
       "id": "P6",
-      "status": "todo",
+      "status": "in_progress",
       "priority": "P2",
       "category": "feature",
       "title": "6단계: 서버 연동 · 아빠 원격 관리",
@@ -4752,10 +4752,17 @@
       "done_when": "아빠 폰에서 수정하면 딸 폰에 반영됨",
       "est_min": null,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "codex",
+      "claimed_at": "2026-10-11T01:12:52.326Z",
+      "updated_at": "2026-10-11T01:12:52.326Z",
+      "log": [
+        {
+          "at": "2026-10-11T01:12:52.326Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "서버 연동·아빠 화면·변경 푸시와 두 폰 검증 완료. 하위 P6.11 완료 푸시 구현 검사·리뷰 및 실제 아빠 수신 확인만 남아 단계는 진행 중으로 관리한다. P7은 사용자 순서대로 P6 완료 뒤 진행한다."
+        }
+      ]
     },
     {
       "id": "P6.1",
@@ -5255,7 +5262,7 @@
     },
     {
       "id": "P6.8",
-      "status": "in_progress",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "아빠 화면",
@@ -5271,7 +5278,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-07T13:56:59.382Z",
-      "updated_at": "2026-10-10T07:53:15.591Z",
+      "updated_at": "2026-10-11T00:51:38.033Z",
       "log": [
         {
           "at": "2026-10-07T13:56:59.382Z",
@@ -5362,12 +5369,26 @@
           "owner": "codex",
           "status": "in_progress",
           "note": "2026-10-10 아빠 폰(SM-S918N 1.62.1, 아빠 계정) 화면 확인: 딸 오늘 현황·보석·딸 폰 마지막 동기화(앱 버전 포함)·이 폰 마지막 동기화·편집 열기 표시, 편집 저장이 현황에 바로 반영. 단 '딸 폰이 마지막으로 맞춘 때'가 실제보다 늦게 갱신되는 문제는 P6.18. 리뷰·done 판단은 Codex 인계"
+        },
+        {
+          "at": "2026-10-11T00:47:46.808Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "필수 하위 P6.16 완료. 두 폰 원격편집·완료현황·줬어요·딸 마지막 동기화 서버시각 실제 검증 및 테스트 정리 확보. 최신check542·교차3회귀·ARM64 두 폰1.62.15 설치 확인. 마지막 화면 재로그인은 정리 후속이며 등록 부모 최종검토 진행."
+        },
+        {
+          "at": "2026-10-11T00:51:38.033Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "등록 부모 최종리뷰 두 역할 code0, 새 Critical/High/Medium 없음. P6.6/P6.16/P6.18 완료와 아빠 편집·딸 현황·보석 지급·마지막 동기화 시각 실제 근거 대조 완료. 재로그인 후 로컬 시험 일정 삭제 확인은 정리 후속 유지."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-10.md의 아빠 편집→딸·딸 체크→아빠·원격 지급→딸 및 서버시각 일치; .tmp/reviews/P6.8-db01cfaf37a5-1791679695439 양역할 code0 지적없음 · 검증: check1.62.15 542 tests·Android·push10 PASS; 교차 회귀3 PASS; d4505cc 푸시 및 두 폰1.62.15/179 서명일치 설치"
     },
     {
       "id": "P6.16",
-      "status": "in_review",
+      "status": "done",
       "priority": null,
       "category": "test",
       "title": "아빠 원격 관리 추가 검증",
@@ -5384,7 +5405,7 @@
       "gate": "아빠 계정 로그인 기기 필요. 기존 행 마지막 저장 우선 정책 수용 여부 미확정.",
       "owner": "codex",
       "claimed_at": "2026-10-10T07:53:11.633Z",
-      "updated_at": "2026-10-11T00:18:44.772Z",
+      "updated_at": "2026-10-11T00:46:54.559Z",
       "log": [
         {
           "at": "2026-10-07T16:04:20.589Z",
@@ -5421,12 +5442,20 @@
           "owner": "codex",
           "status": "in_review",
           "note": "기존 1.62.12 실제 아빠 편집·딸 체크·원격 지급과 장부불변 근거 확인. 신규 권한허용 상태에서 같은 미래notify 일정 딸예약1 아빠0, 아빠 실제로그아웃 및 프로세스재시작 후 로컬항목 존재·활성예약0 확인. 실제 울림 없이 역할 차단 검증. id28삭제 및 권한false·배터리예외제거·두폰화면유지0 복원. 사용자 마지막저장우선 정책문서 반영. 아빠재로그인 필요. 전체check91/540 Android push10 PASS, 등록리뷰 준비."
+        },
+        {
+          "at": "2026-10-11T00:46:54.559Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "등록 병렬 리뷰 두 역할 정상 종료·Critical/High 없음. 기존 시간표·할 일 마지막 저장 우선 정책 research/tasks에 명시, 과거 gate 해소 기록. 검증 후 재로그인은 별도 정리이며 검증 미실시가 아님."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-10.md: 두 폰 편집·완료·원격 지급과 장부 불변, 권한 허용 상태 딸 예약1/아빠0, 아빠 로그아웃·재시작0; .tmp/reviews/P6.16-854053d825e5-1791679203285 두 역할 code0 · 검증: 전체 check1.62.15 542 tests Android push10 PASS; 실기기1.62.12 두 폰 정책 측정 및 설정 복원; 동일서명 ARM641.62.15 두 폰 업데이트 성공"
     },
     {
       "id": "P6.9",
-      "status": "in_progress",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "변경 푸시",
@@ -5442,7 +5471,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-07T15:47:04.730Z",
-      "updated_at": "2026-10-11T00:20:18.346Z",
+      "updated_at": "2026-10-11T00:47:29.202Z",
       "log": [
         {
           "at": "2026-10-07T15:47:04.730Z",
@@ -5509,8 +5538,22 @@
           "owner": "codex",
           "status": "in_progress",
           "note": "로그아웃 시작 계정 세대 변경 및 설치본 등록·동기화 RPC 공용 직렬화 회귀 보완 착수. 실제 자동발송·receipt·수신 근거 유지. 추가 설치는 보완을 묶어 한번 수행한다."
+        },
+        {
+          "at": "2026-10-11T00:47:08.431Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.62.15 전체 검사·등록 두 리뷰 정상종료. 토큰/동기화 교차 회귀3건 추가 PASS 및 lint/typecheck PASS. d4505cc 푸시 후 ARM64 서명확인·두 폰 설치179 확인. 자동 변경발송·receipt·탭 최신 적용 실기기 근거 확보."
+        },
+        {
+          "at": "2026-10-11T00:47:29.202Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "운영 서버 변경 자동발송·수신·탭 최신조회·receipt 자동처리 검증 완료. JWT 유지 운영배포 완료, 로그아웃·설치본 역전 보완 리뷰 반영 및 두 폰 업데이트 확인. 조건부 POST 무응답 정체 한계는 문서 기록하며 실제 재현 결함으로 단정하지 않음."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-10.md; event162 cron200 processed1 failed0·pending0·자동receipt0·딸 실제알림 탭 최신내용; .tmp/reviews/P6.9-854053d825e5-1791678745966 양역할 code0 · 검증: check1.62.15 91 suites/542 tests·Android·push10 PASS; installation-writes-integration 교차3건 PASS·lint/typecheck PASS; d4505cc 푸시·두 폰1.62.15/179 ARM64 기존서명 설치 확인"
     },
     {
       "id": "P6.17",
@@ -5597,7 +5640,7 @@
     },
     {
       "id": "P6.11",
-      "status": "todo",
+      "status": "needs_info",
       "priority": "P3",
       "category": "feature",
       "title": "(선택) 완료 알림",
@@ -5611,10 +5654,47 @@
       "done_when": "딸의 전체 완료 시 아빠 폰에 푸시 도착",
       "est_min": 20,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "codex",
+      "claimed_at": "2026-10-11T00:52:01.436Z",
+      "updated_at": "2026-10-11T01:41:40.019Z",
+      "log": [
+        {
+          "at": "2026-10-11T00:52:01.436Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "P6.9 완료 후 착수. 오늘 할 일 전체 완료 시 같은 가족 아빠 설치본으로 보내는 완료 푸시를 기존 운영 큐에 연결한다. 계정 역할별 토큰·수신 필터, 반복 중복 방지와 0개 할 일 제외를 검증한다. 실제 수신은 아빠 재로그인·알림 권한 후 확인하며 실제 시간표 데이터 입력은 요구하지 않는다."
+        },
+        {
+          "at": "2026-10-11T01:12:41.401Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.63.0/180 구현·전체check PASS: 92 suites/547 tests Android 및 푸시12. 한국시간 오늘1개이상 전체완료 큐·하루중복차단·발송전 재확인·작업자 재시도·아빠 토큰 등록·네이티브 가족/역할/날짜/순서 차단·탭 최신조회. SQL 롤백 검증 및 객체미잔존 확인. 운영 적용과 실기기 수신은 아직 미수행으로 code review 요청이며done판정 아님; 아빠 재로그인 요청 대기."
+        },
+        {
+          "at": "2026-10-11T01:19:42.278Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "등록 리뷰에서 접수 뒤 receipt 추적 누락과 이전 발송 종료의 새 임대 해제 경로 확인. 사용자 결정 대기가 아니라 확인된 코드 보완 전이이며 바로 재착수한다. 실제 아빠 재로그인은 별도 대기."
+        },
+        {
+          "at": "2026-10-11T01:21:24.477Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "1.63.1/181 보완 착수: 완료 ticket·receipt 저장 및 조회·재시도·만료 토큰 처리, 발송 시도별 lease UUID와 지연 종료·이전 receipt 보호. 실제 수신 전 done 금지 유지."
+        },
+        {
+          "at": "2026-10-11T01:28:11.031Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.63.1/181 보완 검증 완료: 전체 check QUALITY_CHECKS_OK(92 suites/547 tests, Android, 푸시13), SQL 롤백 TT_COMPLETION_PUSH_CHECK_OK. receipt 실패 재시도·현재 토큰 폐기·이전 receipt 및 임대 종료 보호 검증. 운영 적용·실기기 도착은 미수행이며 현재 ADB 연결 0대라 실제 수신 done 판정은 보류. 등록 재리뷰 요청."
+        },
+        {
+          "at": "2026-10-11T01:41:40.019Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "1.63.2/182 전체 check QUALITY_CHECKS_OK(92/547, Android, 푸시13), SQL TT_COMPLETION_PUSH_CHECK_OK. 등록 재리뷰 두 에이전트 code0; 확인된 receipt 장애 발송 차단·종료일 불일치 보완 완료. 실제 도착 High는 미검증 상태이며 done 보류. 동시 두 연결 체크·같은 가족 역할 전환은 재현 없는 조건부 추론으로 남겨 실제 단일 딸/별도 아빠 설치본 수신 검증과 구별한다. 정책은 docs/push-notification-setup.md에 기록했고 CLI 허용 add/set-status 범위상 done_when 직접 변경하지 않았다. 현재 ADB 0대: 재연결 요청 대기. 리뷰 후 커밋·푸시, 운영 배포까지 진행하며 설치·표시·탭 증거는 연결 후 기록한다."
+        }
+      ]
     },
     {
       "id": "P6.12",
@@ -6211,7 +6291,7 @@
     },
     {
       "id": "P8.4",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P3",
       "category": "feature",
       "title": "아빠용 주간 리포트",
@@ -6225,7 +6305,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-09-24T01:24:33.705Z",
-      "updated_at": "2026-10-11T00:22:17.951Z",
+      "updated_at": "2026-10-11T01:12:13.951Z",
       "log": [
         {
           "at": "2026-09-24T01:24:33.705Z",
@@ -6304,8 +6384,22 @@
           "owner": "codex",
           "status": "in_progress",
           "note": "리포트 집계 기준 안내 한 줄 보완을 P6.9 계정 전환 회귀와 동일1.62.15 검증·기기설치로 묶는다. 실제 주간 리포트 근거 유지. 부모 화면 선행 완료 조건은 체크 후 완료한다."
+        },
+        {
+          "at": "2026-10-11T01:07:38.691Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "실제 주간50%·날짜 칸·주별 작은/큰 보석 양음 증감과 원복 근거 확보. 집계 기준 안내1.62.15/179 두 폰 설치 완료. 실제 선행P6.6/P6.8 모두done 확인, 마지막 수정은 안내 문구뿐이며 현재 부모 완료 조건과 현황 근거를 등록 리뷰로 재확인한다."
+        },
+        {
+          "at": "2026-10-11T01:12:13.951Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "등록 리뷰 두 역할 code0·Critical/High 구현결함 없음. P6.6/P6.8 실제done 근거 CLI로 대조, 구조화 deps 수정은 허용 add/set-status로 지원하지 않아 문서·증거로 선행확인 명시. 월~오늘 현재설정 기준 완료율 및 최근4주 월~일 작은/큰 보석 변화·누적잔액, 가족 전환 보호와 실제 양음 증감·원복 검증을 완료 범위로 확정."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-10.md: 딸 체크→아빠 주간50%, 주별 +3/+2 및 -1/-1·잔액2/1·원복0/0; .tmp/reviews/P8.4-fd52f45290be-1791680877685 양역할 code0; P6.6/P6.8 done CLI 확인 · 검증: check1.63.0 92 suites/547 tests·Android·push12 PASS; 리포트 안내 포함1.62.15/179 두 폰 설치; 실제1.62.12 주별 증감 XML 및 시험원장 삭제 확인"
     },
     {
       "id": "P8.5",

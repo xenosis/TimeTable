@@ -10,15 +10,16 @@ import { withInstallationWrite } from './installationWrites';
 
 const tokenPattern = /^(?:ExponentPushToken|ExpoPushToken)\[[A-Za-z0-9_-]+\]$/;
 
-/** 권한과 Expo 프로젝트 설정이 갖춰진 딸 계정만 토큰을 등록한다. */
+/** 가족 계정의 토큰을 등록한다. 서버가 변경은 딸에게, 완료는 아빠에게 분리해 보낸다. */
 export async function registerChildPushToken(): Promise<void> {
   const account = getAccount();
-  if (Platform.OS !== 'android' || account.kind !== 'signedIn' || account.membership?.role !== 'child' || !pushPolicyModule()?.setRemotePushFamily) return;
+  if (Platform.OS !== 'android' || account.kind !== 'signedIn' || !account.membership || !pushPolicyModule()?.setRemotePushFamily) return;
   const { familyId } = account.membership;
+  const role = account.membership.role;
   const generation = accountUserActions();
   const current = () => {
     const latest = getAccount();
-    return generation === accountUserActions() && latest.kind === 'signedIn' && latest.email === account.email && latest.membership?.role === 'child' && latest.membership.familyId === familyId;
+    return generation === accountUserActions() && latest.kind === 'signedIn' && latest.email === account.email && latest.membership?.role === role && latest.membership.familyId === familyId;
   };
   const config = require('../../app.json') as { expo: { extra?: { eas?: { projectId?: string } } } };
   const projectId = config.expo.extra?.eas?.projectId;

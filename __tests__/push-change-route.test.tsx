@@ -5,10 +5,12 @@ import type { AccountState } from '../src/server/account';
 import { Text } from 'react-native';
 
 let mockAccount: AccountState;
+let mockType: string | undefined;
 const mockSync = jest.fn();
 const mockReplace = jest.fn();
 const mockRouter = { replace: mockReplace };
-jest.mock('expo-router', () => ({ useLocalSearchParams: () => ({ familyId: 'family-a' }), useRouter: () => mockRouter }));
+jest.mock('expo-router', () => ({ useLocalSearchParams: () => ({ familyId: 'family-a', type: mockType }), useRouter: () => mockRouter }));
+beforeEach(() => { mockType = undefined; });
 jest.mock('../src/store/accountStore', () => ({ useAccount: () => mockAccount }));
 jest.mock('../src/push/pushTap', () => ({ syncTappedFamilyPush: (...args: unknown[]) => mockSync(...args) }));
 
@@ -27,9 +29,26 @@ test('앱이 꺼진 상태의 알림 탭은 계정 복원과 동기화를 마친
   expect(mockReplace).not.toHaveBeenCalled();
   mockAccount = { kind: 'signedIn', email: 'kid@test.com', membership: { familyId: 'family-a', role: 'child' }, offline: false };
   await act(async () => { renderer.update(<PushChangeRoute />); });
-  expect(mockSync).toHaveBeenCalledWith('family-a');
+  expect(mockSync).toHaveBeenCalledWith('family-a', 'child');
   expect(mockReplace).not.toHaveBeenCalled();
   await act(async () => { finish(true); });
+  expect(mockReplace).toHaveBeenCalledWith('/');
+  await act(async () => renderer.unmount());
+});
+
+test('완료 알림은 현재 아빠 계정 현황을 맞추고 딸 계정에서는 조회하지 않는다', async () => {
+  jest.clearAllMocks();
+  mockType = 'tasks-completed';
+  mockAccount = { kind: 'signedIn', email: 'dad@test.com', membership: { familyId: 'family-a', role: 'parent' }, offline: false };
+  mockSync.mockResolvedValue(true);
+  let renderer!: ReactTestRenderer;
+  await act(async () => { renderer = create(<PushChangeRoute />); });
+  expect(mockSync).toHaveBeenCalledWith('family-a', 'parent');
+  await act(async () => renderer.unmount());
+  jest.clearAllMocks();
+  mockAccount = { kind: 'signedIn', email: 'kid@test.com', membership: { familyId: 'family-a', role: 'child' }, offline: false };
+  await act(async () => { renderer = create(<PushChangeRoute />); });
+  expect(mockSync).not.toHaveBeenCalled();
   expect(mockReplace).toHaveBeenCalledWith('/');
   await act(async () => renderer.unmount());
 });

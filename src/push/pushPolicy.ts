@@ -13,6 +13,6 @@ export async function syncRemotePushFamily(): Promise<void> {
   if (Platform.OS !== 'android') return;
   const account = getAccount();
   if (account.kind === 'checking') return;
-  const family = account.kind === 'signedIn' && account.membership?.role === 'child' ? account.membership.familyId : null;
+  const family = account.kind === 'signedIn' && account.membership ? account.membership.familyId : null;
   await pushPolicyModule()?.setRemotePushFamily?.(family);
 }

@@ -6,7 +6,7 @@ import { useAccount } from '../store/accountStore';
 import { registerChildPushToken } from './familyPush';
 import { syncRemotePushFamily } from './pushPolicy';
 
-/** 앱 복귀·로그인 전환·FCM 토큰 변경마다 현재 딸 계정의 수신 설정을 맞춘다. */
+/** 앱 복귀·로그인 전환·FCM 토큰 변경마다 현재 가족 계정의 수신 설정을 맞춘다. */
 export function PushLifecycle(): null {
   const account = useAccount();
   useEffect(() => {

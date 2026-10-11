@@ -4,6 +4,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FamilyPushPolicyTest {
+  @Test fun `완료 푸시는 같은 가족 아빠에게만 보이며 다른 종류는 차단한다`() {
+    assertTrue(FamilyPushPolicy.completionIsToday("2026-10-11", "2026-10-11"))
+    assertFalse(FamilyPushPolicy.completionIsToday("2026-10-10", "2026-10-11"))
+    assertFalse(FamilyPushPolicy.completionIsToday(null, "2026-10-11"))
+    assertTrue(FamilyPushPolicy.shouldShow("a", "a", true, "tasks-completed"))
+    assertFalse(FamilyPushPolicy.shouldShow("a", "a", false, "tasks-completed"))
+    assertFalse(FamilyPushPolicy.shouldShow("a", "b", true, "tasks-completed"))
+    assertFalse(FamilyPushPolicy.shouldShow(null, "a", true, "tasks-completed"))
+    assertFalse(FamilyPushPolicy.shouldShow("a", "a", true, "other"))
+    assertEquals("a", FamilyPushPolicy.messageFamily(mapOf("type" to "tasks-completed", "familyId" to "a")))
+    assertEquals("tasks-completed", FamilyPushPolicy.messageType(mapOf("body" to "{\"type\":\"tasks-completed\"}")))
+  }
   @Test fun `이미 표시했거나 더 오래된 변경은 다시 표시하지 않는다`() {
     assertTrue(FamilyPushPolicy.isNewer(12, 11))
     assertFalse(FamilyPushPolicy.isNewer(11, 11))

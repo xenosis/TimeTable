@@ -3,6 +3,7 @@ import test from 'node:test';
 import { changePushHandler } from './handler.ts';
 import { processPushReceipts } from './receipts.ts';
 import { pushWorkerHandler } from './worker.ts';
+import { processCompletionNotices } from './completion.ts';
 
 const family = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const dad = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
@@ -11,6 +12,7 @@ const event = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
 const claim = { family_id: family, event_id: event, event_order: 1 };
 const deviceId = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
 const ticketId = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+const leaseId = 'abababab-abab-abab-abab-abababababab';
 const request = (body = { familyId: family }, authorization = 'Bearer user-session') => new Request('https://test/function', {
   method: 'POST', headers: authorization ? { authorization } : {}, body: JSON.stringify(body),
 });
@@ -159,6 +161,7 @@ test('인증된 작업자는 DB 대기 가족만 처리하고 사용자 로그�
     calls.push(url);
     assert.equal(options.headers.Authorization, 'Bearer server-only');
     if (url.endsWith('/tt_due_push_families')) return response([{ family_id: family }]);
+    if (url.endsWith('/tt_claim_completion_notices') || url.endsWith('/tt_claim_completion_receipts')) return response([]);
     if (url.endsWith('/tt_claim_push_receipts') || url.endsWith('/tt_claim_push_changes')) {
       assert.deepEqual(JSON.parse(options.body), { p_family: family });
       return response([]);
@@ -167,6 +170,67 @@ test('인증된 작업자는 DB 대기 가족만 처리하고 사용자 로그�
   });
   const result = await handler(new Request('https://test/worker', { method: 'POST', headers: { 'x-tt-push-worker': workerSecret } }));
   assert.equal(result.status, 200);
-  assert.deepEqual(await result.json(), { processed: 1, failed: 0 });
-  assert.equal(calls.length, 3);
+  assert.deepEqual(await result.json(), { processed: 1, completionProcessed: 0, failed: 0 });
+  assert.equal(calls.length, 5);
+});
+
+test('완료 큐는 아빠 토큰을 중복 제거하고 완료 종류·날짜·순서를 보낸다', async () => {
+  const calls = [];
+  const result = await processCompletionNotices({ url: 'https://test', serviceKey: 'server-only' }, async (url, options) => {
+    calls.push([url, JSON.parse(options.body)]);
+    if (url.endsWith('/tt_claim_completion_receipts')) return response([]);
+    if (url.endsWith('/tt_claim_completion_notices')) return response([{ family_id: family, completion_date: '2026-10-11', event_order: 123, lease_id: leaseId, tokens: ['ExpoPushToken[dad]', 'ExpoPushToken[dad]'] }]);
+    if (url.includes('/push/send')) return response({ data: [{ status: 'ok', id: ticketId }] });
+    return new Response(null, { status: 204 });
+  });
+  assert.deepEqual(result, { processed: 1, failed: 0 });
+  assert.deepEqual(calls[2][1], [{ to: 'ExpoPushToken[dad]', priority: 'high', ttl: 300, data: { type: 'tasks-completed', familyId: family, completionDate: '2026-10-11', changeOrder: 123 } }]);
+  assert.equal(calls[3][1].p_success, true);
+  assert.equal(calls[3][1].p_lease, leaseId);
+  assert.deepEqual(calls[3][1].p_tickets, [{ token: 'ExpoPushToken[dad]', ticketId, error: null }]);
+});
+
+test('완료 전송 오류·만료 토큰·아빠 토큰 없음은 성공으로 기록하지 않는다', async () => {
+  for (const mode of ['network', 'expired', 'empty']) {
+    let finish;
+    const result = await processCompletionNotices({ url: 'https://test', serviceKey: 'server-only' }, async (url, options) => {
+      if (url.endsWith('/tt_claim_completion_receipts')) return response([]);
+      if (url.endsWith('/tt_claim_completion_notices')) return response([{ family_id: family, completion_date: '2026-10-11', event_order: 123, lease_id: leaseId, tokens: mode === 'empty' ? [] : ['ExpoPushToken[dad]'] }]);
+      if (url.includes('/push/send')) {
+        if (mode === 'network') throw new Error('network');
+        return response({ data: [{ status: 'error', details: { error: 'DeviceNotRegistered' } }] });
+      }
+      finish = JSON.parse(options.body);
+      return response(true);
+    });
+    assert.equal(result.failed, 1);
+    assert.equal(finish.p_success, false);
+    assert.deepEqual(finish.p_tickets, mode === 'expired' ? [{ token: 'ExpoPushToken[dad]', ticketId: null, error: 'DeviceNotRegistered' }] : []);
+  }
+});
+
+test('완료 receipt의 전달 실패도 전용 종료 RPC로 보내고 조회 실패는 보존한다', async () => {
+  const calls = [];
+  await processCompletionNotices({ url: 'https://test', serviceKey: 'server-only' }, async (url, options) => {
+    calls.push([url, JSON.parse(options.body)]);
+    if (url.endsWith('/tt_claim_completion_receipts')) return response([{ ticket_id: ticketId, expired: false }]);
+    if (url.endsWith('/getReceipts')) return response({ data: { [ticketId]: { status: 'error', details: { error: 'DeviceNotRegistered' } } } });
+    if (url.endsWith('/tt_finish_completion_receipt')) return response(true);
+    return response([]);
+  });
+  assert.equal(calls[2][0], 'https://test/rest/v1/rpc/tt_finish_completion_receipt');
+  assert.deepEqual(calls[2][1], { p_ticket: ticketId, p_status: 'error', p_error: 'DeviceNotRegistered' });
+  let finished = false;
+  let sent = false;
+  const result = await processCompletionNotices({ url: 'https://test', serviceKey: 'server-only' }, async (url) => {
+    if (url.endsWith('/tt_claim_completion_receipts')) return response([{ ticket_id: ticketId, expired: false }]);
+    if (url.endsWith('/getReceipts')) return response({}, 503);
+    if (url.endsWith('/tt_finish_completion_receipt')) finished = true;
+    if (url.endsWith('/tt_claim_completion_notices')) return response([{ family_id: family, completion_date: '2026-10-11', event_order: 123, lease_id: leaseId, tokens: ['ExpoPushToken[dad]'] }]);
+    if (url.includes('/push/send')) { sent = true; return response({ data: [{ status: 'ok', id: ticketId }] }); }
+    return response(true);
+  });
+  assert.equal(finished, false);
+  assert.equal(sent, true);
+  assert.deepEqual(result, { processed: 1, failed: 1 });
 });

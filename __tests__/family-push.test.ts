@@ -109,12 +109,13 @@ test('인증 확인 중 로그아웃한 이전 요청은 실패해도 재시도�
   expect(mockRpc).not.toHaveBeenCalled();
 });
 
-test('아빠 계정은 딸 토큰을 등록하지 않으며 현재 가족의 저장에만 푸시를 요청한다', async () => {
+test('아빠 계정도 완료 알림 토큰을 등록하고 현재 가족의 저장에만 변경 푸시를 요청한다', async () => {
   setAccount({ kind: 'signedIn', email: 'dad@test.com', membership: { role: 'parent', familyId: 'family-a' }, offline: false });
   await syncRemotePushFamily();
-  expect(NativeModules.SecureAlarmPoc.setRemotePushFamily).toHaveBeenCalledWith(null);
+  expect(NativeModules.SecureAlarmPoc.setRemotePushFamily).toHaveBeenCalledWith('family-a');
+  mockUser.mockResolvedValueOnce({ data: { user: { id: 'dad-id', email: 'dad@test.com' } }, error: null });
   await registerChildPushToken();
-  expect(mockToken).not.toHaveBeenCalled();
+  expect(mockRpc).toHaveBeenCalledWith('tt_register_push_installation', expect.objectContaining({ p_family: 'family-a' }));
   await notifyParentEditSaved('family-b');
   expect(mockInvoke).not.toHaveBeenCalled();
   await notifyParentEditSaved('family-a');

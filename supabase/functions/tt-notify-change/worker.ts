@@ -1,4 +1,5 @@
 import { changePushHandler } from './handler.ts';
+import { processCompletionNotices } from './completion.ts';
 
 type WorkerEnvironment = { url: string; serviceKey: string; workerSecret: string; expoAccessToken?: string };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -35,7 +36,9 @@ export function pushWorkerHandler(environment: WorkerEnvironment, fetcher: typeo
           headers: { Authorization: `Bearer ${environment.serviceKey}` }, body: JSON.stringify({ familyId: row.family_id }) }));
         if (!result.ok) failed++;
       }
-      return Response.json({ processed: rows.length, failed }, { status: failed ? 503 : 200 });
+      const completion = await processCompletionNotices(environment, fetcher);
+      failed += completion.failed;
+      return Response.json({ processed: rows.length, completionProcessed: completion.processed, failed }, { status: failed ? 503 : 200 });
     } catch { return Response.json({ error: 'worker_unavailable' }, { status: 503 }); }
   };
 }
