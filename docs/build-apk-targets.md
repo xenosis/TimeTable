@@ -18,11 +18,11 @@ SM-A245N처럼 ARM 기반 Android 폰에는 `arm64-v8a` APK만 설치한다.
 .\scripts\build-apk.ps1 -OfflineTest -Target Device
 ```
 
-`TimeTable-v<버전>-OfflineTest-Device-arm64-v8a.apk`가 만들어진다. 이 파일은 JavaScript를 APK 안에 포함하므로 설치 후 PC, USB, Metro 개발 서버 없이 실행할 수 있다. 디버그 서명으로 만든 검증용 파일이며, 정식 배포용 릴리즈 APK가 아니다.
+`TimeTable-v<버전>-OfflineTest-Device-arm64-v8a.apk`가 만들어진다. 이 파일은 JavaScript를 APK 안에 포함하므로 설치 후 PC, USB, Metro 개발 서버 없이 실행할 수 있다. `release.properties`가 있으면 기존 release 키로 서명하고 없으면 debug 키를 사용한다. 정식 배포용 릴리즈 APK와는 빌드 목적이 다르므로 설치 전 실제 서명을 확인한다.
 
 ## 정식 릴리즈 APK
 
-정식 업데이트용 APK는 새 서명 키를 만든 뒤에만 생성한다. 서명 키와 비밀번호는 앱 업데이트의 신원이며, 잃어버리면 기존 앱을 업데이트할 수 없다. 따라서 키 파일과 비밀번호를 각각 안전한 외부 보관 위치에 백업한 뒤 아래 형식으로 `android/release.properties`를 만든다. 이 파일과 키 파일은 Git에 올리지 않는다.
+정식 업데이트용 APK는 기존 서명 키와 `android/release.properties`를 재사용해 만든다. 최초 생성 때만 아래 형식의 설정이 필요하다. 서명 키와 비밀번호는 앱 업데이트의 신원이며, 잃어버리면 기존 앱을 업데이트할 수 없다. P7.6 외부 백업은 2026-10-09 사용자 결정으로 취소되어 현재 PC에만 보관한다. 외부 백업을 배포 필수 조건으로 취급하지 않으며, 이 파일과 키 파일·비밀번호는 Git이나 문서에 올리지 않는다.
 
 ```properties
 storeFile=release-keystore.jks

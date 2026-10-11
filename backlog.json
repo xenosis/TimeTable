@@ -4738,7 +4738,7 @@
     },
     {
       "id": "P6",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P2",
       "category": "feature",
       "title": "6단계: 서버 연동 · 아빠 원격 관리",
@@ -4754,7 +4754,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-11T01:12:52.326Z",
-      "updated_at": "2026-10-11T15:45:56.957Z",
+      "updated_at": "2026-10-11T22:41:55.884Z",
       "log": [
         {
           "at": "2026-10-11T01:12:52.326Z",
@@ -4779,8 +4779,22 @@
           "owner": "codex",
           "status": "in_progress",
           "note": "P6.19로 확인된 백그라운드 누락 보완을 진행 중. 사용자 판단 대기 아님. 완료 푸시 실기기 도착·탭·정상receipt와 테스트 정리는 완료했으며 아빠폰은 사용자 결정으로 분리, 새APK 설치는 이후 연결 때 진행."
+        },
+        {
+          "at": "2026-10-11T22:32:54.855Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "P6.19 실제 화면없는 주기 동기화까지 완료하여 P6 중첩 하위 전부 해결. 부모 완료조건 아빠편집→딸 반영은10/10 양쪽실기기 근거, 완료푸시10/12 실제 수신탭 및receipt, 서버미연결10/8, 주기동기화10/12. 소스변경없이1.63.5 전체check93/557 Android푸시13 재사용. 부모단계 등록 재리뷰."
+        },
+        {
+          "at": "2026-10-11T22:41:55.884Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "필수중첩하위모두완료·부모설계전체와 실제근거 대조·등록 재리뷰 두역할 정상종료. 문서 Medium 정책/오프라인/현재상태 정정 확인, Critical/High 없음. 미재현 로그인 시작 경쟁 Medium은 기록을 유지하고 해결이나 계정전환 실기기 PASS로 주장하지 않음."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-10.md 양쪽원격편집체크지급·변경푸시; docs/device-verification-2026-10-12.md 실제완료푸시수신탭receipt정리 및 화면없는주기동기화; 10/8 오프라인로컬알림위젯; docs/backlog/P6.md 설계/중첩하위/취소범위 계약 · 검증: 1.63.5 QUALITY_CHECKS_OK 93/557 Android 푸시13; .tmp/reviews/P6-e02e752fa14e-1791758313903 두역할 code0; 문서 git diff --check 및 instructions:check PASS"
     },
     {
       "id": "P6.1",
@@ -5868,7 +5882,7 @@
     },
     {
       "id": "P6.19",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "feature",
       "title": "백그라운드 주기 가족 동기화 보완",
@@ -5885,7 +5899,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-11T15:34:03.551Z",
-      "updated_at": "2026-10-11T16:26:49.012Z",
+      "updated_at": "2026-10-11T22:32:40.071Z",
       "log": [
         {
           "at": "2026-10-11T15:34:03.551Z",
@@ -5940,12 +5954,32 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "1.63.5/185 전체check93/557 Android 푸시13 PASS·등록리뷰 정상종료·8faf92a 커밋푸시·딸폰 설치Success 버전185 확인. 남은High는 실제콜드주기 동기화 증거. 딸폰 현재 패턴잠금으로 해제요청 대기, PIN을 패턴으로 추정하지 않음. 검증중USB화면유지2 잠깐설정(원래0, 종료시복구필수). 아빠 새APK 설치는 사용자지시로 나중이며 이 작업 필수아님."
+        },
+        {
+          "at": "2026-10-11T22:11:54.165Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "ADBでパターンロック解除を確認。딸 폰 1.63.5/185의 콜드 백그라운드 동기화 실기기 검증 재개. 화면 복귀 전에 주기 작업 실행과 서버 동기화 시각을 확인하고 알림 없는 임시 데이터 정리까지 진행한다."
+        },
+        {
+          "at": "2026-10-11T22:29:08.440Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "딸 1.63.5/185 실기기 콜드 주기 확인 완료: 프로세스 부재 뒤 임시할일77 생성, 화면 복귀 전 07:25 작업자 완료·서버시각07:25:17·위젯0/1 반영, 앱 확인·77 정확삭제·할일0 학교23 원장32 합계0 보존·USB유지0 복구. 초기 OS강제실행은 최소지연으로 JS 미실행이어서 실제 등록 주기까지 기다림. 전체check93/557 Android 푸시13 PASS 재사용, 소스변경없음. 실제 증거 등록 재리뷰 요청."
+        },
+        {
+          "at": "2026-10-11T22:32:40.071Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "딸 1.63.5 실제 화면 없는 등록 주기 동기화·위젯 반영·임시 데이터 정리 완료. 등록 재리뷰 두 역할 정상종료, 추가 Critical/High 없음. 기존 로그인 시작 경쟁의 Medium 조건부 추론은 문서에 구별 기록하며 해결·실기기 계정변경 검증으로 주장하지 않음."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-12.md P6.19; .tmp/p619-live-worker.log 07:25:09 실행/07:25:17 완료 및 다음15분등록; 앱열기전 서버시각07:25:17·위젯0/1; 임시77삭제·할일0 학교23 원장32 합계0·USB유지0복구 · 검증: 1.63.5 전체check QUALITY_CHECKS_OK 93 suites/557 tests Android 푸시13; .tmp/reviews/P6.19-bffd544da818-1791757765186 critical-reviewer/backlog-explainer exit0; git diff --check PASS"
     },
     {
       "id": "P7",
-      "status": "todo",
+      "status": "needs_info",
       "priority": "P2",
       "category": "release",
       "title": "7단계: 마무리 · 배포",
@@ -5959,10 +5993,23 @@
       "done_when": "정식 설치, 업데이트 절차 확립",
       "est_min": null,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "codex",
+      "claimed_at": "2026-10-11T22:42:08.303Z",
+      "updated_at": "2026-10-11T23:05:48.959Z",
+      "log": [
+        {
+          "at": "2026-10-11T22:42:08.303Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "P6 전체 완료 후 사용자 순서대로 P7 착수. 아빠1.63.2/182·딸1.63.5/185 릴리즈 설치 실제근거 검토, 새아빠업데이트는 사용자보류. 최종회귀는 기존실기기·자동검사·사용자알람재시험 제외 및 수용 범위를 구별해 검증한다."
+        },
+        {
+          "at": "2026-10-11T23:05:48.959Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "P6/P7.2 완료·빌드업데이트문서정정·최종회귀근거대조 완료. 잔여P7.4만 needs_info: 실제알림탭6조합 기존근거완료간주 여부 질문대기, 딸ADB연결0으로 미래임시예약 최종0 직접확인 재연결필요. 임시할일78/시간표29 서버정리·할일0학교23장부합계0 복구. 부모P7 전체완료로가장하지 않음."
+        }
+      ]
     },
     {
       "id": "P7.1",
@@ -6068,7 +6115,7 @@
     },
     {
       "id": "P7.2",
-      "status": "needs_info",
+      "status": "done",
       "priority": null,
       "category": "release",
       "title": "설치",
@@ -6083,16 +6130,36 @@
       "est_min": 20,
       "gate": null,
       "owner": "codex",
-      "claimed_at": null,
-      "updated_at": "2026-10-11T13:18:45.134Z",
+      "claimed_at": "2026-10-11T22:42:23.271Z",
+      "updated_at": "2026-10-11T22:48:37.709Z",
       "log": [
         {
           "at": "2026-10-11T13:18:45.134Z",
           "owner": "codex",
           "status": "needs_info",
           "note": "사용자 두 실기기 작업 전체 진행 요청 아래 준비된 1.63.2/182 릴리즈 ARM64 APK를 딸 SM-A245N에 데이터 유지 업데이트 성공. 패키지·ABI·기존 인증서 검증 및 실제 설치 버전 확인. 로그인/PIN·주간표·보석·위젯 제목 앱 이동·복귀 확인. 현재 ADB에는 딸 폰만 있고 아빠 연결 요청 대기여서 양쪽 설치 done_when 미충족. P6.11 실제 수신도 아빠 연결 필요하며 P6/P7 상위 완료를 선행 완료로 가장하지 않는다."
+        },
+        {
+          "at": "2026-10-11T22:42:23.271Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "양쪽릴리즈 설치근거 확인 착수. 아빠SM-S918N1.63.2/182 실제installSuccess·로그인·완료푸시실제수신탭, 딸SM-A245N1.63.5/185installSuccess·콜드주기실행. 동일패키지ARM64인증서 검증. 아빠 새버전은 사용자나중결정대로 보류."
+        },
+        {
+          "at": "2026-10-11T22:42:44.272Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "양쪽설치완료조건 실제근거확인. 아빠1.63.2/182 release installSuccess·실제로그인·완료푸시수신탭(10/12기록), 딸1.63.5/185release installSuccess·실제버전·화면없는주기위젯확인. 패키지com.chaea.timetable ARM64 기존서명동일. 최신아빠재설치는사용자보류여서 추가조건으로만들지 않음. P6/P7.1선행done, 소스변경없음·기존전체검사재사용."
+        },
+        {
+          "at": "2026-10-11T22:48:37.709Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "양쪽릴리즈설치 실제근거·APK대조 일치 등록재리뷰확인. 아빠최신업데이트는 사용자보류. 외부백업취소 문서 Medium 반영, 부모P7 최종리뷰에서도 설치/업데이트 문서일관성 재대조. 잘못된서명/설치실패없음."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-12.md P7.2 산출물대조; 아빠 TimeTable-v1.63.2-release-Device-arm64-v8a.apk 182 Success/실제수신탭; 딸 TimeTable-v1.63.5-release-Device-arm64-v8a.apk 185 Success/실제주기실행; .tmp/p72-apk-identity-20261012.log 패키지 ARM64 서명일치 · 검증: .tmp/reviews/P7.2-2008ddd2a912-1791758777070 두역할code0 Critical/High없음; 전체check1.63.5 93/557 Android푸시13 PASS재사용; 문서 diff --check PASS"
     },
     {
       "id": "P7.3",
@@ -6156,7 +6223,7 @@
     },
     {
       "id": "P7.4",
-      "status": "todo",
+      "status": "needs_info",
       "priority": null,
       "category": "test",
       "title": "회귀 테스트",
@@ -6171,10 +6238,41 @@
       "done_when": "전체 체크리스트 항목 통과",
       "est_min": 45,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "codex",
+      "claimed_at": "2026-10-11T22:49:09.157Z",
+      "updated_at": "2026-10-11T23:04:10.667Z",
+      "log": [
+        {
+          "at": "2026-10-11T22:49:09.157Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "최종회귀 체크리스트 대조 착수. P7.2/P3.9 done. 1.63.5 전체check93/557 Android푸시13, 기존실기기 근거와10/12콜드주기위젯실행 검토. 사용자 일정알람소리재시험·추가절전·관리자가로글자확대 제외 유지. P4.8 사용자가2026-10-05 알람은일단완료간주 승인한 기록은 실제PASS로재작성하지않음. 미검증세부·제외·수용범위를 문서표에 공개하고 등록리뷰로 완료조건대조."
+        },
+        {
+          "at": "2026-10-11T22:49:31.927Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "チェックリスト対照を完了。최신전체check93/557 Android푸시13 PASS, 기존P3/P4/P5/P9실기기·10/10양방향원격지급푸시·10/12완료푸시실제탭receipt와콜드주기위젯정리 근거를 docs/regression-verification-2026-10-12.md에 영역별대조. 사용자알람재시험제외/P4.8완료간주 수용을 실제PASS와구별. 6조합알림탭 및30분실기기재시험은 새로수행하지않았음. 원래전체체크리스트와수용/제외범위의 완료계약을 등록리뷰에서판단하며 아직done아님."
+        },
+        {
+          "at": "2026-10-11T23:01:48.082Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "등록리뷰 High는 전체체크리스트와 실제알림탭6조합 미실시/기존수용·제외 연결 문제. 기존알람소리재시험 제외는 유지하고 6조합의 기존근거 완료간주 여부만 사용자에게 질문함. Medium 권한절차를 현재 홈배너→관리자카드로 정정. 예약 Medium은 소리없이 내일 임시할일78: 콜드주기에서14:00/14:30 생성→15:00/15:30교체·2건/구예약없음→삭제 처리 관찰, 시간표29의16시예약 생성 및교체/정리 확인중. 실제 발생·탭 PASS로주장하지 않음."
+        },
+        {
+          "at": "2026-10-11T23:03:58.356Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자알림탭6조합 수용판정은 계속대기. 독립적으로 미래예약 Medium 확인 및 정리: 할일78의콜드주기14/14:30→15/15:30활성2건 교체·서버삭제, 시간표29의16시활성예약 관찰·17시서버변경 뒤 ADB연결끊김. 임시29도 정확서버삭제했고 보존상태 확인중. 연결되면 최종네이티브임시예약0 확인 필요."
+        },
+        {
+          "at": "2026-10-11T23:04:10.667Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "임시할일78·시간표29 서버에서 정확삭제 완료. 딸폰 ADB 두번모두 연결0이라 마지막네이티브임시예약0 직접관찰을 재연결 후 확인해야 함. 사용자에게재연결·잠금해제 요청. 실제알림탭6조합의 기존근거완료간주 판단도 질문대기. 다른필수P6/P7.2는done 유지, P7.4/P7부모 전체완료는 아직아님. 기존알람소리재시험제외는유지."
+        }
+      ]
     },
     {
       "id": "P7.5",
