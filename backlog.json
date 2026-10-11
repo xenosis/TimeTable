@@ -5953,7 +5953,7 @@
     },
     {
       "id": "P7.2",
-      "status": "todo",
+      "status": "needs_info",
       "priority": null,
       "category": "release",
       "title": "설치",
@@ -5967,10 +5967,17 @@
       "done_when": "양쪽 폰에 릴리즈 APK 설치 완료",
       "est_min": 20,
       "gate": null,
-      "owner": null,
+      "owner": "codex",
       "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "updated_at": "2026-10-11T13:18:45.134Z",
+      "log": [
+        {
+          "at": "2026-10-11T13:18:45.134Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "사용자 두 실기기 작업 전체 진행 요청 아래 준비된 1.63.2/182 릴리즈 ARM64 APK를 딸 SM-A245N에 데이터 유지 업데이트 성공. 패키지·ABI·기존 인증서 검증 및 실제 설치 버전 확인. 로그인/PIN·주간표·보석·위젯 제목 앱 이동·복귀 확인. 현재 ADB에는 딸 폰만 있고 아빠 연결 요청 대기여서 양쪽 설치 done_when 미충족. P6.11 실제 수신도 아빠 연결 필요하며 P6/P7 상위 완료를 선행 완료로 가장하지 않는다."
+        }
+      ]
     },
     {
       "id": "P7.3",
