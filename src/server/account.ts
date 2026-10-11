@@ -3,6 +3,7 @@ import { SUPABASE_URL } from './supabaseConfig';
 import { ACCOUNT_CACHE_KEY, DEVICE_ROLE_KEY } from './accountCacheKey';
 import { clearSyncedFamily } from '../sync/syncMarkers';
 import { clearRemotePushFamily } from '../push/pushPolicy';
+import { getAccount, setAccountByUser } from '../store/accountStore';
 
 export type FamilyRole = 'parent' | 'child';
 export type Membership = { readonly role: FamilyRole; readonly familyId: string };
@@ -106,14 +107,24 @@ export async function signIn(email: string, password: string): Promise<AccountSt
  * 오프라인에서 토큰이 만료돼 라이브러리가 세션을 지우지 못하면(오류 반환) 저장된 로그인 정보를 직접 지워, 다음에 켤 때 다시 로그인되지 않게 한다.
  */
 export async function signOut(): Promise<AccountState> {
-  await clearRemotePushFamily();
-  // 이전 버전에서 저장한 계정도 로그아웃하기 전에 기기 용도를 남긴다.
-  const role = readCachedAccount()?.membership?.role;
-  if (role) globalThis.localStorage?.setItem(DEVICE_ROLE_KEY, role);
-  const { error } = await getSupabase().auth.signOut({ scope: 'local' });
-  if (error) globalThis.localStorage?.removeItem(AUTH_STORAGE_KEY);
-  globalThis.localStorage?.removeItem(CACHE_KEY);
-  // 다음 로그인 때는 서버 기준으로 처음부터 맞춘다(다른 계정·가족으로 로그인해도 옛 기록이 섞여 올라가지 않게)
-  clearSyncedFamily();
-  return { kind: 'local' };
+  const previous = getAccount();
+  // 인증 응답을 기다리는 동안 이전 계정으로 푸시·동기화를 다시 시작하지 않는다.
+  setAccountByUser({ kind: 'checking' });
+  try {
+    await clearRemotePushFamily();
+    // 이전 버전에서 저장한 계정도 로그아웃하기 전에 기기 용도를 남긴다.
+    const role = readCachedAccount()?.membership?.role;
+    if (role) globalThis.localStorage?.setItem(DEVICE_ROLE_KEY, role);
+    const { error } = await getSupabase().auth.signOut({ scope: 'local' });
+    if (error) globalThis.localStorage?.removeItem(AUTH_STORAGE_KEY);
+    globalThis.localStorage?.removeItem(CACHE_KEY);
+    // 다음 로그인 때는 서버 기준으로 처음부터 맞춘다(다른 계정·가족으로 로그인해도 옛 기록이 섞여 올라가지 않게)
+    clearSyncedFamily();
+    const local = { kind: 'local' } as const;
+    setAccountByUser(local);
+    return local;
+  } catch (error) {
+    setAccountByUser(previous);
+    throw error;
+  }
 }

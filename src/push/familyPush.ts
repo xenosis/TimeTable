@@ -6,6 +6,7 @@ import { accountUserActions, getAccount } from '../store/accountStore';
 import { initializeNotificationChannels } from '../notifications/secureAlarmPoc';
 import { pushPolicyModule } from './pushPolicy';
 import { getPushInstallation } from './pushInstallation';
+import { withInstallationWrite } from './installationWrites';
 
 const tokenPattern = /^(?:ExponentPushToken|ExpoPushToken)\[[A-Za-z0-9_-]+\]$/;
 
@@ -33,11 +34,14 @@ export async function registerChildPushToken(): Promise<void> {
   if (!data.user || data.user.email?.toLowerCase() !== account.email.toLowerCase()) return;
   const installation = await getPushInstallation();
   if (!current()) return;
-  const { error: saveError } = await supabase.rpc('tt_register_push_installation', {
-    p_family: familyId, p_installation: installation.id, p_secret: installation.secret, p_token: token,
-    p_version: (require('../../package.json') as { version: string }).version,
+  await withInstallationWrite(async () => {
+    if (!current()) return;
+    const { error: saveError } = await supabase.rpc('tt_register_push_installation', {
+      p_family: familyId, p_installation: installation.id, p_secret: installation.secret, p_token: token,
+      p_version: (require('../../package.json') as { version: string }).version,
+    });
+    if (saveError) throw new Error('변경 알림을 받을 기기를 등록하지 못했어요.');
   });
-  if (saveError) throw new Error('변경 알림을 받을 기기를 등록하지 못했어요.');
 }
 
 /** 편집 저장은 이미 성공했다. 푸시 접수 실패는 저장을 되돌리지 않는다. */

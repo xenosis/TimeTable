@@ -1,6 +1,8 @@
 import { AUTH_STORAGE_KEY, parseMembership, restoreAccount, signIn, signInErrorMessage, signOut } from '../src/server/account';
 import { accountSummary } from '../src/components/AccountPanel';
 import { accountUserActions, getAccount, isParentDevice, setAccount, setAccountByUser } from '../src/store/accountStore';
+import { NativeModules, Platform } from 'react-native';
+import { syncRemotePushFamily } from '../src/push/pushPolicy';
 
 const mockGetSession = jest.fn();
 const mockSignInWithPassword = jest.fn();
@@ -29,6 +31,26 @@ const dad = { id: 'user-dad', email: 'dad@example.com' };
 beforeEach(() => {
   memory.clear();
   jest.clearAllMocks();
+});
+
+test('로그아웃 인증 응답이 늦어도 앱 복귀가 이전 수신 가족을 되살리지 않는다', async () => {
+  jest.replaceProperty(Platform, 'OS', 'android');
+  const setFamily = jest.fn(async () => undefined);
+  NativeModules.SecureAlarmPoc = { setRemotePushFamily: setFamily };
+  setAccountByUser({ kind: 'signedIn', email: 'kid@test.com', offline: false, membership: { familyId: 'f1', role: 'child' } });
+  await syncRemotePushFamily();
+  let finish!: (value: { error: null }) => void;
+  mockSignOut.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+  const pending = signOut();
+  await syncRemotePushFamily();
+  expect(getAccount().kind).toBe('checking');
+  expect(setFamily).toHaveBeenLastCalledWith(null);
+  expect(setFamily).toHaveBeenCalledTimes(2);
+  finish({ error: null });
+  await pending;
+  expect(getAccount().kind).toBe('local');
+  delete NativeModules.SecureAlarmPoc;
+  jest.restoreAllMocks();
 });
 
 describe('parseMembership', () => {

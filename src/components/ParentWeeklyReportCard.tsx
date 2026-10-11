@@ -43,6 +43,7 @@ export function ParentWeeklyReportCard({ theme, familyId }: { readonly theme: Th
       : report === null ? <Text style={[styles.body, muted]}>주간 리포트를 불러오지 못했어요.</Text>
       : <>
         <Text style={[styles.body, { color: colors.text }]}>{weekSummaryLine(report)}</Text>
+        <Text style={[styles.item, muted]}>할 일 완료율은 현재 할 일 설정 기준이에요.</Text>
         <View style={styles.days}>{report.days.map((item) => <Text key={item.date} style={[styles.day, { borderColor: colors.border, color: item.total > 0 && item.done === item.total ? colors.text : colors.textMuted }]}>{dayLabel(item)}</Text>)}</View>
         <Text style={[styles.subheading, { color: colors.text }]}>💎 주별 보석 변화</Text>
         {report.gemWeeks.map((week, index) => <Text key={week.weekStart} style={[styles.item, { color: index === report.gemWeeks.length - 1 ? colors.text : colors.textMuted }]}>{gemWeekLine(week, index === report.gemWeeks.length - 1)}</Text>)}

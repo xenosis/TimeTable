@@ -32,6 +32,31 @@ beforeEach(() => {
 });
 afterEach(() => setAccount({ kind: 'checking' }));
 
+test('계정 전환 뒤 설치본 등록은 이전 요청이 확정된 다음 실행된다', async () => {
+  let finish!: () => void;
+  const previousResponse = new Promise<void>((resolve) => { finish = resolve; });
+  let serverFamily = '';
+  mockRpc.mockImplementationOnce(async (_name: string, body: { p_family: string }) => {
+    await previousResponse;
+    serverFamily = body.p_family;
+    return { error: null };
+  }).mockImplementationOnce(async (_name: string, body: { p_family: string }) => {
+    serverFamily = body.p_family;
+    return { error: null };
+  });
+  const previous = registerChildPushToken();
+  for (let turn = 0; turn < 30 && mockRpc.mock.calls.length === 0; turn++) await Promise.resolve();
+  expect(mockRpc).toHaveBeenCalledTimes(1);
+  setAccountByUser({ kind: 'signedIn', email: 'kid@test.com', offline: false, membership: { role: 'child', familyId: 'family-b' } });
+  const latest = registerChildPushToken();
+  for (let turn = 0; turn < 30; turn++) await Promise.resolve();
+  expect(mockRpc).toHaveBeenCalledTimes(1);
+  finish();
+  await Promise.all([previous, latest]);
+  expect(mockRpc.mock.calls.map((call) => call[1].p_family)).toEqual(['family-a', 'family-b']);
+  expect(serverFamily).toBe('family-b');
+});
+
 test('로그아웃은 서버 호출 없이 수신 가족을 지우고 확인 중에는 기존 정책을 보존한다', async () => {
   await syncRemotePushFamily();
   expect(NativeModules.SecureAlarmPoc.setRemotePushFamily).toHaveBeenCalledWith('family-a');

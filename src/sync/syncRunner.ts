@@ -5,6 +5,7 @@ import type { AccountState } from '../server/account';
 import { hasLocalData, readLocalPayload } from '../server/localImport';
 import { getSupabase } from '../server/supabaseClient';
 import { getPushInstallation } from '../push/pushInstallation';
+import { withInstallationWrite } from '../push/installationWrites';
 import { accountUserActions, getAccount } from '../store/accountStore';
 import { notifyWidgetChecksApplied } from '../widgets/widgetChecksSignal';
 import { applyPendingWidgetChecksNow, requestWidgetRefresh } from '../widgets/widgetRefresh';
@@ -41,11 +42,14 @@ async function recordDeviceSync(familyId: string, at: string, isCurrent: () => b
   if (authError || !userId) throw new Error('내용은 받았지만 기기 기록을 위해 계정을 확인하지 못했어요. 다시 맞춰 주세요.');
   const installation = await getPushInstallation();
   if (!isCurrent()) return;
-  const { error } = await supabase.rpc('tt_record_device_sync', {
-    p_family: familyId, p_installation: installation.id, p_secret: installation.secret,
-    p_version: appVersion(), p_synced_at: at,
+  await withInstallationWrite(async () => {
+    if (!isCurrent()) return;
+    const { error } = await supabase.rpc('tt_record_device_sync', {
+      p_family: familyId, p_installation: installation.id, p_secret: installation.secret,
+      p_version: appVersion(), p_synced_at: at,
+    });
+    if (error) throw new Error('내용은 받았지만 마지막 동기화 기록을 남기지 못했어요. 다시 맞춰 주세요.');
   });
-  if (error) throw new Error('내용은 받았지만 마지막 동기화 기록을 남기지 못했어요. 다시 맞춰 주세요.');
 }
 
 async function currentUserId(): Promise<string> {
