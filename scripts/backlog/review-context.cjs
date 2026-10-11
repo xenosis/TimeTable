@@ -13,6 +13,19 @@ function reviewContext(tasks, task) {
     for (const dependency of item.deps ?? []) visit(dependency);
   };
   visit(task.id);
+  // 부모 단계의 중첩 하위도 빠짐없이 전달한다(P6.6 아래 P6.13 등).
+  const descendants = new Set([task.id]);
+  let expanded = true;
+  while (expanded) {
+    expanded = false;
+    for (const item of tasks) {
+      if (descendants.has(item.parent) && !descendants.has(item.id)) {
+        descendants.add(item.id);
+        visit(item.id);
+        expanded = true;
+      }
+    }
+  }
   // 형제 작업의 연계와 대상 자체의 하위 완료 조건도 확인한다.
   for (const item of tasks) {
     if (item.parent === task.id || (task.parent && item.parent === task.parent)) visit(item.id);

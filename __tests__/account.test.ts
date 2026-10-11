@@ -3,6 +3,7 @@ import { accountSummary } from '../src/components/AccountPanel';
 import { accountUserActions, getAccount, isParentDevice, setAccount, setAccountByUser } from '../src/store/accountStore';
 import { NativeModules, Platform } from 'react-native';
 import { syncRemotePushFamily } from '../src/push/pushPolicy';
+import { ACCOUNT_CACHE_KEY, DEVICE_ROLE_KEY } from '../src/server/accountCacheKey';
 
 const mockGetSession = jest.fn();
 const mockSignInWithPassword = jest.fn();
@@ -31,6 +32,21 @@ const dad = { id: 'user-dad', email: 'dad@example.com' };
 beforeEach(() => {
   memory.clear();
   jest.clearAllMocks();
+});
+
+test('늦은 계정 복원은 사용자 변경 뒤 새 캐시와 기기 역할을 덮지 않는다', async () => {
+  mockGetSession.mockResolvedValueOnce({ data: { session: { user: dad } }, error: null });
+  let finish!: (value: { data: { role: string; family_id: string }; error: null }) => void;
+  mockMaybeSingle.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+  const pending = restoreAccount();
+  await Promise.resolve();
+  setAccountByUser({ kind: 'local' });
+  memory.set(ACCOUNT_CACHE_KEY, '새 계정 캐시');
+  memory.set(DEVICE_ROLE_KEY, 'child');
+  finish({ data: { role: 'parent', family_id: 'old-family' }, error: null });
+  await pending;
+  expect(memory.get(ACCOUNT_CACHE_KEY)).toBe('새 계정 캐시');
+  expect(memory.get(DEVICE_ROLE_KEY)).toBe('child');
 });
 
 test('로그아웃 인증 응답이 늦어도 앱 복귀가 이전 수신 가족을 되살리지 않는다', async () => {

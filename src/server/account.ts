@@ -3,7 +3,7 @@ import { SUPABASE_URL } from './supabaseConfig';
 import { ACCOUNT_CACHE_KEY, DEVICE_ROLE_KEY } from './accountCacheKey';
 import { clearSyncedFamily } from '../sync/syncMarkers';
 import { clearRemotePushFamily } from '../push/pushPolicy';
-import { getAccount, setAccountByUser } from '../store/accountStore';
+import { accountUserActions, getAccount, setAccountByUser } from '../store/accountStore';
 
 export type FamilyRole = 'parent' | 'child';
 export type Membership = { readonly role: FamilyRole; readonly familyId: string };
@@ -66,11 +66,11 @@ function writeCache(account: CachedAccount): void {
 }
 
 /** 로그인한 계정의 가족·역할을 서버에서 읽는다. 인터넷이 없으면 마지막으로 확인한 역할을 쓴다. */
-async function loadSignedIn(userId: string, email: string): Promise<AccountState> {
+async function loadSignedIn(userId: string, email: string, canWriteCache: () => boolean = () => true): Promise<AccountState> {
   const { data, error } = await getSupabase().from('tt_family_members').select('role, family_id').eq('user_id', userId).maybeSingle();
   if (error) return { kind: 'signedIn', email, membership: readCache(userId), offline: true };
   const membership = parseMembership(data);
-  writeCache({ userId, email, membership });
+  if (canWriteCache()) writeCache({ userId, email, membership });
   return { kind: 'signedIn', email, membership, offline: false };
 }
 
@@ -80,6 +80,7 @@ async function loadSignedIn(userId: string, email: string): Promise<AccountState
  * 화면을 먼저 정하도록 onStored로 알려 준다. 그동안 아빠 폰에 아이 화면이 잠깐 보이지 않게 하기 위해서다.
  */
 export async function restoreAccount(onStored?: (state: AccountState) => void): Promise<AccountState> {
+  const generation = accountUserActions();
   const { data, error } = await getSupabase().auth.getSession();
   const user = data.session?.user;
   if (!user) {
@@ -92,7 +93,7 @@ export async function restoreAccount(onStored?: (state: AccountState) => void): 
     return stored;
   }
   onStored?.({ kind: 'signedIn', email: user.email ?? '', membership: readCache(user.id), offline: true });
-  return loadSignedIn(user.id, user.email ?? '');
+  return loadSignedIn(user.id, user.email ?? '', () => accountUserActions() === generation);
 }
 
 export async function signIn(email: string, password: string): Promise<AccountState> {

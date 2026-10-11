@@ -4754,13 +4754,31 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-11T01:12:52.326Z",
-      "updated_at": "2026-10-11T01:12:52.326Z",
+      "updated_at": "2026-10-11T15:45:56.957Z",
       "log": [
         {
           "at": "2026-10-11T01:12:52.326Z",
           "owner": "codex",
           "status": "in_progress",
           "note": "서버 연동·아빠 화면·변경 푸시와 두 폰 검증 완료. 하위 P6.11 완료 푸시 구현 검사·리뷰 및 실제 아빠 수신 확인만 남아 단계는 진행 중으로 관리한다. P7은 사용자 순서대로 P6 완료 뒤 진행한다."
+        },
+        {
+          "at": "2026-10-11T15:28:24.702Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "P6.11 실제 완료 푸시 수신까지 완료하여 P6 하위 모두 해결됨. 아빠 편집→딸/딸체크→아빠/원격지급은10-10 근거, 오프라인10-08, 완료알림10-12. 전체check1.63.2 재사용·소스변경없음. 부모단계 등록리뷰 요청."
+        },
+        {
+          "at": "2026-10-11T15:33:19.445Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "부모 등록리뷰 High: 설계 백그라운드 주기 가족동기화가 현재 로컬재예약에만 연결. 완료 보류하고 P6.19 보완 착수. Medium 중첩하위 리뷰입력 누락은 dispatcher context 재귀포함 보완, 현재문서 오래된 상태 정정. 실제완료푸시수신은 완료 유지."
+        },
+        {
+          "at": "2026-10-11T15:45:56.957Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "P6.19로 확인된 백그라운드 누락 보완을 진행 중. 사용자 판단 대기 아님. 완료 푸시 실기기 도착·탭·정상receipt와 테스트 정리는 완료했으며 아빠폰은 사용자 결정으로 분리, 새APK 설치는 이후 연결 때 진행."
         }
       ]
     },
@@ -5640,7 +5658,7 @@
     },
     {
       "id": "P6.11",
-      "status": "needs_info",
+      "status": "done",
       "priority": "P3",
       "category": "feature",
       "title": "(선택) 완료 알림",
@@ -5656,7 +5674,7 @@
       "gate": null,
       "owner": "codex",
       "claimed_at": "2026-10-11T00:52:01.436Z",
-      "updated_at": "2026-10-11T01:41:40.019Z",
+      "updated_at": "2026-10-11T15:28:08.910Z",
       "log": [
         {
           "at": "2026-10-11T00:52:01.436Z",
@@ -5693,8 +5711,28 @@
           "owner": "codex",
           "status": "needs_info",
           "note": "1.63.2/182 전체 check QUALITY_CHECKS_OK(92/547, Android, 푸시13), SQL TT_COMPLETION_PUSH_CHECK_OK. 등록 재리뷰 두 에이전트 code0; 확인된 receipt 장애 발송 차단·종료일 불일치 보완 완료. 실제 도착 High는 미검증 상태이며 done 보류. 동시 두 연결 체크·같은 가족 역할 전환은 재현 없는 조건부 추론으로 남겨 실제 단일 딸/별도 아빠 설치본 수신 검증과 구별한다. 정책은 docs/push-notification-setup.md에 기록했고 CLI 허용 add/set-status 범위상 done_when 직접 변경하지 않았다. 현재 ADB 0대: 재연결 요청 대기. 리뷰 후 커밋·푸시, 운영 배포까지 진행하며 설치·표시·탭 증거는 연결 후 기록한다."
+        },
+        {
+          "at": "2026-10-11T15:16:03.388Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "아빠 재로그인 및 두 실기기 ADB 연결 확인. 1.63.2 완료 알림 실제 수신과 탭 동작 검증 재개. 일정 알람 울림 테스트는 반복하지 않는다."
+        },
+        {
+          "at": "2026-10-11T15:23:24.194Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.63.2 양쪽 실기기: 딸 실제 체크 1/1→완료 큐219→정상 cron 발송→아빠 알림창 실제 도착→탭 후 최신 완료 현황 및100% 확인. 임시76 체크취소·삭제, 보석32 유지. docs/device-verification-2026-10-12.md. 기존 전체check PASS 재사용(소스변경없음). 정상receipt 확인은 아직 대기 중이며 이를 실제 수신 증거와 구별. 등록 리뷰 요청."
+        },
+        {
+          "at": "2026-10-11T15:28:08.910Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "등록 병렬 리뷰 code0, 확인된 Critical/High 없음. 정책 모호성 Medium은 docs/push-notification-setup.md와 실제 범위 명시로 반영. 실제 양쪽 수신·탭 증거로 완료."
         }
-      ]
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "docs/device-verification-2026-10-12.md: 딸 실제1/1→큐219→아빠 알림창 도착→실제 탭 최신100%. docs/push-notification-setup.md 정책: KST오늘·1개이상·가족하루1회·지난날짜/아빠마지막체크 제외. 임시76 삭제·보석32 유지. 정상receipt 후속 대기이며 미검증 구별. · 검증: 1.63.2 전체check QUALITY_CHECKS_OK 92/547 Android 푸시13 및SQL롤백PASS(소스변경없음); 등록 critical-reviewer/backlog-explainer .tmp/reviews/P6.11-e09d3ab7ed41-1791732221061 정상종료 및 실제XML 교차확인."
     },
     {
       "id": "P6.12",
@@ -5827,6 +5865,77 @@
       ],
       "done_at": "2026-10-10",
       "evidence": "docs/device-verification-2026-10-10.md; .tmp/p618-screen-timing-create.log 및 .tmp/p618-screen-visible-time.txt 실제 UI7.63초; .tmp/p618-cold-push-tapped.xml 및 .tmp/p618-cold-push-home.xml 최신 적용 대기; .tmp/p618-dad-lastsync-16212.xml 및 .tmp/p618-device-final16212.log 시각 일치; .tmp/p618-screen-timing-cleanup.log · 검증: 1.62.12 실제 두 폰, 전체 check91 suites/540 tests Android build push10 PASS .tmp/p618-quality-16212.log 및 최신1.62.14 check PASS; 등록 병렬 리뷰 .tmp/reviews/P6.18-de67d7aa7b66-1791655629438 두 code0 High/Critical없음, Medium 운영 한계와 실제 화면 시각 근거 문서 반영"
+    },
+    {
+      "id": "P6.19",
+      "status": "in_review",
+      "priority": null,
+      "category": "feature",
+      "title": "백그라운드 주기 가족 동기화 보완",
+      "summary": "화면 없이 주기 작업 실행 시 저장된 계정을 복원하여 서버 가족 데이터를 동기화한 뒤 로컬 알림·위젯을 갱신한다. 오프라인 실패 시 기존 로컬 예약을 유지하고 사용자 계정 변경에 따른 늦은 복원을 차단한다.",
+      "where": null,
+      "parent": "P6",
+      "deps": [
+        "P6.6",
+        "P6.7"
+      ],
+      "doc": null,
+      "done_when": "백그라운드 실행의 계정복원·서버동기화·로컬재예약 순서 및 오프라인/로그아웃 보호 자동검증 통과, 실제 딸폰 앱 배경 주기작업으로 임시 서버변경 반영 확인. 일정 알람 소리 테스트는 하지 않음.",
+      "est_min": 30,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-11T15:34:03.551Z",
+      "updated_at": "2026-10-11T16:14:14.939Z",
+      "log": [
+        {
+          "at": "2026-10-11T15:34:03.551Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "P6 부모리뷰에서 확인한 백그라운드 가족동기화 누락 보완 착수. 저장계정 복원·세대보호·실패시 로컬예약 유지·실기기 강제주기 실행 검증. 버전1.63.3/183."
+        },
+        {
+          "at": "2026-10-11T15:48:23.257Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.63.3/183 구현 전체check QUALITY_CHECKS_OK 93 suites/554 tests Android 및푸시13 PASS. 화면없는 계정복원·사용자로그아웃 세대보호·서버실패시 로컬예약갱신 검증. 부모리뷰 중첩하위 누락 및 최신문서상태 보완. 사용자 순서대로 코드리뷰→커밋푸시→실기기설치·주기실행 증거 확인하며 아직done아님."
+        },
+        {
+          "at": "2026-10-11T15:56:01.686Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "등록리뷰 확인된 로그아웃 시작 후 복원 High, 늦은 캐시저장·POST대기 Medium 보완. 1.63.4/184 사용자조작뒤 checking 복원차단·캐시저장 세대보호·로컬재예약 선행 구현, 실제경로 회귀검증 중. 실기기는프로세스없음 확인후 작업자강제실행으로 Realtime과 구별."
+        },
+        {
+          "at": "2026-10-11T15:56:24.543Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "1.63.4/184 리뷰보완 회귀32 PASS. 로그아웃 시작후 복원차단·실제restore 캐시역할 덮기차단·끝나지않는 서버요청에도 선행로컬예약 실행 확인. 전체check 재실행 후 등록 재리뷰→커밋푸시→딸폰 설치·콜드주기실행."
+        },
+        {
+          "at": "2026-10-11T16:00:20.662Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.63.4/184 전체check QUALITY_CHECKS_OK 93/557 Android 푸시13 PASS. 리뷰 High 로그아웃시작후복원과 Medium 늦은캐시저장은 실제경로 회귀로 보완; 끝나지않는서버요청에도 로컬예약선행 확인. 실기기 계획은 HOME→am kill→pid없음 확인→알림없는 임시서버할일→주기작업force실행→화면복귀전 기기동기화시각/logcat 확인→UI·위젯 확인·정리. 코드 재리뷰이며 설치증거전done금지."
+        },
+        {
+          "at": "2026-10-11T16:07:43.062Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "재리뷰 High 선행예약권한실패가 가족동기화 차단함을 보완: 오류수집 후 동기화 계속·실패결과반영 회귀 추가. 1.63.5/185 전체check 중. POST무응답의 작업종료 미보장은 기존 미재현조건부한계로 유지하며 선행로컬갱신만 보장한다. 실제콜드실기기 미완료."
+        },
+        {
+          "at": "2026-10-11T16:08:04.499Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "1.63.5 보완 재검증 착수. 동기화 전 기존 로컬예약시도는 서버정체 대비; 계정복원→서버→최신재예약 순서 유지. 권한오류에도 동기화 계속, POST 미응답 작업종료조건부한계 문서화. 실기기콜드경로 확인 후만done."
+        },
+        {
+          "at": "2026-10-11T16:14:14.939Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.63.5/185 최종전체check QUALITY_CHECKS_OK 93/557 Android 푸시13. 선행예약 실패를 수집하여 가족동기화 계속·최종실패 반영, 회귀테스트 Promise모의 수정 후 전체PASS. 계정복원→서버→최신재예약 유지+별도선행기존예약; POST무응답 작업종료는 기존미재현한계로 구별. 콜드실기기 계획 구체화·임시알림없음0보상 생성/정리. 코드재리뷰→커밋푸시→실기기확인."
+        }
+      ]
     },
     {
       "id": "P7",

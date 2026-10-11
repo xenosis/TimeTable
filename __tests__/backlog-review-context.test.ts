@@ -19,3 +19,9 @@ test('순환 의존은 종료하고 최상위 대상에서 무관한 최상위 �
   const tasks = [task, { id: 'P5', deps: ['P6'] }, { id: 'P7', deps: [] }];
   expect(reviewContext(tasks, task).map((item: { id: string }) => item.id)).toEqual(['P6', 'P5']);
 });
+
+test('부모 단계 리뷰는 중첩 하위의 완료 조건과 의존 작업을 포함한다', () => {
+  const task = { id: 'P6', deps: [] };
+  const tasks = [task, { id: 'P6.6', parent: 'P6', deps: [] }, { id: 'P6.13', parent: 'P6.6', deps: ['P5'] }, { id: 'P5', deps: [] }];
+  expect(reviewContext(tasks, task).map((item: { id: string }) => item.id)).toEqual(['P6', 'P6.6', 'P6.13', 'P5']);
+});
