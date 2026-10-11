@@ -6136,7 +6136,7 @@
     },
     {
       "id": "P8",
-      "status": "todo",
+      "status": "done",
       "priority": "P3",
       "category": "feature",
       "title": "8단계: 추가 기능 (선택)",
@@ -6150,10 +6150,31 @@
       "done_when": "선택 기능 중 필요한 것만 골라 완료",
       "est_min": null,
       "gate": null,
-      "owner": null,
-      "claimed_at": null,
-      "updated_at": "2026-09-15T00:00:00Z",
-      "log": []
+      "owner": "codex",
+      "claimed_at": "2026-10-11T10:20:23.478Z",
+      "updated_at": "2026-10-11T10:24:57.558Z",
+      "log": [
+        {
+          "at": "2026-10-11T10:20:23.478Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "실기기 없이 마무리할 수 있는 상위 단계 정리 착수. P5 done 및 P8 하위 8개 중 6개 done·급식/고정 방학모드 2개 사용자 취소를 CLI로 확인. 기존 구현·검사·리뷰·실기기 근거를 대조하고 선택 기능 완료 조건을 등록 리뷰로 확인한다. 신규 실기기 검증이 필요한 P6.11/P7은 완료로 가장하지 않는다."
+        },
+        {
+          "at": "2026-10-11T10:20:54.195Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "P8.1/.4/.5/.6/.7/.8 완료 및 P8.2/.3 사용자 취소 기록 대조. 기존 소스 변경 없이 상위 단계·tasks 문서 정리이며 최신 1.63.2 전체 check(92 suites/547 tests, Android, 푸시13) PASS와 각 하위 완료 리뷰·실기기 근거를 사용한다. 아직 오지 않은 실제 NEIS 공휴일 재관찰은 기존 후속 관찰이며 검증 완료로 주장하지 않는다. P8 선택 기능 완료 조건에 대해 등록 병렬 리뷰 요청."
+        },
+        {
+          "at": "2026-10-11T10:24:57.558Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "등록 병렬 리뷰 code0, 확인된 Critical/High 구현결함 없음. Medium3건을 상위 완료 근거·관련 문서에 반영: 완료/취소 범위 명시, P8.8 과거 summary와 현재 휴일 구분, P8.6 후속 이름변경 증거 연결. 실기기 없이 가능한 상위 단계 정리 완료."
+        }
+      ],
+      "done_at": "2026-10-11",
+      "evidence": "완료 P8.1/P8.4/P8.5/P8.6/P8.7/P8.8, 사용자 취소 P8.2(급식)/P8.3(고정방학모드→세트대체), 선행 P5 done. 앱 종료 상태 자동갱신 제외는 2026-10-10 사용자 결정. P8.8 과거 summary 대신 done_when과 구현을 기준으로 공휴일은 전체 일정 제외·방학 아닌 휴업일은 학교만 제외하며 학원 유지. P8.6 후속 실기기 SetA→SetAB 이름 저장·서버 반영 docs/device-verification-2026-10-08.md:63, 한글 조합 입력 자체 미확인 유지. P8.4 실제 50%·작은/큰 보석 양음 증감·원복 docs/device-verification-2026-10-10.md. 실제 NEIS 공휴일 최초 도래 때 재관찰은 후속 확인이며 완료 증거로 가장하지 않음. · 검증: 1.63.2 전체 check QUALITY_CHECKS_OK: 92 suites/547 tests, Android debug build, 푸시13 (.tmp/p611-quality-1632.log). 이번 작업 소스 변경 없음·git diff --check PASS. 등록 critical-reviewer/backlog-explainer .tmp/reviews/P8-c115b42f2f6c-1791714083898 둘 다code0. 하위 완료·취소 및 실제 후속 증거를 대조함."
     },
     {
       "id": "P8.1",
