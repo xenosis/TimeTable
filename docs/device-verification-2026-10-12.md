@@ -44,3 +44,11 @@
 - ADB 연결 목록은 두 번 모두 빈 목록이었다. 재연결·잠금 해제를 요청했다. USB 화면 유지 설정은 앞서 0으로 복구되어 있다.
 
 근거: `.tmp/p74-future-worker.log`, `p74-future-before-alarm.txt`, `p74-future-after-alarm.txt`, `p74-future-changed-alarm.txt`, `p74-future-clean-alarm.txt`, `p74-timetable-before-alarm.txt`. 마지막 파일이 서버 정리 후 네이티브 0건을 증명하는 것은 아니다.
+
+## P7.4 재연결 후 최종 임시 예약 정리 (19:42–19:48)
+
+딸 SM-A245N을 ADB에서 다시 확인했고 OS 잠금이 해제된 상태였다. 설치본은 1.63.5/185다. 재연결 첫 dump와 새 동기화가 끝난 뒤의 dump 모두 활성 RollingNotificationReceiver·AlarmReceiver 예약이 0건이었다. 19:43:07 서버 시각 기록까지 정상 종료했고 앱 화면은 ‘오늘 일정이 끝났어요’, ‘오늘 할 일이 없어요’를 표시했다. 마지막 임시 시간표·할 일 예약 제거를 직접 확인했으므로 앞 절의 재연결·정리 미확인 조건은 해결됐다.
+
+USB 화면 유지 설정은 0을 유지했다. 소리 없이 실제 알림 이동 6조합을 확인할 수 있는지 오디오 명령을 조회했지만, 알람 스트림은 볼륨 2·허용 범위 1–15라 무음 실행을 보장하지 못했다. 알림 스트림은 3이었다. 볼륨·알림 설정을 변경하거나 알람을 새로 발생시키지 않았다. 폰은 홈으로 돌려놓았다. 기존 알람 소리 재시험 제외를 유지하며, 6조합의 기존 근거 완료간주 여부는 사용자 답변 대기로 남긴다.
+
+근거: `.tmp/p74-reconnect-before-alarm.txt`, `p74-reconnect-app.xml`(동기화 진행 화면), `p74-reconnect-final-app.xml`(종료 후 빈 할 일), `p74-reconnect-final-alarm.txt`(활성 예약 0건). 진행 화면을 최종 성공 근거로 사용하지 않았다.
