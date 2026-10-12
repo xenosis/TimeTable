@@ -37,7 +37,7 @@ keyPassword=키 비밀번호
 .\scripts\build-apk.ps1 -Release -Target Device
 ```
 
-`Release`는 `release.properties`가 없으면 중단하며, 설정된 별도 키로만 서명한다. `OfflineTest`와 `Release`는 목적과 서명이 다른 파일이므로 이름이 비슷해도 바꾸어 사용하지 않는다.
+`Release`는 `release.properties`가 없으면 중단하며 설정된 기존 release 키로 서명한다. `OfflineTest`와 `Release`는 빌드 목적이 다르지만, 설정에 따라 같은 release 키로 서명할 수 있다. 파일명만으로 서명 일치를 판단하지 말고 실제 인증서를 확인한 뒤 목적에 맞는 산출물을 설치한다.
 
 ## PC 에뮬레이터 검사
 
