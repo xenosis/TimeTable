@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.1",
   "meta": {
-    "updated": "2026-10-12",
+    "updated": "2026-10-16",
     "context_doc": "docs/tasks.md",
     "max_est_min": 45,
     "note": "TimeTable(kidtimetable) 작업 항목 SSOT. 이 프로젝트엔 전용 CLI가 없으므로 이 파일은 직접 편집한다(voice-claude-car의 pnpm backlog와 달리 수동 관리). 단계 구조·근거는 docs/tasks.md·docs/research.md 참고. 상태 갱신 시 status/log/updated_at을 함께 갱신하고, 완료 시 evidence에 확인 근거(파일 경로·명령 결과 등)를 남긴다. needs_info/blocked는 log에 사유를 남길 것."
@@ -7909,6 +7909,44 @@
       ],
       "done_at": "2026-10-05",
       "evidence": "커밋 3afd3f0·c378b2c: timetableRepository·timetableSetRepository 검증 문구 한글화, userErrorMessage로 편집기·요일 복사·세트 패널에서 영어 내부 오류를 일반 한글 문구로 표시. Jest database·timetable-memo·user-error-message. 딸 폰에서 영문 문구 발견(docs/device-verification-2026-10-05.md) · 검증: npm run check 통과 .tmp/claude-check-1457.log(345 tests, Android build PASS). critical-reviewer 2회·backlog-explainer 병렬 리뷰. 버전 1.45.6/1.45.7 반영"
+    },
+    {
+      "id": "P17",
+      "status": "in_review",
+      "priority": null,
+      "category": "feature",
+      "title": "아빠 화면에 시간표 탭 추가",
+      "summary": "아빠 폰(부모 계정) 화면에는 현황·주간 리포트만 있어 딸 시간표를 볼 수 없었다(2026-10-16 사용자 요청). 아빠 화면 하단에 현황·시간표·설정 탭을 두고, 시간표 탭은 딸 화면과 같은 요일별·주간 한눈에 보기 시간표를 보여 준다. 보석 탭은 딸 화면에만 둔다.",
+      "where": "app/(tabs)/_layout.tsx src/components/ParentHome.tsx",
+      "parent": null,
+      "deps": [],
+      "doc": null,
+      "done_when": "아빠 기기 로그인 시 하단 탭(현황·시간표·설정)이 보이고, 시간표 탭에서 딸과 같은 요일별·주간 시간표를 볼 수 있음. 딸 기기 탭 구성은 변경 없음. 버전 동시 수정, npm run check 통과",
+      "est_min": 20,
+      "gate": "아빠 폰 실기기에서 하단 탭(현황·시간표·설정)과 요일별·주간 시간표 표시 확인",
+      "owner": "claude",
+      "claimed_at": "2026-10-16T14:11:20.533Z",
+      "updated_at": "2026-10-16T14:47:10.886Z",
+      "log": [
+        {
+          "at": "2026-10-16T14:11:20.533Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 요청(2026-10-16)으로 착수. _layout.tsx에서 아빠 기기용 탭(현황·시간표) + 설정 버튼 구성, 시간표 탭은 기존 timetable 화면 재사용(아빠 폰도 runSync로 로컬 DB 보유). v1.64.0, npm run check 진행 중."
+        },
+        {
+          "at": "2026-10-16T14:28:11.590Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "커밋 05762df: 아빠 기기 탭(현황·시간표)+설정, 시간표 탭은 timetable 화면 재사용. v1.64.0 npm run check 전체 통과(첫 실행은 부하로 Jest TIMEOUT_UNVERIFIED, 재실행 PASS). 리뷰 진행."
+        },
+        {
+          "at": "2026-10-16T14:47:10.886Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "리뷰 반영: 커밋 a96b2b3에 tabs-layout 테스트 5개 추가. npm run check 7개 PASS(Jest 81초, 120초 제한 근접). Slot 토글 지적은 딸 기기도 탭 전환 시 재마운트되고 상시 마운트 시 아빠 폰에 딸 오늘 화면이 붙으므로 유지. 실기기 확인 대기."
+        }
+      ]
     }
   ]
 }
