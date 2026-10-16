@@ -9,11 +9,19 @@ import { GemCollectionArtwork } from '../../src/components/GemCollectionArtwork'
 import { ParentHome } from '../../src/components/ParentHome';
 import { isParentDevice, useAccount } from '../../src/store/accountStore';
 
-const tabs = [
+type Tab = { readonly path: '/' | '/timetable' | '/stickers'; readonly label: string; readonly icon: string };
+
+const childTabs: readonly Tab[] = [
   { path: '/', label: '오늘', icon: '☀️' },
   { path: '/timetable', label: '시간표', icon: '🗓️' },
   { path: '/stickers', label: '내 보석', icon: '💎' },
-] as const;
+];
+
+// 아빠 폰: 현황(아빠 화면)과 딸과 같은 시간표(요일별·주간)를 볼 수 있다. 보석 탭은 딸 화면에만 둔다
+const parentTabs: readonly Tab[] = [
+  { path: '/', label: '현황', icon: '📊' },
+  { path: '/timetable', label: '시간표', icon: '🗓️' },
+];
 
 export default function TabsLayout() {
   const pathname = usePathname();
@@ -21,19 +29,18 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const immersive = useImmersive();
   const account = useAccount();
-
-  // 아빠 계정으로 로그인한 기기는 아이 화면 대신 아빠 화면을 보인다(화면 이동 없이 같은 자리에 그려 관리자 화면이 열려 있어도 튀지 않는다)
-  if (isParentDevice(account)) return <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-    <Stack.Screen options={{ headerShown: false }} />
-    <ParentHome theme={theme} />
-  </View>;
+  const parent = isParentDevice(account);
+  const tabs = parent ? parentTabs : childTabs;
+  // 아빠 폰은 시간표 탭 외에는 모두 아빠 화면을 같은 자리에 그린다(화면 이동 없이 그려 관리자 화면이 열려 있어도 튀지 않는다)
+  const showParentHome = parent && pathname !== '/timetable';
+  const isActive = (path: Tab['path']) => (parent && path === '/' ? showParentHome : pathname === path);
 
   return <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
     <Stack.Screen options={{ headerShown: false }} />
-    <View style={styles.content}><Slot /></View>
+    <View style={styles.content}>{showParentHome ? <ParentHome theme={theme} /> : <Slot />}</View>
     {!immersive && <View style={[styles.tabBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border, paddingBottom: Math.max(spacing.sm, insets.bottom) }]}>
       {tabs.map(({ path, label, icon }) => {
-        const active = pathname === path;
+        const active = isActive(path);
         return <Pressable
           key={path}
           accessibilityRole="tab"

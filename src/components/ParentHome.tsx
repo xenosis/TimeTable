@@ -9,7 +9,7 @@ import { ParentStatusCard } from './ParentStatusCard';
 import { ParentWeeklyReportCard } from './ParentWeeklyReportCard';
 
 /**
- * 아빠 계정으로 로그인한 기기의 첫 화면(P6.8). 딸 화면(오늘·시간표·보석) 대신 보인다.
+ * 아빠 계정으로 로그인한 기기의 첫 화면(P6.8, 현황 탭). 딸 화면(오늘·보석) 대신 보이고, 시간표는 하단 시간표 탭에서 딸과 같은 화면으로 본다.
  * 딸 오늘 현황·보석·딸 폰 마지막 동기화 시각을 보여 주고, 시간표·할 일 편집은 관리자 설정(서버에 먼저 저장, P6.15)으로 연다.
  * 이 폰에서는 딸 알림·알람을 울리지 않는다(notifications/parentDeviceAlarms.ts).
  */
