@@ -26,7 +26,6 @@ function ThemedRootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="manage" options={{ title: '관리자 설정' }} />
         <Stack.Screen name="push-change" options={{ headerShown: false }} />
       </Stack>
     </SafeAreaProvider>

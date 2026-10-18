@@ -5,6 +5,7 @@ import { getTodayTasks, type TodayTask } from '../src/db/taskRepository';
 import { setTaskCompletionWithRewards } from '../src/db/rewardRepository';
 
 jest.mock('expo-router', () => ({ router: {}, useFocusEffect: (callback: () => void) => jest.requireActual<typeof import('react')>('react').useEffect(callback, [callback]) }));
+jest.mock('../src/components/ParentHome', () => ({ ParentHome: () => null }));
 jest.mock('../src/theme/provider', () => ({ useActiveTheme: () => ({ theme: jest.requireActual<typeof import('../src/theme')>('../src/theme').defaultTheme }) }));
 jest.mock('../src/db/database', () => ({ getDatabase: jest.fn(async () => ({})) }));
 jest.mock('../src/db/timetableSetRepository', () => ({ getActiveTimetableSet: jest.fn(async () => ({ id: 1, name: '평소' })) }));

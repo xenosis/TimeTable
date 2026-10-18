@@ -3,18 +3,27 @@ import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import { router, useFocusEffect } from 'expo-router';
 
 import { CharacterHeader } from '../../src/components/CharacterHeader';
+import { ParentHome } from '../../src/components/ParentHome';
 import { PermissionGuide } from '../../src/components/PermissionGuide';
 import { TodayScheduleCard } from '../../src/components/TodayScheduleCard';
 import { TodayTasksCard } from '../../src/components/TodayTasksCard';
 import { getDatabase } from '../../src/db/database';
 import { getActiveTimetableSet } from '../../src/db/timetableSetRepository';
 import type { TimetableSet } from '../../src/db/types';
+import { isParentDevice, useAccount } from '../../src/store/accountStore';
 import { useActiveTheme } from '../../src/theme/provider';
 import { dailyEncouragement } from '../../src/theme/dailyEncouragement';
 import { msUntilNextLocalMidnight } from '../../src/utils/date';
 import { subscribeWidgetChecksApplied } from '../../src/widgets/widgetChecksSignal';
 
-export default function TodayScreen() {
+/** 첫 탭: 아빠 폰은 아빠 현황 화면, 그 밖(딸·로컬)은 오늘 화면. 아빠 폰에서는 딸 오늘 화면(체크 기록)을 마운트하지 않는다 */
+export default function HomeRoute() {
+  const account = useAccount();
+  const { theme } = useActiveTheme();
+  return isParentDevice(account) ? <ParentHome theme={theme} /> : <TodayScreen />;
+}
+
+function TodayScreen() {
   const { theme } = useActiveTheme();
   const [refreshKey, setRefreshKey] = useState(0);
   const [timetableSet, setTimetableSet] = useState<TimetableSet | null>(null);
@@ -57,7 +66,7 @@ export default function TodayScreen() {
       <Text style={[styles.date, { color: colors.primary }]}>{dateLabel}</Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>{encouragement.subtitle}</Text>
     </View></CharacterHeader>
-    <PermissionGuide theme={theme} banner={{ onPress: () => router.push('/manage') }} />
+    <PermissionGuide theme={theme} banner={{ onPress: () => router.replace('/manage') }} />
     {status !== 'ready' && <View style={[styles.scheduleStatus, { backgroundColor: theme.decorations.cardBackground }]}><Text style={{ color: colors.text }}>{status === 'loading' ? '오늘 일정을 불러오는 중이에요.' : '오늘 일정을 불러오지 못했어요.'}</Text>{status === 'error' && <Pressable accessibilityRole="button" onPress={bump} style={styles.retry}><Text style={{ color: colors.primary }}>다시 불러오기</Text></Pressable>}</View>}
     <TodayScheduleCard refreshKey={refreshKey} theme={theme} setId={status === 'ready' ? timetableSet?.id ?? null : null}>
       <TodayTasksCard theme={theme} refreshKey={refreshKey} onChanged={bump} />

@@ -3,13 +3,13 @@
     "name": "채아시간표",
     "slug": "chaea-timetable",
     "scheme": "kidtimetable",
-    "version": "1.64.0",
+    "version": "1.64.1",
     "orientation": "default",
     "icon": "./assets/timetable-icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.chaea.timetable",
-      "versionCode": 186,
+      "versionCode": 187,
       "permissions": [
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM",

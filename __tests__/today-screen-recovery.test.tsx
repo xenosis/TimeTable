@@ -4,6 +4,7 @@ import TodayScreen from '../app/(tabs)/index';
 import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
 
 jest.mock('expo-router', () => ({ router: {}, useFocusEffect: (callback: () => void) => jest.requireActual<typeof import('react')>('react').useEffect(callback, [callback]) }));
+jest.mock('../src/components/ParentHome', () => ({ ParentHome: () => null }));
 jest.mock('../src/theme/provider', () => ({ useActiveTheme: () => ({ theme: jest.requireActual<typeof import('../src/theme')>('../src/theme').defaultTheme }) }));
 jest.mock('../src/db/database', () => ({ getDatabase: jest.fn(async () => ({})) }));
 jest.mock('../src/db/timetableSetRepository', () => ({ getActiveTimetableSet: jest.fn() }));

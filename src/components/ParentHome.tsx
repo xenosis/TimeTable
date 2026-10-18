@@ -9,7 +9,7 @@ import { ParentStatusCard } from './ParentStatusCard';
 import { ParentWeeklyReportCard } from './ParentWeeklyReportCard';
 
 /**
- * 아빠 계정으로 로그인한 기기의 첫 화면(P6.8, 현황 탭). 딸 화면(오늘·보석) 대신 보이고, 시간표는 하단 시간표 탭에서 딸과 같은 화면으로 본다.
+ * 아빠 계정으로 로그인한 기기의 첫 화면(P6.8, 현황 탭). app/(tabs)/index.tsx가 딸 오늘 화면 대신 그리고, 시간표는 하단 시간표 탭에서 딸과 같은 화면으로 본다.
  * 딸 오늘 현황·보석·딸 폰 마지막 동기화 시각을 보여 주고, 시간표·할 일 편집은 관리자 설정(서버에 먼저 저장, P6.15)으로 연다.
  * 이 폰에서는 딸 알림·알람을 울리지 않는다(notifications/parentDeviceAlarms.ts).
  */
@@ -25,7 +25,7 @@ export function ParentHome({ theme }: { readonly theme: ThemeDefinition }) {
     <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
       <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>시간표·할 일 고치기</Text>
       <Text style={[styles.body, { color: colors.textMuted }]}>여기서 고친 내용은 서버에 바로 저장돼요. 딸 폰에서 앱이 실행 중이고 인터넷에 연결돼 있으면 자동으로 반영돼요. 이 폰에서는 딸 알림·알람이 울리지 않아요.</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel="관리자 설정 열기" onPress={() => router.push('/manage')} style={({ pressed }) => [styles.button, { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}>
+      <Pressable accessibilityRole="button" accessibilityLabel="관리자 설정 열기" onPress={() => router.replace('/manage')} style={({ pressed }) => [styles.button, { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 }]}>
         <Text style={[styles.buttonText, { color: colors.onPrimary }]}>시간표·할 일 편집 열기</Text>
       </Pressable>
     </View>

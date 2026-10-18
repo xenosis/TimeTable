@@ -2,39 +2,39 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { adminFontSize, adminSpacing } from '../src/theme/admin';
-import { borderRadius, touchTarget } from '../src/theme';
-import { AdminCollapsible } from '../src/components/AdminCollapsible';
-import { AdminSectionMenu } from '../src/components/AdminSectionMenu';
-import { AccountPanel } from '../src/components/AccountPanel';
-import { LocalImportPanel } from '../src/components/LocalImportPanel';
-import { SyncPanel } from '../src/components/SyncPanel';
-import { DeviceTestPanel } from '../src/components/DeviceTestPanel';
-import { GemRequestsPanel } from '../src/components/GemRequestsPanel';
-import { PeriodSettings } from '../src/components/PeriodSettings';
-import { TimetableSetPanel } from '../src/components/TimetableSetPanel';
-import { TimetableEditor } from '../src/components/TimetableEditor';
-import { WeekdayCopy } from '../src/components/WeekdayCopy';
-import { SchoolTimetableImport } from '../src/components/SchoolTimetableImport';
-import { PinGate } from '../src/components/PinGate';
-import { initializeNotificationChannels } from '../src/notifications/secureAlarmPoc';
-import { useActiveTheme } from '../src/theme/provider';
-import { RewardGoalEditor } from '../src/components/RewardGoalEditor';
-import { PermissionGuide } from '../src/components/PermissionGuide';
-import { TaskEditor } from '../src/components/TaskEditor';
-import { getDatabase } from '../src/db/database';
-import { getActiveTimetableSet } from '../src/db/timetableSetRepository';
-import type { TimetableSet } from '../src/db/types';
-import { requestRollingScheduleRefresh } from '../src/notifications/rollingRefresh';
-import { requestTaskRollingScheduleRefresh } from '../src/notifications/taskRollingSchedule';
-import { CLEAN_FORM_STATE, DEFAULT_ADMIN_SECTION, decideSectionSwitch, type AdminFormState, type AdminSectionKey } from '../src/utils/adminSections';
+import { adminFontSize, adminSpacing } from '../../src/theme/admin';
+import { borderRadius, touchTarget } from '../../src/theme';
+import { AdminCollapsible } from '../../src/components/AdminCollapsible';
+import { AdminSectionMenu } from '../../src/components/AdminSectionMenu';
+import { AccountPanel } from '../../src/components/AccountPanel';
+import { LocalImportPanel } from '../../src/components/LocalImportPanel';
+import { SyncPanel } from '../../src/components/SyncPanel';
+import { DeviceTestPanel } from '../../src/components/DeviceTestPanel';
+import { GemRequestsPanel } from '../../src/components/GemRequestsPanel';
+import { PeriodSettings } from '../../src/components/PeriodSettings';
+import { TimetableSetPanel } from '../../src/components/TimetableSetPanel';
+import { TimetableEditor } from '../../src/components/TimetableEditor';
+import { WeekdayCopy } from '../../src/components/WeekdayCopy';
+import { SchoolTimetableImport } from '../../src/components/SchoolTimetableImport';
+import { PinGate } from '../../src/components/PinGate';
+import { initializeNotificationChannels } from '../../src/notifications/secureAlarmPoc';
+import { isParentDevice, useAccount } from '../../src/store/accountStore';
+import { useActiveTheme } from '../../src/theme/provider';
+import { RewardGoalEditor } from '../../src/components/RewardGoalEditor';
+import { PermissionGuide } from '../../src/components/PermissionGuide';
+import { TaskEditor } from '../../src/components/TaskEditor';
+import { getDatabase } from '../../src/db/database';
+import { getActiveTimetableSet } from '../../src/db/timetableSetRepository';
+import type { TimetableSet } from '../../src/db/types';
+import { requestRollingScheduleRefresh } from '../../src/notifications/rollingRefresh';
+import { requestTaskRollingScheduleRefresh } from '../../src/notifications/taskRollingSchedule';
+import { CLEAN_FORM_STATE, DEFAULT_ADMIN_SECTION, decideSectionSwitch, type AdminFormState, type AdminSectionKey } from '../../src/utils/adminSections';
 
 export default function ManageScreen() {
   const headerHeight = useHeaderHeight();
-  // 화면이 시스템 탐색 막대 아래까지 그려지므로(edge-to-edge) 마지막 영역과 가로 화면 오른쪽 끝이 가려지지 않게 여백을 더한다(P9.7)
-  const insets = useSafeAreaInsets();
+  // 아빠 폰(아빠 계정 로그인)은 딸이 쓰지 않으므로 PIN 없이 바로 연다. 딸 폰·로컬 모드는 계속 PIN 뒤에 둔다
+  const parentDevice = isParentDevice(useAccount());
   const { theme } = useActiveTheme();
   const { colors, categories: categoryPalette } = theme;
   const [section, setSection] = useState<AdminSectionKey>(DEFAULT_ADMIN_SECTION);
@@ -106,9 +106,11 @@ export default function ManageScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={headerHeight} style={styles.keyboardContainer}>
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background, paddingBottom: adminSpacing.md + insets.bottom, paddingLeft: adminSpacing.md + insets.left, paddingRight: adminSpacing.md + insets.right }]}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
+      {/* 하단 탭 안에 있어 머리 막대가 없으므로 화면 제목을 직접 보인다. 안전 영역 여백은 탭 레이아웃이 처리한다 */}
+      <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>관리자 설정</Text>
       <PermissionGuide theme={theme} collapseWhenReady />
-      <PinGate theme={theme}>
+      <PinGate theme={theme} bypass={parentDevice}>
         <AdminSectionMenu selected={section} onSelect={selectSection} theme={theme} />
         {status !== '' && <Text accessibilityLiveRegion="polite" style={[styles.status, { color: colors.text }]}>{status}</Text>}
         {section === 'timetable' && <>
@@ -146,6 +148,7 @@ export default function ManageScreen() {
 const styles = StyleSheet.create({
   keyboardContainer: { flex: 1 },
   container: { alignItems: 'center', flexGrow: 1, padding: adminSpacing.md, gap: adminSpacing.sm },
+  title: { alignSelf: 'stretch', fontSize: adminFontSize.title + 3, fontWeight: '800' },
   status: { fontSize: adminFontSize.label, textAlign: 'center' },
   categoryPreview: { flexDirection: 'row', flexWrap: 'wrap', gap: adminSpacing.xs },
   categoryChip: { alignItems: 'center', borderRadius: borderRadius.md, justifyContent: 'center', minHeight: touchTarget.minimum, minWidth: touchTarget.minimum, paddingHorizontal: adminSpacing.xs },

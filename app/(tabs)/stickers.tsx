@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
+import { Redirect, useFocusEffect } from 'expo-router';
 
 import { StickerBoard } from '../../src/components/StickerBoard';
 import { ThemePicker } from '../../src/components/ThemePicker';
 import { borderRadius, fontSize, spacing, touchTarget } from '../../src/theme';
+import { isParentDevice, useAccount } from '../../src/store/accountStore';
 import { useActiveTheme } from '../../src/theme/provider';
 import { msUntilNextLocalMidnight } from '../../src/utils/date';
 import { subscribeWidgetChecksApplied } from '../../src/widgets/widgetChecksSignal';
 
-export default function StickersScreen() {
+/** 보석 탭은 딸 화면에만 있다. 아빠 폰이 이 경로로 오면(알림 등) 현황으로 보낸다 */
+export default function StickersRoute() {
+  const account = useAccount();
+  return isParentDevice(account) ? <Redirect href="/" /> : <StickersScreen />;
+}
+
+function StickersScreen() {
   const { theme, selectTheme } = useActiveTheme();
   const [refreshKey, setRefreshKey] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
