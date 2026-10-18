@@ -16,7 +16,7 @@ import { dailyEncouragement } from '../../src/theme/dailyEncouragement';
 import { msUntilNextLocalMidnight } from '../../src/utils/date';
 import { subscribeWidgetChecksApplied } from '../../src/widgets/widgetChecksSignal';
 
-/** 첫 탭: 아빠 폰은 아빠 현황 화면, 그 밖(딸·로컬)은 오늘 화면. 아빠 폰에서는 딸 오늘 화면(체크 기록)을 마운트하지 않는다 */
+/** 첫 탭: 아빠 계정으로 확인된 폰은 아빠 현황 화면, 그 밖(딸·로컬·앱 시작 직후 계정 확인 중)은 오늘 화면 */
 export default function HomeRoute() {
   const account = useAccount();
   const { theme } = useActiveTheme();

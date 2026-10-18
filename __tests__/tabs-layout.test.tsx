@@ -8,13 +8,15 @@ import type { AccountState } from '../src/server/account';
 let mockAccount: AccountState;
 let mockPathname = '/';
 let mockImmersive = false;
+const mockScreenOptions: unknown[] = [];
+const mockReplace = jest.fn();
 jest.mock('expo-router', () => {
   const { Text: MockText } = jest.requireActual('react-native');
   return {
     usePathname: () => mockPathname,
-    router: { replace: jest.fn(), push: jest.fn() },
+    router: { replace: (...args: unknown[]) => mockReplace(...args), push: jest.fn() },
     Slot: () => <MockText>탭 화면 슬롯</MockText>,
-    Stack: { Screen: () => null },
+    Stack: { Screen: ({ options }: { options: unknown }) => { mockScreenOptions.push(options); return null; } },
   };
 });
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
@@ -81,4 +83,23 @@ test('가로 주간 보기(몰입 모드)에서는 탭바를 숨긴다', async (
   mockImmersive = true;
   const renderer = await render();
   expect(tabs(renderer)).toEqual([]);
+});
+
+test('화면 옵션은 렌더링마다 같은 객체를 넘긴다(setOptions 반복 호출로 인한 무한 렌더링 회귀 방지)', async () => {
+  mockAccount = parent;
+  mockScreenOptions.length = 0;
+  const renderer = await render();
+  mockPathname = '/timetable';
+  await act(async () => renderer.update(<TabsLayout />));
+  expect(mockScreenOptions.length).toBeGreaterThanOrEqual(2);
+  expect(new Set(mockScreenOptions).size).toBe(1);
+});
+
+test('탭을 누르면 해당 경로로 replace한다', async () => {
+  mockAccount = parent;
+  mockReplace.mockClear();
+  const renderer = await render();
+  const press = (label: string) => renderer.root.find((node) => node.props.accessibilityLabel === label && typeof node.props.onPress === 'function').props.onPress();
+  await act(async () => { press('설정 탭'); press('시간표 탭'); });
+  expect(mockReplace.mock.calls).toEqual([['/manage'], ['/timetable']]);
 });

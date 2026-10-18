@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useNavigation } from 'expo-router';
-import { useHeaderHeight } from 'expo-router/react-navigation';
+import { Alert, BackHandler, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router, useFocusEffect, useNavigation } from 'expo-router';
 
 import { adminFontSize, adminSpacing } from '../../src/theme/admin';
 import { borderRadius, touchTarget } from '../../src/theme';
@@ -32,7 +31,6 @@ import { requestTaskRollingScheduleRefresh } from '../../src/notifications/taskR
 import { CLEAN_FORM_STATE, DEFAULT_ADMIN_SECTION, decideSectionSwitch, type AdminFormState, type AdminSectionKey } from '../../src/utils/adminSections';
 
 export default function ManageScreen() {
-  const headerHeight = useHeaderHeight();
   // 아빠 폰(아빠 계정 로그인)은 딸이 쓰지 않으므로 PIN 없이 바로 연다. 딸 폰·로컬 모드는 계속 PIN 뒤에 둔다
   const parentDevice = isParentDevice(useAccount());
   const { theme } = useActiveTheme();
@@ -62,6 +60,13 @@ export default function ManageScreen() {
       { text: '버리고 나가기', style: 'destructive', onPress: () => { formState.current = CLEAN_FORM_STATE; navigation.dispatch(event.data.action); } },
     ]);
   }), [navigation]);
+
+  // 설정은 하단 탭 안에 있어 휴대폰 뒤로 가기에 닫을 화면이 없다. 앱이 바로 나가지 않도록 첫 탭으로 보내고,
+  // 그 이동이 위 beforeRemove 확인(저장하지 않은 입력 경고)을 거치게 한다. 열린 시간표 폼은 자체 뒤로 가기 처리가 먼저 받는다
+  useFocusEffect(useCallback(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { router.replace('/'); return true; });
+    return () => subscription.remove();
+  }, []));
 
   useEffect(() => {
     void getDatabase().then((database) => getActiveTimetableSet(database)).then(setTimetableSet).catch(() => setStatus('시간표를 불러오지 못했어요.'));
@@ -105,7 +110,7 @@ export default function ManageScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={headerHeight} style={styles.keyboardContainer}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardContainer}>
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       {/* 하단 탭 안에 있어 머리 막대가 없으므로 화면 제목을 직접 보인다. 안전 영역 여백은 탭 레이아웃이 처리한다 */}
       <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>관리자 설정</Text>
