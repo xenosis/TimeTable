@@ -5,12 +5,13 @@ import { getDatabase } from '../db/database';
 import { dayOffText, getScheduleForDate } from '../db/dateSchedule';
 import type { TimetableItem } from '../db/timetableRepository';
 import type { TimetableSetId } from '../db/types';
-import { resolveThemeColor, resolveThemeIcon, type ThemeDefinition } from '../theme';
+import { resolveThemeIcon, type ThemeDefinition } from '../theme';
+import { resolveScheduleColor } from '../theme/scheduleColors';
 import { borderRadius, fontSize, spacing } from '../theme';
 import { getTodaySchedule } from '../utils/todaySchedule';
 
 function ScheduleItemCard({ label, item, theme }: { readonly label: string; readonly item: TimetableItem; readonly theme: ThemeDefinition }) {
-  const category = resolveThemeColor(theme, item.colorKey);
+  const category = resolveScheduleColor(item.category, item.colorKey, item.title);
   const icon = resolveThemeIcon(theme, item.iconKey);
   const current = label === '지금';
   const foreground = current ? category.textColor : theme.colors.text;

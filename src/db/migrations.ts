@@ -1,6 +1,7 @@
 import type { TimetableDatabase } from './types';
+import { schemaV14 } from './afterSchoolMigration';
 
-export const databaseVersion = 13;
+export const databaseVersion = 14;
 
 export const schemaV1 = [
   `CREATE TABLE IF NOT EXISTS periods (
@@ -271,6 +272,10 @@ export async function migrateDatabase(database: Pick<TimetableDatabase, 'execAsy
     }
     if (version < 13) {
       for (const statement of schemaV13) await database.execAsync(statement);
+      await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
+    }
+    if (version < 14) {
+      for (const statement of schemaV14) await database.execAsync(statement);
       await database.execAsync(`PRAGMA user_version = ${databaseVersion}`);
     }
     await database.execAsync('COMMIT');

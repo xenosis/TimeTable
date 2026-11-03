@@ -4,7 +4,9 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import type { Period } from '../db/periodRepository';
 import { MAX_MEMO_LENGTH } from '../db/timetableRepository';
 import { timetableCategories, type TimetableCategory } from '../db/types';
-import { borderRadius, colorKeys, iconKeys, resolveThemeColor, resolveThemeIcon, type ThemeDefinition } from '../theme';
+import { borderRadius, colorKeys, iconKeys, resolveThemeIcon, type ThemeDefinition } from '../theme';
+import { isMoveTitle, resolveScheduleColor } from '../theme/scheduleColors';
+import { categoryText } from '../utils/cellText';
 import { adminFontSize, adminSpacing, adminTouchTarget } from '../theme/admin';
 import { formatTimeInput } from '../utils/timeInput';
 import { AdminCollapsible } from './AdminCollapsible';
@@ -17,7 +19,6 @@ export type TimetableDraft = {
 };
 export const emptyTimetableDraft = (weekday: number): TimetableDraft => ({ weekdays: [weekday], title: '', periodNo: null, startTime: '', endTime: '', category: 'academy', colorKey: 'other', iconKey: 'other', alertMode: 'none', alertBeforeMin: '0', memo: '' });
 
-const categoryLabels: Record<TimetableCategory, string> = { school: '학교', academy: '학원', care: '돌봄', life: '생활' };
 const alertLabels = { none: '없음', notify: '알림', alarm: '알람' } as const;
 
 /** 시간표 항목 하나를 입력하는 폼(모달 안에서 쓴다). 색·아이콘은 현재 값만 보이고, 눌렀을 때 한 줄 가로 목록에서 고른다. */
@@ -28,8 +29,9 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onR
   const { colors } = theme;
   const [picker, setPicker] = useState<'color' | 'icon' | null>(null);
   const memoLength = Array.from(draft.memo.trim()).length; // 저장할 때 앞뒤 공백은 지우므로 같은 기준으로 센다
-  const currentColor = resolveThemeColor(theme, draft.colorKey);
+  const currentColor = resolveScheduleColor(draft.category, draft.colorKey, draft.title);
   const currentIcon = resolveThemeIcon(theme, draft.iconKey);
+  const move = isMoveTitle(draft.title); // 이동 일정은 색이 하나로 고정돼 고를 게 없다
 
   const choice = (label: string, selected: boolean, onPress: () => void, a11y = label) => (
     <Pressable key={a11y} accessibilityRole="button" accessibilityLabel={a11y} accessibilityState={{ selected }} disabled={saving} onPress={onPress} style={[styles.choice, { borderColor: colors.primary }, selected && { backgroundColor: colors.primary }]}>
@@ -41,6 +43,8 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onR
   );
 
   return <View style={styles.form}>
+    <Text style={[styles.label, { color: colors.text }]}>일정 종류</Text>
+    <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inline}>{timetableCategories.map((category) => choice(categoryText[category], draft.category === category, () => onChange({ category })))}</ScrollView>
     <TextInput accessibilityLabel="과목 이름" editable={!saving} value={draft.title} onChangeText={(title) => onChange({ title })} placeholder="과목 또는 일정" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
     <TextInput accessibilityLabel="메모" editable={!saving} value={draft.memo} onChangeText={(memo) => onChange({ memo })} placeholder="메모 (예: 16:45 차 타고 이동)" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
     <Text style={[styles.hint, { color: memoLength > MAX_MEMO_LENGTH ? colors.danger : colors.textMuted }]}>{`메모 ${memoLength}/${MAX_MEMO_LENGTH}글자`}</Text>
@@ -59,29 +63,27 @@ export function TimetableItemForm({ draft, onChange, periods, theme, saving, onR
       <TextInput accessibilityLabel="종료 시간" editable={!saving} value={draft.endTime} onChangeText={(value) => onChange({ endTime: formatTimeInput(value) })} placeholder="종료 0940" maxLength={5} keyboardType="number-pad" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
     </View>}
 
-    <Text style={[styles.label, { color: colors.text }]}>색 · 아이콘</Text>
+    <Text style={[styles.label, { color: colors.text }]}>{categoryText[draft.category]} 안에서 세부 구분 · 아이콘</Text>
     <View style={styles.inline}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`색 ${currentColor.label} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'color' ? null : 'color')} style={[styles.summary, { backgroundColor: currentColor.backgroundColor, borderColor: colors.border }]}><Text style={[styles.text, { color: currentColor.textColor }]}>색: {currentColor.label} ▾</Text></Pressable>
+      {move ? <View accessible accessibilityLabel="이동 일정은 모두 같은 색으로 보여요" style={[styles.summary, { backgroundColor: currentColor.backgroundColor, borderColor: colors.border }]}><Text style={[styles.text, { color: currentColor.textColor }]}>색: 이동 (모두 같은 색)</Text></View> : <Pressable accessibilityRole="button" accessibilityLabel={`색 ${currentColor.label} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'color' ? null : 'color')} style={[styles.summary, { backgroundColor: currentColor.backgroundColor, borderColor: colors.border }]}><Text style={[styles.text, { color: currentColor.textColor }]}>색: {currentColor.label} ▾</Text></Pressable>}
       <Pressable accessibilityRole="button" accessibilityLabel={`아이콘 ${currentIcon.label} 바꾸기`} disabled={saving} onPress={() => setPicker(picker === 'icon' ? null : 'icon')} style={[styles.summary, { borderColor: colors.border }]}><Text style={[styles.text, { color: colors.text }]}>아이콘: {currentIcon.glyph} {currentIcon.label} ▾</Text></Pressable>
     </View>
-    {picker === 'color' && <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} accessibilityLabel="색 목록" contentContainerStyle={styles.inline}>{colorKeys.map((key) => {
-      const color = resolveThemeColor(theme, key);
-      return <Pressable key={key} accessibilityRole="button" accessibilityLabel={`색 ${color.label}`} accessibilityState={{ selected: draft.colorKey === key }} disabled={saving} onPress={() => { onChange({ colorKey: key }); setPicker(null); }} style={[styles.swatch, { backgroundColor: color.backgroundColor }, draft.colorKey === key && styles.outline]}><Text style={[styles.text, { color: color.textColor }]}>{color.label}</Text></Pressable>;
+    {picker === 'color' && !move && <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} accessibilityLabel="색 목록" contentContainerStyle={styles.inline}>{colorKeys.map((key) => {
+      const color = resolveScheduleColor(draft.category, key, draft.title);
+      return <Pressable key={key} accessibilityRole="button" accessibilityLabel={`색 ${color.label}`} accessibilityState={{ selected: draft.colorKey === key }} disabled={saving} onPress={() => { onChange({ colorKey: key }); setPicker(null); }} style={[styles.swatch, { backgroundColor: color.backgroundColor }, draft.colorKey === key && [styles.outline, { borderColor: color.textColor }]]}><Text style={[styles.text, { color: color.textColor }]}>{color.label}</Text></Pressable>;
     })}</ScrollView>}
     {picker === 'icon' && <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} accessibilityLabel="아이콘 목록" contentContainerStyle={styles.inline}>{iconKeys.map((key) => {
       const icon = resolveThemeIcon(theme, key);
       return choice(icon.glyph, draft.iconKey === key, () => { onChange({ iconKey: key }); setPicker(null); }, `아이콘 ${icon.label}`);
     })}</ScrollView>}
 
-    <Text style={[styles.label, { color: colors.text }]}>종류</Text>
-    <View style={styles.inline}>{timetableCategories.map((category) => choice(categoryLabels[category], draft.category === category, () => onChange({ category })))}</View>
     <Text style={[styles.label, { color: colors.text }]}>알림</Text>
     <View style={styles.inline}>
       {(['none', 'notify', 'alarm'] as const).map((mode) => choice(alertLabels[mode], draft.alertMode === mode, () => onChange({ alertMode: mode }), `알림 방식 ${alertLabels[mode]}`))}
       <TextInput accessibilityLabel="미리 알림 분" editable={!saving} value={draft.alertBeforeMin} onChangeText={(alertBeforeMin) => onChange({ alertBeforeMin })} keyboardType="number-pad" placeholder="미리 알림 분" placeholderTextColor={colors.textMuted} style={[styles.input, { color: colors.text }]} />
     </View>
     <AdminCollapsible title="도움말" theme={theme}>
-      <Text style={[styles.hint, { color: colors.textMuted }]}>알림: 상단에 알려 줘요. 알람: 소리가 나고 잠금 화면에도 보여요. 바탕화면 위젯에는 학교 일정이 나오지 않아요. 학원·방과후는 학원, 돌봄교실은 돌봄으로 골라 주세요.</Text>
+      <Text style={[styles.hint, { color: colors.textMuted }]}>정규수업은 파랑, 방과후는 초록, 학원은 보라 계열이에요. 자동 색은 일정 이름마다 정해져 같은 이름은 같은 색이에요. 색이 겹치면 과목 색을 직접 골라 주세요. 돌봄교실은 돌봄으로 선택해 주세요. 위젯에서는 정규수업만 제외해요. 알림은 상단 안내, 알람은 소리와 잠금 화면 안내예요.</Text>
     </AdminCollapsible>
 
     {/* 저장·취소는 모달 맨 위 제목 줄에 있다(키보드가 열려도 가리지 않게, P9.7). 삭제만 맨 아래에 둔다 */}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect, useIsFocused } from 'expo-router';
 
 import { DailyScheduleList } from '../../src/components/DailyScheduleList';
@@ -72,9 +72,7 @@ export default function TimetableScreen() {
       <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.buttonText, { color: colors.primary }]}>{todayLabel ? `📍 오늘(${todayLabel})로 가기` : '📍 오늘로 가기'}</Text>
     </Pressable>
   </View>;
-  const card = <View style={[styles.card, { backgroundColor: theme.decorations.cardBackground, borderColor: theme.decorations.cardBorder }]}>
-    {timetableSet && <WeekOverviewGrid theme={theme} setId={timetableSet.id} today={todayDay} refreshKey={refreshKey} onSelectDay={goToDay} showHeader={!(compact && weekView)} active={focused} />}
-  </View>;
+  const grid = timetableSet && <WeekOverviewGrid theme={theme} setId={timetableSet.id} today={todayDay} refreshKey={refreshKey} onSelectDay={goToDay} showHeader={!(compact && weekView)} active={focused} />;
 
   // 가로 주간 보기: 어느 시간표인지·해제 버튼·요일 헤더는 스크롤 밖에 고정하고 표만 스크롤한다
   if (compact && weekView) {
@@ -87,7 +85,7 @@ export default function TimetableScreen() {
       <View style={styles.fixedHeader}>
         <WeekDayHeader theme={theme} today={todayDay} onSelectDay={goToDay} />
       </View>
-      <ScrollView contentContainerStyle={styles.fixedScroll}>{card}</ScrollView>
+      <View style={styles.fixedGrid}>{grid}</View>
     </View>;
   }
 
@@ -101,15 +99,14 @@ export default function TimetableScreen() {
     </View>;
   }
 
-  return <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
+  return <View style={[styles.dayRoot, { backgroundColor: colors.background }]}>
     {!compact && <CharacterHeader theme={theme} compact><Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{setTitle}</Text></CharacterHeader>}
     {buttons}
-    {card}
-  </ScrollView>;
+    {grid}
+  </View>;
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', flexGrow: 1, gap: spacing.sm, padding: spacing.md },
   dayRoot: { alignItems: 'center', flex: 1, gap: spacing.sm, padding: spacing.md },
   heading: { fontSize: fontSize.md, fontWeight: '700', textAlign: 'center' },
   buttonRow: { flexDirection: 'row', gap: spacing.sm, width: '100%' },
@@ -122,6 +119,5 @@ const styles = StyleSheet.create({
   setTitle: { fontSize: fontSize.lg, fontWeight: '700' },
   // 표 카드의 좌우 여백(lg + md + 테두리 2)과 같게 맞춰 요일 헤더가 표 칸과 정렬되게 한다
   fixedHeader: { paddingHorizontal: spacing.lg + spacing.sm + 2, paddingTop: spacing.xs },
-  fixedScroll: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  card: { borderRadius: borderRadius.md, borderWidth: 2, padding: spacing.sm, width: '100%' },
+  fixedGrid: { flex: 1, minHeight: 0, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
 });

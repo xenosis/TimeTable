@@ -2,7 +2,8 @@ import { getTodayTasks } from '../db/taskRepository';
 import { getScheduleForDate } from '../db/dateSchedule';
 import { getActiveTimetableSet } from '../db/timetableSetRepository';
 import type { TimetableDatabase } from '../db/types';
-import { resolveThemeColor, type ThemeDefinition } from '../theme';
+import type { ThemeDefinition } from '../theme';
+import { resolveScheduleColor } from '../theme/scheduleColors';
 import { toLocalDateStr } from '../utils/date';
 
 /** 앱이 오늘부터 이만큼의 날짜를 미리 써 두면, 앱을 열지 않아도 위젯이 그날 것을 골라 쓸 수 있다. */
@@ -85,7 +86,7 @@ export async function buildWidgetData(database: TimetableDatabase, theme: ThemeD
       hasSchool: allItems.length > items.length,
       holiday: scheduled.dayOff?.kind === 'holiday' ? scheduled.dayOff.name : null,
       schedule: items.slice(0, LIMITS.schedule).map((item) => {
-        const color = resolveThemeColor(theme, item.colorKey);
+        const color = resolveScheduleColor(item.category, item.colorKey, item.title);
         return { title: shorten(item.title), startTime: item.startTime, endTime: item.endTime, backgroundColor: color.backgroundColor, textColor: color.textColor };
       }),
       tasks: tasks.slice(0, LIMITS.tasks).map((task) => ({ id: task.id, title: shorten(task.title), completed: task.completed === 1 })),

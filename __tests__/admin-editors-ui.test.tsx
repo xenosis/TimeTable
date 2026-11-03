@@ -78,7 +78,7 @@ test('시간표 항목 폼은 목록 자리에서 열리고, 휴대폰 뒤로 �
   expect(Alert.alert).toHaveBeenCalledWith('작성 중인 내용이 있어요', expect.any(String), expect.any(Array));
   act(() => { alertButton('작성 중인 내용이 있어요', '버리고 닫기').onPress?.(); });
   expect(texts(root)).toContain('요일을 고르고 항목을 누르거나 추가를 눌러 주세요.');
-});
+}, 30000); // 첫 Paper/React Native 렌더 초기화도 포함한다. 동작 검증은 그대로 유지한다.
 
 test('시간표 항목 삭제는 확인 창을 거치고, 취소하면 지우지 않는다', async () => {
   const { root } = await renderTimetable();

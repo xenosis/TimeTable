@@ -26,7 +26,7 @@ const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`
 
 describe('supabase 마이그레이션', () => {
   it('파일 이름이 시간순으로 스키마 → 보안 규칙 → 보석 자격·이전 함수 순서로 적용되게 정렬된다', () => {
-    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql', 'tt_realtime.sql', 'tt_mark_gems_given.sql', 'tt_push_delivery_queue.sql', 'tt_push_installation.sql', 'tt_school_profile.sql', 'tt_device_sync_installation.sql', 'tt_push_worker_schedule.sql', 'tt_completion_push.sql', 'tt_parent_push_installation.sql']);
+    expect(files.map((name: string) => name.replace(/^\d+_/, ''))).toEqual(['tt_schema.sql', 'tt_rls.sql', 'tt_gem_rights_import.sql', 'tt_import_guard.sql', 'tt_apply_family_edit.sql', 'tt_realtime.sql', 'tt_mark_gems_given.sql', 'tt_push_delivery_queue.sql', 'tt_push_installation.sql', 'tt_school_profile.sql', 'tt_device_sync_installation.sql', 'tt_push_worker_schedule.sql', 'tt_completion_push.sql', 'tt_parent_push_installation.sql', 'tt_after_school_category.sql']);
   });
 
   it('보석 자격 테이블도 RLS·권한·anon 회수가 다른 가족 테이블과 같다(P6.5)', () => {
@@ -132,7 +132,7 @@ describe('supabase 마이그레이션', () => {
 
   it('메모 최대 길이와 종류·색·아이콘 목록이 앱 코드와 같다', () => {
     expect(schema).toContain(`char_length(memo) <= ${MAX_MEMO_LENGTH}`);
-    expect(schema).toContain(`category in (${quoted(timetableCategories)})`);
+    expect(read('_tt_after_school_category.sql')).toContain(`category in (${quoted(timetableCategories)})`);
     expect(schema).toContain(`color_key in (${quoted(colorKeys)})`);
     expect(schema).toContain(`icon_key in (${quoted(iconKeys)})`);
   });

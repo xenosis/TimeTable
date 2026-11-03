@@ -5,6 +5,7 @@ import { createTimetableItem } from '../src/db/timetableRepository';
 import { createTimetableSet, getActiveTimetableSet, setActiveTimetableSet } from '../src/db/timetableSetRepository';
 import type { TimetableItemInput } from '../src/db/types';
 import { defaultTheme as daylightTheme, themes } from '../src/theme';
+import { resolveScheduleColor } from '../src/theme/scheduleColors';
 import { buildWidgetData, WIDGET_DAYS, WIDGET_MAX_BYTES } from '../src/widgets/widgetDataV2';
 import { openTestDatabase } from '../test-utils/sqliteTestDatabase';
 
@@ -79,16 +80,16 @@ describe('buildWidgetData: 위젯 v2 데이터', () => {
     expect(data.days[2].schedule.map(({ title }) => title)).toEqual(['피아노']);
   });
 
-  it('일정에 대비가 보장된 과목 색을 담는다', async () => {
+  it('학원 일정에는 학원 계열의 수학 색조를 담는다', async () => {
     const database = await freshDatabase();
     const regular = (await getActiveTimetableSet(database)).id;
     await createTimetableItem(database, item(regular, '수학', 3));
     const [entry] = (await buildWidgetData(database, daylightTheme, WEDNESDAY)).days[0].schedule;
-    const math = daylightTheme.categories.find((category) => category.key === 'math')!;
+    const math = resolveScheduleColor('academy', 'math');
     expect(entry).toMatchObject({ startTime: '09:00', endTime: '10:00', backgroundColor: math.backgroundColor, textColor: math.textColor });
   });
 
-  it('지원하는 모든 테마에서 위젯 색은 그 테마의 화면 색이고, 과목 색은 그 테마의 같은 의미 색이다(P7.5)', async () => {
+  it('테마의 화면 색을 유지하면서 일정 색은 종류와 세부 과목 기준으로 통일한다', async () => {
     const database = await freshDatabase();
     const regular = (await getActiveTimetableSet(database)).id;
     await createTimetableItem(database, item(regular, '수학', 3));
@@ -97,7 +98,7 @@ describe('buildWidgetData: 위젯 v2 데이터', () => {
       const data = await buildWidgetData(database, theme, WEDNESDAY);
       const { background, surface, text, textMuted, primary, onPrimary, border } = theme.colors;
       expect(data.theme).toEqual({ background, surface, text, textMuted, primary, onPrimary, border });
-      const math = theme.categories.find((category) => category.key === 'math')!;
+      const math = resolveScheduleColor('academy', 'math');
       expect(data.days[0].schedule[0]).toMatchObject({ backgroundColor: math.backgroundColor, textColor: math.textColor });
     }
   });

@@ -11,6 +11,7 @@ import { minutesOfDay } from '../utils/scheduleClock';
 import type { GridDay } from '../utils/timetableGrid';
 import { SCHOOL_WEEKDAYS } from '../utils/weekdays';
 import { WeekTimeGrid } from './WeekTimeGrid';
+import { ScheduleGridViewport } from './ScheduleGridViewport';
 
 export function WeekOverviewGrid({ theme, setId, today, refreshKey, onSelectDay, showHeader = true, active = true }: {
   readonly theme: ThemeDefinition;
@@ -49,5 +50,7 @@ export function WeekOverviewGrid({ theme, setId, today, refreshKey, onSelectDay,
   const holidayNote = holidays.length > 0 && <Text style={{ color: theme.colors.text, fontSize: fontSize.sm, fontWeight: '700', textAlign: 'center' }}>🎉 {holidays.join(' · ')}</Text>;
   if (days.length && !hasAnyItem) return <View>{holidayNote}<Text style={{ color: theme.colors.textMuted, fontSize: fontSize.md, textAlign: 'center' }}>등록된 일정이 없어요.</Text></View>;
 
-  return <>{holidayNote}<WeekTimeGrid theme={theme} days={days} today={today} onSelectDay={onSelectDay} showHeader={showHeader} nowMinutes={minutesOfDay(now)} /></>;
+  return <>{holidayNote}<ScheduleGridViewport theme={theme} card>{(height) =>
+    <WeekTimeGrid theme={theme} days={days} today={today} onSelectDay={onSelectDay} showHeader={showHeader} nowMinutes={minutesOfDay(now)} fitHeight={height} />
+  }</ScheduleGridViewport></>;
 }

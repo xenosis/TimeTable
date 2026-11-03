@@ -1,7 +1,7 @@
 import type { TimetableCategory } from '../db/types';
 
 /** 일정 칸의 첫 줄에 쓰는 구분 이름 */
-export const categoryText: Readonly<Record<TimetableCategory, string>> = { school: '학교', academy: '학원', care: '돌봄', life: '생활' };
+export const categoryText: Readonly<Record<TimetableCategory, string>> = { school: '정규수업', after_school: '방과후', academy: '학원', care: '돌봄', life: '생활' };
 
 export type CellLines = {
   /** 칸에 쓸 줄 수(1~3) */

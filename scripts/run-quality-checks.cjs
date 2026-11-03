@@ -44,7 +44,8 @@ const checks = [
   {
     name: 'test',
     ...npmInvocation('run', 'test:ci'),
-    timeoutMs: 120_000,
+    // --no-cache인 전체 Expo UI 검사에는 콜드 초기화가 포함된다. 98개 suite의 실행 여유만 확보한다.
+    timeoutMs: 240_000,
     fix: '실패한 Jest 테스트 또는 구현을 수정한 뒤 npm run test:ci를 다시 실행하세요.',
   },
   {

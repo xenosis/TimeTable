@@ -81,3 +81,9 @@
 
 ## 설치본 동기화 시각 (P6.18, 2026-10-11)
 사용자 승인 후 20261010084815_tt_device_sync_installation.sql을 트랜잭션으로 운영 적용했다. tt_record_device_sync의 authenticated 실행 허용 및 anon 실행 거부를 확인했다(.tmp/p618-production-apply.log). 설치본 증명으로 동기화 시각을 기록하며, 자기 계정의 미연결 구버전 토큰은 등록 시 비워 같은 토큰 충돌을 피한다. 두 폰 1.62.9/173 설치 후 각각 설치본 행에 서버 시각 기록을 확인했다(.tmp/p618-device-current.log). 지급 이후 딸 화면 반영은 추가 조사 중이다.
+
+## 방과후 분류 (P18, 2026-10-23)
+
+사용자의 “서버에도 적용해” 승인 후 `20261022132515_tt_after_school_category.sql`의 CHECK 변경을 기존 공유 프로젝트에 적용했다. 같은 트랜잭션 안에서 기존 행을 임시 복사해 비교하고, 실제 제약을 복제한 임시 테이블에서 다섯 분류 허용·잘못된 분류 거부를 확인한 뒤 커밋했다. 기존 시간표 79개가 모든 값 그대로 보존됐다. 적용 후 별도 연결로 `after_school` 허용값을 재조회했다. RLS·권한·RPC·보석 데이터는 변경하지 않았다.
+
+근거: `.tmp/p18-server-apply-verified.sql`, `.tmp/p18-server-apply-result.json` (`P18_CHECK_PASS`), `.tmp/p18-server-after-apply.json`. 이 검증은 PostgreSQL CHECK 변경과 행 보존을 확인한 것이며, 앱 RPC 경유 저장·양쪽 폰 동기화의 실사용 검증을 대신하지 않는다. 새 분류 사용 전에는 양쪽 앱을 SQLite V14 포함 버전(1.65.0/189 이상)으로 업데이트해야 한다. 이번 적용은 아직 커밋 전이며, `db push`나 마이그레이션 이력 변경은 수행하지 않았다.

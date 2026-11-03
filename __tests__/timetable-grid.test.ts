@@ -1,4 +1,4 @@
-import { buildWeekGrid, cellRect, needsOwnTimeLabel, rowHeights, rowOffsets, type GridDay, type GridItem } from '../src/utils/timetableGrid';
+import { buildWeekGrid, cellRect, needsOwnTimeLabel, rowHeights, rowOffsets, timeAxisConnector, timeAxisLabels, type GridDay, type GridItem } from '../src/utils/timetableGrid';
 
 let nextId = 1;
 const item = (title: string, startTime: string, endTime: string): GridItem => ({ id: nextId++, title, startTime, endTime });
@@ -40,30 +40,71 @@ describe('buildWeekGrid', () => {
     expect(forest?.rowSpan).toBeGreaterThan(1);
   });
 
-  it('행 높이는 시간 비례에 최소·최대 제한을 둔다: 학기 시간표는 세로 520dp 이하', () => {
-    const { rows } = buildWeekGrid(semester);
-    expect(sum(rowHeights(rows, 1.2, 28))).toBe(756);
-    const capped = rowHeights(rows, 1.2, 28, 64);
-    expect(capped[0]).toBe(64);
-    expect(sum(capped)).toBeLessThanOrEqual(520);
-  });
-
-  it('채택값(최소 36·최대 64dp): 학기 시간표 표 본문은 592dp로 세로 스크롤이 필요하다(헤더 제외)', () => {
-    expect(sum(rowHeights(buildWeekGrid(semester).rows, 1.2, 36, 64))).toBe(592);
-    expect(sum(rowHeights(buildWeekGrid(vacationWeek).rows, 1.2, 36, 64))).toBeLessThanOrEqual(400);
+  it.each([[semester], [vacationWeek]])('짧은 경계와 긴 수업이 섞여도 표 전체가 같은 분당 높이를 쓴다', (days) => {
+    const { rows, cells } = buildWeekGrid(days);
+    const heights = rowHeights(rows, 1.5, 14);
+    const scale = heights[0] / (rows[0].endMin - rows[0].startMin);
+    rows.forEach((row, i) => expect(heights[i]).toBeCloseTo((row.endMin - row.startMin) * scale));
+    cells.forEach((cell) => {
+      const duration = cell.item.endTime.split(':').map(Number).reduce((h, m) => h * 60 + m)
+        - cell.item.startTime.split(':').map(Number).reduce((h, m) => h * 60 + m);
+      expect(cellRect(cell, heights).height).toBeCloseTo(duration * scale);
+    });
   });
 
   it('방학 특강 주(시간표2)는 6행이다', () => {
     expect(buildWeekGrid(vacationWeek).rows).toHaveLength(6);
   });
 
-  it('모든 요일이 비는 구간은 행에서 빠지고 일정은 빈 행을 걸치지 않는다', () => {
+  it('다른 요일 경계가 30분 칸을 나누어도 40분 칸과의 높이 비율은 4:3이다', () => {
+    const grid = buildWeekGrid([
+      { day: 1, items: [item('40분', '14:00', '14:40')] },
+      { day: 2, items: [item('30분', '14:40', '15:10')] },
+      { day: 3, items: [item('다른 경계', '14:50', '15:10')] },
+    ]);
+    const heights = rowHeights(grid.rows, 1.5, 14);
+    const first = cellRect(grid.cells.find((cell) => cell.item.title === '40분')!, heights);
+    const second = cellRect(grid.cells.find((cell) => cell.item.title === '30분')!, heights);
+    expect(first.height / second.height).toBeCloseTo(4 / 3);
+  });
+
+  it('5분 경계가 있어도 80분 일정은 64dp이며 모든 시각은 겹치지 않고 축에 남는다', () => {
+    const grid = buildWeekGrid([
+      { day: 1, items: [item('생명융합과학', '13:50', '15:10')] },
+      { day: 2, items: [item('다른 수업', '14:45', '15:30')] },
+      { day: 3, items: [item('다른 요일 수업', '14:50', '15:40')] },
+    ]);
+    const heights = rowHeights(grid.rows, 0.8, 14);
+    expect(cellRect(grid.cells[0], heights).height).toBeCloseTo(64);
+    const labels = timeAxisLabels(grid.rows, heights, 14);
+    expect(labels.map(({ minutes }) => minutes)).toEqual([830, 885, 890, 910, 930, 940]);
+    labels.forEach((label, index) => {
+      expect(label.top).toBeGreaterThanOrEqual(0);
+      if (index) expect(label.top - labels[index - 1].top).toBeGreaterThanOrEqual(14);
+    });
+    expect(labels[1].anchor).toBeCloseTo(44);
+    expect(labels[2].anchor).toBeCloseTo(48);
+    expect(labels.at(-1)?.top).toBeCloseTo(88);
+    const connectors = labels.map(({ top, anchor }) => timeAxisConnector(top, anchor, 14, 36, 46));
+    connectors.forEach((connector, index) => {
+      const radians = connector.angle * Math.PI / 180;
+      expect(connector.width * Math.cos(radians)).toBeCloseTo(10);
+      expect(connector.width * Math.sin(radians)).toBeCloseTo(connector.toY - connector.fromY);
+      if (index) {
+        // 양 끝의 순서가 같은 직선은 교차하거나 합쳐지지 않는다.
+        expect(connector.fromY).toBeGreaterThan(connectors[index - 1].fromY);
+        expect(connector.toY).toBeGreaterThan(connectors[index - 1].toY);
+      }
+    });
+  });
+
+  it('모든 요일이 비는 구간도 시간축에 남겨 일정 사이 간격을 유지한다', () => {
     const { rows, cells } = buildWeekGrid([
       { day: 1, items: [item('앞', '09:00', '10:00')] },
       { day: 2, items: [item('뒤', '11:00', '12:00')] },
     ]);
-    expect(rows).toEqual([{ startMin: 540, endMin: 600 }, { startMin: 660, endMin: 720 }]);
-    expect(cells.map(({ startRow, rowSpan }) => [startRow, rowSpan])).toEqual([[0, 1], [1, 1]]);
+    expect(rows).toEqual([{ startMin: 540, endMin: 600 }, { startMin: 600, endMin: 660 }, { startMin: 660, endMin: 720 }]);
+    expect(cells.map(({ startRow, rowSpan }) => [startRow, rowSpan])).toEqual([[0, 1], [2, 1]]);
   });
 
   it('겹치는 일정은 나란히 놓고 잘못된 시간은 표 밖에 따로 남긴다', () => {
@@ -79,7 +120,7 @@ describe('buildWeekGrid', () => {
   it('칸의 세로 위치·높이와 겹침 칸의 가로 비율을 계산한다', () => {
     const { rows, cells } = buildWeekGrid([{ day: 1, items: [item('A', '10:00', '11:00'), item('B', '10:30', '11:30'), item('D', '13:00', '14:00')] }]);
     const heights = rowHeights(rows, 1, 30);
-    expect(rowOffsets(heights)).toEqual({ tops: [0, 30, 60, 90, 120].slice(0, rows.length), total: sum(heights) });
+    expect(rowOffsets(heights)).toEqual({ tops: [0, 30, 60, 90, 180], total: sum(heights) });
     const b = cells.find((cell) => cell.item.title === 'B')!;
     expect(cellRect(b, heights)).toMatchObject({ leftRatio: 0.5, widthRatio: 0.5 });
     const d = cells.find((cell) => cell.item.title === 'D')!;

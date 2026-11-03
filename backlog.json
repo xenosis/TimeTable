@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.1",
   "meta": {
-    "updated": "2026-10-16",
+    "updated": "2026-11-03",
     "context_doc": "docs/tasks.md",
     "max_est_min": 45,
     "note": "TimeTable(kidtimetable) 작업 항목 SSOT. 이 프로젝트엔 전용 CLI가 없으므로 이 파일은 직접 편집한다(voice-claude-car의 pnpm backlog와 달리 수동 관리). 단계 구조·근거는 docs/tasks.md·docs/research.md 참고. 상태 갱신 시 status/log/updated_at을 함께 갱신하고, 완료 시 evidence에 확인 근거(파일 경로·명령 결과 등)를 남긴다. needs_info/blocked는 log에 사유를 남길 것."
@@ -7916,17 +7916,17 @@
       "priority": null,
       "category": "feature",
       "title": "아빠 화면에 시간표 탭 추가",
-      "summary": "아빠 폰(부모 계정) 화면에는 현황·주간 리포트만 있어 딸 시간표를 볼 수 없었다(2026-10-16 사용자 요청). 아빠 화면 하단에 현황·시간표·설정 탭을 두고, 시간표 탭은 딸 화면과 같은 요일별·주간 한눈에 보기 시간표를 보여 준다. 보석 탭은 딸 화면에만 둔다.",
-      "where": "app/(tabs)/_layout.tsx src/components/ParentHome.tsx",
+      "summary": "아빠 폰(부모 계정) 화면에는 현황·주간 리포트만 있어 딸 시간표를 볼 수 없었다(2026-10-16 사용자 요청). 아빠 화면 하단에 현황·시간표·설정 탭을 두고, 시간표 탭은 딸 화면과 같은 요일별·주간 한눈에 보기 시간표를 보여 준다. 보석 탭은 딸 화면에만 둔다. 2026-10-18 추가 요청: 설정 화면에서도 하단 탭바를 유지(설정을 탭 그룹으로 이동)하고, 아빠 폰은 설정을 PIN 없이 연다.",
+      "where": "app/(tabs)/_layout.tsx app/(tabs)/index.tsx app/(tabs)/stickers.tsx app/(tabs)/manage.tsx app/_layout.tsx src/components/ParentHome.tsx src/components/PinGate.tsx",
       "parent": null,
       "deps": [],
       "doc": null,
-      "done_when": "아빠 기기 로그인 시 하단 탭(현황·시간표·설정)이 보이고, 시간표 탭에서 딸과 같은 요일별·주간 시간표를 볼 수 있음. 딸 기기 탭 구성은 변경 없음. 버전 동시 수정, npm run check 통과",
+      "done_when": "아빠 기기 로그인 시 하단 탭(현황·시간표·설정)이 보이고, 시간표 탭에서 딸과 같은 요일별·주간 시간표를 볼 수 있음. 설정 화면에서도 하단 탭바가 보이고 아빠 기기는 PIN 없이 열림. 딸 기기는 PIN 유지. 탭 전환 시 크래시 없음(아빠 폰 실기기). 버전 동시 수정, npm run check 통과",
       "est_min": 20,
-      "gate": "아빠 폰 실기기에서 하단 탭(현황·시간표·설정)과 요일별·주간 시간표 표시 확인",
+      "gate": null,
       "owner": "claude",
       "claimed_at": "2026-10-16T14:11:20.533Z",
-      "updated_at": "2026-10-16T14:47:10.886Z",
+      "updated_at": "2026-10-18T06:48:25.822Z",
       "log": [
         {
           "at": "2026-10-16T14:11:20.533Z",
@@ -7945,8 +7945,196 @@
           "owner": "claude",
           "status": "in_review",
           "note": "리뷰 반영: 커밋 a96b2b3에 tabs-layout 테스트 5개 추가. npm run check 7개 PASS(Jest 81초, 120초 제한 근접). Slot 토글 지적은 딸 기기도 탭 전환 시 재마운트되고 상시 마운트 시 아빠 폰에 딸 오늘 화면이 붙으므로 유지. 실기기 확인 대기."
+        },
+        {
+          "at": "2026-10-18T06:48:25.822Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "v1.64.0 아빠 폰(SM-S918N) 실기기에서 현황 탭 전환 시 Maximum update depth 크래시 발견 → v1.64.1(커밋 f966d32, 푸시 완료): 레이아웃 항상 Slot, 아빠 현황은 index 경로, 설정 탭 그룹 이동, 아빠 PIN 생략. npm run check 7개 PASS. 아빠 폰 release APK 설치 후 현황·시간표·설정 3회 순환 크래시 0건, 사용자 직접 확인 완료. 수정분 재리뷰 진행."
         }
       ]
+    },
+    {
+      "id": "P18",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "시간표 비례 시간축·정규수업 접기·방과후 분류",
+      "summary": "시간 구간별 높이 제한과 빈 시간 압축을 제거해 같은 표의 모든 시간을 동일 비율로 표시한다. 정규수업 접기와 종료 시각 안내, 방과후 신규 분류, 종류별 색 계열 및 세부 과목별 색조를 적용한다.",
+      "where": "src/utils/timetableGrid.ts,src/components/WeekTimeGrid.tsx,src/db,src/theme,supabase/migrations",
+      "parent": null,
+      "deps": [],
+      "doc": "docs/backlog/P18.md",
+      "done_when": "주간·요일별 시간 길이 비율 및 빈 구간 유지 회귀검증, 정규수업 접기/펼치기와 종료 시각 안내, 방과후 로컬 저장·복제·서버 호환 마이그레이션 준비, 기존 데이터 보존, 종류별 색상과 편집·오늘·위젯 일관성, 버전 동시 갱신·전체 검사·병렬 리뷰 완료. 운영 서버 적용 및 실기기 설치는 별도 승인 범위로 구분한다.",
+      "est_min": null,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-22T13:19:09.573Z",
+      "updated_at": "2026-10-22T21:55:56.537Z",
+      "log": [
+        {
+          "at": "2026-10-22T13:19:09.573Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "2026-10-22 요청 착수. 시간축의 구간별 min/max 높이와 빈 시간 압축이 비율 왜곡 원인임을 확인. 정규수업 접기·종료시각 요약과 after_school 분류·종류별 색 계열을 로컬/서버 계약에 반영한다."
+        },
+        {
+          "at": "2026-10-22T21:28:37.321Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "비례 시간축·정규수업 접기·방과후 분류 구현 완료. 1.65.0/189, 전체 검사 98 suites 571 tests 및 push 13 tests, Android debug build 통과(.tmp/p18-quality-final.log). 병렬 리뷰 착수, 운영 서버 마이그레이션과 실기기 설치는 아직 미실행."
+        },
+        {
+          "at": "2026-10-22T21:55:56.537Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "비례 시간축·정규수업 접기·종류별 색상·방과후 분류 완료. 병렬 리뷰 지적 보완 및 등록 reviewer 재검토 완료. 사용자 승인 후 운영 서버 CHECK 적용, 기존79행 보존. S23 Ultra R3CW10EBFYB 1.65.0/189 ARM64 업데이트 설치 확인. 앱 화면·양쪽폰 RPC 동기화 실사용 검증은 미실행이며 다른 폰도 업데이트 필요."
+        }
+      ],
+      "done_at": "2026-10-22",
+      "evidence": "docs/backlog/P18.md; .tmp/reviews/P18-e825caf6e6d3-1792704539015/; .tmp/p18-review-followup.md; .tmp/p18-server-apply-result.json; .tmp/p18-server-after-apply.json; .tmp/p18-device-build.log · 검증: npm run check 전체 PASS(.tmp/p18-quality-reviewed.log): 98 suites/572 tests, push13, lint/typecheck/code-length/instructions/Android debug build. Device release build PASS, ABI arm64-v8a/서명일치, adb install -r Success 및 dumpsys 1.65.0/189. 서버5분류 허용·잘못된분류 거부·기존79행 보존 및 커밋 후 제약 재조회."
+    },
+    {
+      "id": "P19",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "시간표 밀도와 과목 색 구분 개선",
+      "summary": "짧은 경계 때문에 전체 표가 확대되고 요일별 표가 화면을 채우도록 늘어나는 문제를 수정한다. 종류별 계열은 유지하면서 과목 색의 차이와 비활성 상태의 식별성을 높인다.",
+      "where": "src/components/WeekTimeGrid.tsx,src/utils/timetableGrid.ts,src/theme/scheduleColors.ts",
+      "parent": null,
+      "deps": [
+        "P18"
+      ],
+      "doc": "docs/backlog/P19.md",
+      "done_when": "주간·요일별 비례와 빈 시간 보존, 짧은 경계의 과도한 확대 방지, 적은 일정의 화면 채우기 확대 없음, 경계 시각 겹침 방지·현재 강조 유지, 과목 팔레트와 읽기 대비 검증, 편집·오늘·위젯 일관성, 버전 갱신·전체 검사·병렬 리뷰 완료. 설치는 별도 요청 시 수행.",
+      "est_min": null,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-10-27T14:47:27.309Z",
+      "updated_at": "2026-10-29T12:17:55.313Z",
+      "log": [
+        {
+          "at": "2026-10-27T14:47:27.309Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자 지적 재현: rowHeights의 최단 경계 기준 전체 배율 확대와 fitRowHeights의 빈 화면 채우기 확대, 동일 색의 흰색 혼합 및 비활성 탈색이 원인. 시간 비례 유지·축 라벨 개별 배치·컴팩트 배율·더 분명한 계열 팔레트로 보완한다."
+        },
+        {
+          "at": "2026-10-27T15:19:25.807Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.65.1/190 구현 완료. 최단 경계 확대·화면 채우기 확대 제거, 축 시각 개별 배치, 과목 팔레트·자동 이름 색·비활성 색 유지·글자 확대 보완. 전체 검사 통과: .tmp/p19-quality-verified.log 98 suites/576 tests, push13, Android debug build 포함. 로컬 계산 시안 시각 확인, 실기기 설치·화면 조작 미실행. 필수 병렬 리뷰 착수."
+        },
+        {
+          "at": "2026-10-27T15:41:07.034Z",
+          "owner": "codex",
+          "status": "needs_info",
+          "note": "개발·전체 검사·병렬 리뷰 및 보완 재검토 완료. .tmp/p19-quality-review-fixed.log 98 suites/578 tests+push13+Android debug PASS. Device 릴리즈 APK 1.65.1/190 ARM64 빌드·서명 검증 완료. 사용자가 폰 설치를 승인했으나 adb install -r에서 A24 R59X3033P3X not found, 두 차례 재조회도 연결 기기 없음. USB 재연결만 필요. 준비된 TimeTable-v1.65.1-release-Device-arm64-v8a.apk(SHA256 9fca49c55e4ec0a4e048e9369956964821b0bdfe9fb19f4a66cdab596b3188e9)로 설치 후 dumpsys 버전 확인. 소스 변경·재빌드·재리뷰 불필요. 설치 미완료를 완료로 기록하지 않음."
+        },
+        {
+          "at": "2026-10-29T12:15:45.368Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "2026-10-29 사용자가 아빠 폰 설치 요청. S23 Ultra R3CW10EBFYB 연결 확인. 기존 검증 APK SHA256 9fca49c55e4ec0a4e048e9369956964821b0bdfe9fb19f4a66cdab596b3188e9 일치. 소스 변경·재빌드 없이 1.65.1/190 업데이트 설치만 재개. 딸 A24 설치와 실제 화면 검증은 별도 상태로 유지."
+        },
+        {
+          "at": "2026-10-29T12:17:26.718Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "검증한 1.65.1/190 ARM64 APK로 아빠 S23 Ultra R3CW10EBFYB adb install -r Success. 기존 소스·전체검사·병렬 리뷰·보완 재검토 근거를 유지하고 설치 버전 최종 확인 후 완료 기록한다. 앱 화면 조작은 미실행."
+        },
+        {
+          "at": "2026-10-29T12:17:55.313Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "개발·전체검사·필수 병렬리뷰 및 지적보완 재검토 완료. 2026-10-29 사용자 요청대로 아빠 S23 Ultra R3CW10EBFYB에 준비한 동일 APK를 데이터 유지 방식으로 설치해 Success 및 dumpsys 1.65.1/190 확인. 실사용 화면 확인은 사용자가 수행하며 딸 A24의 1.65.1 설치 완료를 주장하지 않는다."
+        }
+      ],
+      "done_at": "2026-10-29",
+      "evidence": "docs/backlog/P19.md; .tmp/p19-quality-review-fixed.log; .tmp/reviews/P19-7f8f0ba07363-1793114391538/; .tmp/p19-review-followup.md; .tmp/p19-device-build.log · 검증: 전체검사 98 suites/578 tests+push13+Android debug build PASS 및 보완 재검토 남은 확인된 지적 없음. 공식 Device ARM64 릴리즈 빌드·서명검증·APK SHA256 9fca49c55e4ec0a4e048e9369956964821b0bdfe9fb19f4a66cdab596b3188e9 일치. S23 Ultra adb install -r Success와 설치 버전 1.65.1/190 확인. 설치 세션에서 소스 변경·재빌드 없음."
+    },
+    {
+      "id": "P20",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "하교 후 시간표를 화면 높이에 맞춰 표 안에서 읽기",
+      "summary": "실제 남은 화면 높이와 마지막 종료 시각으로 시간축을 맞춘다. 짧은 일정의 표 밖 분리·불필요한 요약을 제거하고 오전·점심 접기 뒤 5교시를 유지하며 11월 이름을 정정한다.",
+      "where": "app/(tabs)/timetable.tsx,src/components/WeekTimeGrid.tsx,src/components/WeekOverviewGrid.tsx,src/utils/scheduleGridLayout.ts",
+      "parent": null,
+      "deps": [
+        "P19"
+      ],
+      "doc": "docs/backlog/P20.md",
+      "done_when": "주간·요일별 viewport 측정·상단 영역 차감·마지막 일정까지 높이 활용, 짧은 일정도 표 안 최대 두 줄·최소 가독 높이 유지, 작은 화면만 표 내부 스크롤, 안내·종료 요약 제거, 접기 뒤 5교시 표시·펼치기 복구, 현재 강조·시간 칼럼 유지, 11월 세트 일루스터 이름만 정정·기존 데이터 보존, 버전·전체검사·병렬리뷰 완료. 폰 설치는 별도 요청.",
+      "est_min": 45,
+      "gate": null,
+      "owner": "codex",
+      "claimed_at": "2026-11-01T14:33:34.815Z",
+      "updated_at": "2026-11-01T15:45:01.693Z",
+      "log": [
+        {
+          "at": "2026-11-01T14:33:34.815Z",
+          "owner": "codex",
+          "status": "in_progress",
+          "note": "사용자 재설계 지시 착수. 고정 축소·보조 목록 방식을 대체해 실제 viewport를 채우되 일정 제목은 표 안에서 읽게 한다. 오전 수업과 점심만 접고 5교시는 남기며 11월 세트의 일루스티 이름을 일루스터로 정정한다."
+        },
+        {
+          "at": "2026-11-01T14:53:37.711Z",
+          "owner": "codex",
+          "status": "in_review",
+          "note": "1.65.2/191 구현·전체 검사 완료. .tmp/p20-quality.log 100 suites/585 tests+push13+Android debug build QUALITY_CHECKS_OK. 실제 11월 데이터의 360/411px 계산 배치 확인(실기기 캡처 아님). 11월 세트 8개 이름 정정 후 새 연결에서 total49/old_name0/corrected8 확인. 고정 입력 병렬 리뷰 착수, 폰 설치·조작 미실행."
+        },
+        {
+          "at": "2026-11-01T15:45:01.693Z",
+          "owner": "codex",
+          "status": "done",
+          "note": "2026-11-02 KST 구현·전체검사·필수 병렬리뷰·3건 보완 재검토 완료. 실제 Android 에뮬레이터에서 11월49개로 주간/요일별·펼침/접힘·360dp/411.4dp·글자1.3·회전·표 내부 스크롤을 확인. 기본 세로는 스와이프 전후 좌표 동일,17:10까지 표시. 실제 점심 월~금12:10~13:00 유지. 사용자 폰 설치·조작은 별도 요청 범위로 미실행."
+        }
+      ],
+      "done_at": "2026-11-01",
+      "evidence": "docs/backlog/P20.md; .tmp/p20-quality-reviewed.log; .tmp/reviews/P20-1bb4cc04199e-1793544849575/; .tmp/p20-review-followup.md; .tmp/p20-native-verification.md; .tmp/p20-rename-verified.json · 검증: 100 suites/587 tests+push13+Android debug build QUALITY_CHECKS_OK. 최초 Medium3건 수정 후 동일 입력 재검토의 남은 확인된 Critical/High/Medium 없음. Android 실측·PNG/XML로 칸 내부 두 줄·화면맞춤·5교시·마지막 종료·회전·확대 확인. Supabase 11월세트 총49/옛이름0/정정8,비대상 값 보존."
+    },
+    {
+      "id": "P21",
+      "status": "done",
+      "priority": null,
+      "category": "feature",
+      "title": "이동 일정 색 통일과 요일별 보기 한 줄 이름",
+      "summary": "2026-11-03 사용자 요청: 이동 일정('돌봄 → 일루스터'처럼 화살표가 든 이름)이 이름별 자동 색으로 칸마다 색이 달라 보인다. 이동 일정은 한 색으로 통일한다. 요일별 일정표는 칸이 넓은데도 이동 일정 이름을 두 줄로 나눠 쓰므로 한 줄로 쓰고, 폭이 좁은 주간 표만 두 줄 나눔을 유지한다.",
+      "where": "src/theme/scheduleColors.ts src/components/WeekTimeGrid.tsx",
+      "parent": null,
+      "deps": [],
+      "doc": null,
+      "done_when": "이동 일정이 시간표·오늘 카드·위젯·편집 미리보기에서 같은 색, 읽기 대비 4.5 이상, 일반 일정 색은 그대로. 요일별 보기에서 이동 이름 한 줄, 주간 표는 두 줄 유지. 테스트 추가, 버전 동시 갱신, npm run check 통과, 병렬 리뷰 완료.",
+      "est_min": 30,
+      "gate": null,
+      "owner": "claude",
+      "claimed_at": "2026-11-03T14:50:48.736Z",
+      "updated_at": "2026-11-03T15:23:45.580Z",
+      "log": [
+        {
+          "at": "2026-11-03T14:50:48.736Z",
+          "owner": "claude",
+          "status": "in_progress",
+          "note": "사용자 요청(2026-11-03)으로 착수. resolveScheduleColor에서 화살표 이름을 고정 회색(#CBD5E1)으로, WeekTimeGrid focus(요일별)에서는 gridItemTitle 두 줄 나눔 생략. 테스트 2건 추가, v1.65.3."
+        },
+        {
+          "at": "2026-11-03T15:23:36.381Z",
+          "owner": "claude",
+          "status": "in_review",
+          "note": "구현·전체검사 통과(599 tests, Android build PASS). critical-reviewer 2회·backlog-explainer 2회 병렬 실행, 지적(versionCode, 이동 색 팔레트 겹침, 띠 색, 편집 폼 색 선택, 진행 중 테두리, 폭 여유, 줄 수 고정, -> 나눔) 반영 후 재검사."
+        },
+        {
+          "at": "2026-11-03T15:23:45.580Z",
+          "owner": "claude",
+          "status": "done",
+          "note": "v1.66.0(192). 이동 일정 색·띠 통일, 요일별 이동 이름 한 줄, 이동 글자 1.5pt 축소·칸 최소 높이 축소, 나머지 칸에 들어갈 때만 2→1pt 확대. 실기기 확인은 APK 설치 후 사용자 확인."
+        }
+      ],
+      "done_at": "2026-11-03",
+      "evidence": "src/theme/scheduleColors.ts(isMoveTitle·MOVE_COLOR·scheduleStripeColor), src/utils/scheduleGridLayout.ts(cellTitleFontSize·칸별 minCellHeight·gridItemTitle splitMove), src/components/WeekTimeGrid.tsx, src/components/TimetableItemForm.tsx, 테스트 schedule-colors·schedule-grid-layout·week-time-grid·timetable-item-form-move, docs/backlog/P21.md · 검증: npm run check 2026-11-04 전 항목 PASS(.tmp/p21-check3.log, 599 tests, build PASS). 병렬 리뷰 2회 반영. 세로 주간 보기에서는 칸 폭이 좁아 4글자 이상 제목은 확대되지 않을 수 있음(설계상 줄 넘김 방지)."
     }
   ]
 }
